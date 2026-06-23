@@ -87,33 +87,40 @@ $videoFiles = Get-ChildItem -LiteralPath $resolvedRoot -Recurse -File |
 
 $actorsByKey = [ordered]@{}
 $videos = New-Object System.Collections.Generic.List[object]
-$skipped = New-Object System.Collections.Generic.List[string]
+$unclassified = New-Object System.Collections.Generic.List[string]
+$unclassifiedTagName = "sin clasificar"
+$unclassifiedTagCod = Get-StableCode -Prefix "TAG" -Value (Normalize-NameKey -Name $unclassifiedTagName)
 
 foreach ($file in $videoFiles) {
     $parsed = Parse-VideoFileName -BaseName $file.BaseName
-    if ($null -eq $parsed) {
-        $skipped.Add((ConvertTo-VideoPathValue -Path $file.FullName))
-        continue
-    }
-
     $actorCodes = New-Object System.Collections.Generic.List[string]
-    foreach ($actorName in $parsed.Actors) {
-        $actorKey = Normalize-NameKey -Name $actorName
-        if (-not $actorsByKey.Contains($actorKey)) {
-            $actorsByKey[$actorKey] = [pscustomobject]@{
-                ActorCod = Get-StableCode -Prefix "ACT" -Value $actorKey
-                Name = $actorName.Trim()
+
+    if ($null -eq $parsed) {
+        $unclassified.Add((ConvertTo-VideoPathValue -Path $file.FullName))
+        $title = $file.BaseName.Trim()
+        $tagCodes = @($unclassifiedTagCod)
+    } else {
+        foreach ($actorName in $parsed.Actors) {
+            $actorKey = Normalize-NameKey -Name $actorName
+            if (-not $actorsByKey.Contains($actorKey)) {
+                $actorsByKey[$actorKey] = [pscustomobject]@{
+                    ActorCod = Get-StableCode -Prefix "ACT" -Value $actorKey
+                    Name = $actorName.Trim()
+                }
             }
+            $actorCodes.Add($actorsByKey[$actorKey].ActorCod)
         }
-        $actorCodes.Add($actorsByKey[$actorKey].ActorCod)
+        $title = $file.BaseName.Trim()
+        $tagCodes = @()
     }
 
     $videoCod = Get-StableCode -Prefix "VID" -Value $file.FullName
     $videos.Add([pscustomobject]@{
         VideoCod = $videoCod
-        Title = $file.BaseName.Trim()
+        Title = $title
         SourceValue = ConvertTo-VideoPathValue -Path $file.FullName
         ActorCodes = @($actorCodes)
+        TagCodes = @($tagCodes)
     })
 }
 
@@ -128,6 +135,13 @@ foreach ($actor in $actorsByKey.Values) {
     $lines.Add("INSERT INTO ``actor`` (``ActorCod``, ``Name``, ``Description``, ``ImageUrl``, ``CreationUser``, ``Status``)")
     $lines.Add("SELECT $(ConvertTo-SqlString $actor.ActorCod), $(ConvertTo-SqlString $actor.Name), NULL, NULL, $(ConvertTo-SqlString $CreationUser), 'A'")
     $lines.Add("WHERE NOT EXISTS (SELECT 1 FROM ``actor`` WHERE ``ActorCod`` = $(ConvertTo-SqlString $actor.ActorCod));")
+    $lines.Add("")
+}
+
+if ($unclassified.Count -gt 0) {
+    $lines.Add("INSERT INTO ``tag`` (``TagCod``, ``Name``, ``CreationUser``, ``Status``)")
+    $lines.Add("SELECT $(ConvertTo-SqlString $unclassifiedTagCod), $(ConvertTo-SqlString $unclassifiedTagName), $(ConvertTo-SqlString $CreationUser), 'A'")
+    $lines.Add("WHERE NOT EXISTS (SELECT 1 FROM ``tag`` WHERE ``Name`` = $(ConvertTo-SqlString $unclassifiedTagName));")
     $lines.Add("")
 }
 
@@ -151,11 +165,25 @@ foreach ($video in $videos) {
         $lines.Add("WHERE NOT EXISTS (SELECT 1 FROM ``video_actor_rel`` WHERE ``VideoCod`` = $(ConvertTo-SqlString $video.VideoCod) AND ``ActorCod`` = $(ConvertTo-SqlString $actorCod));")
         $lines.Add("")
     }
+
+    foreach ($tagCod in $video.TagCodes) {
+        $lines.Add("INSERT INTO ``video_tag_rel`` (``VideoCod``, ``TagCod``, ``CreationUser``, ``Status``)")
+        if ($tagCod -eq $unclassifiedTagCod) {
+            $lines.Add("SELECT $(ConvertTo-SqlString $video.VideoCod), t.``TagCod``, $(ConvertTo-SqlString $CreationUser), 'A'")
+            $lines.Add("FROM ``tag`` t")
+            $lines.Add("WHERE t.``Name`` = $(ConvertTo-SqlString $unclassifiedTagName)")
+            $lines.Add("AND NOT EXISTS (SELECT 1 FROM ``video_tag_rel`` WHERE ``VideoCod`` = $(ConvertTo-SqlString $video.VideoCod) AND ``TagCod`` = t.``TagCod``);")
+        } else {
+            $lines.Add("SELECT $(ConvertTo-SqlString $video.VideoCod), $(ConvertTo-SqlString $tagCod), $(ConvertTo-SqlString $CreationUser), 'A'")
+            $lines.Add("WHERE NOT EXISTS (SELECT 1 FROM ``video_tag_rel`` WHERE ``VideoCod`` = $(ConvertTo-SqlString $video.VideoCod) AND ``TagCod`` = $(ConvertTo-SqlString $tagCod));")
+        }
+        $lines.Add("")
+    }
 }
 
-if ($skipped.Count -gt 0) {
-    $lines.Add("-- Archivos omitidos porque no cumplen el patron 'actor1, actor2 y actor3 - pelicula':")
-    foreach ($path in $skipped) {
+if ($unclassified.Count -gt 0) {
+    $lines.Add("-- Archivos importados con tag 'sin clasificar' porque no cumplen el patron 'actor1, actor2 y actor3 - pelicula':")
+    foreach ($path in $unclassified) {
         $lines.Add("-- $path")
     }
 }
@@ -170,4 +198,4 @@ $lines | Set-Content -LiteralPath $OutputPath -Encoding UTF8
 Write-Host "SQL generado: $OutputPath"
 Write-Host "Videos procesados: $($videos.Count)"
 Write-Host "Actores detectados: $($actorsByKey.Count)"
-Write-Host "Archivos omitidos: $($skipped.Count)"
+Write-Host "Videos sin clasificar: $($unclassified.Count)"

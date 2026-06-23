@@ -17,8 +17,14 @@ export class PubliccategoryComponent implements OnInit {
   constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService) {}
 
   async ngOnInit(): Promise<void> {
-    this.categoryCod = this.route.snapshot.paramMap.get('categoryCod') || '';
-    await this.loadVideos('recent');
+    this.route.paramMap.subscribe(async params => {
+      const nextCategoryCod = params.get('categoryCod') || '';
+      if (!nextCategoryCod) {
+        return;
+      }
+      this.categoryCod = nextCategoryCod;
+      await this.loadVideos('recent');
+    });
   }
 
   async loadVideos(sort: string): Promise<void> {

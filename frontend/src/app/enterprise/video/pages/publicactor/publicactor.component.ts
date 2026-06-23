@@ -17,8 +17,14 @@ export class PublicactorComponent implements OnInit {
   constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService) {}
 
   async ngOnInit(): Promise<void> {
-    this.actorCod = this.route.snapshot.paramMap.get('actorCod') || '';
-    await this.loadVideos('recent');
+    this.route.paramMap.subscribe(async params => {
+      const nextActorCod = params.get('actorCod') || '';
+      if (!nextActorCod) {
+        return;
+      }
+      this.actorCod = nextActorCod;
+      await this.loadVideos('recent');
+    });
   }
 
   async loadVideos(sort: string): Promise<void> {

@@ -5,3 +5,4 @@ target/
 *.log
 uploads/thumbnails/
 backend/uploads/thumbnails/
+database/inserts/local/
