@@ -85,6 +85,26 @@ public class AdminVideoController {
         }
     }
 
+    @PostMapping("uploadCapture")
+    public ResponseEntity<ResponseWsDto> uploadCapture(@RequestParam String VideoCod, @RequestParam("File") MultipartFile file, HttpServletRequest request) {
+        try {
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.saveManualCapture(VideoCod, file, baseUrl)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("captureAtSecond")
+    public ResponseEntity<ResponseWsDto> captureAtSecond(@RequestParam String VideoCod, @RequestParam Double CaptureSecond, HttpServletRequest request) {
+        try {
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.saveCaptureAtSecond(VideoCod, CaptureSecond, baseUrl)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PostMapping("processMetadata")
     public ResponseEntity<ResponseWsDto> processMetadata(@RequestParam Double Percentage, @RequestParam(defaultValue = "") String VideoCod, @RequestParam(defaultValue = "MISSING_THUMBNAIL") String Mode, @RequestParam(defaultValue = "false") Boolean Overwrite, HttpServletRequest request) {
         try {

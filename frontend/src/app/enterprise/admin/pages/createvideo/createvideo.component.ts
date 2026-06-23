@@ -7,6 +7,7 @@ import { VideoRegisterDto } from '../../../video/model/dto/VideoRegisterDto';
 import { VideoCategoryEntity } from '../../../video/model/entity/VideoCategoryEntity';
 import { ActorEntity } from '../../../video/model/entity/ActorEntity';
 import { TagEntity } from '../../../video/model/entity/TagEntity';
+import { VideoCaptureEntity } from '../../../video/model/entity/VideoCaptureEntity';
 
 @Component({
   selector: 'app-createvideo',
@@ -14,11 +15,13 @@ import { TagEntity } from '../../../video/model/entity/TagEntity';
 })
 export class CreatevideoComponent implements OnInit {
   @ViewChild('previewVideo') previewVideo?: ElementRef<HTMLVideoElement>;
+  @ViewChild('adminCaptureSlider') adminCaptureSlider?: ElementRef<HTMLDivElement>;
 
   dto: VideoRegisterDto = new VideoRegisterDto();
   categories: VideoCategoryEntity[] = [];
   actors: ActorEntity[] = [];
   tags: TagEntity[] = [];
+  captures: VideoCaptureEntity[] = [];
   sourceTypes: string[] = ['EMBED', 'URL', 'PATH'];
   errorMessage = '';
   saveMessage = '';
@@ -34,6 +37,8 @@ export class CreatevideoComponent implements OnInit {
   generateCapturesMessage = '';
   thumbnailOptions: string[] = [];
   showThumbnailModal = false;
+  showCaptureModal = false;
+  selectedCaptureIndex = 0;
   quickModalType: 'category' | 'actor' | 'tag' | '' = '';
   quickName = '';
   quickDescription = '';
@@ -56,6 +61,7 @@ export class CreatevideoComponent implements OnInit {
       this.dto.CategoryCodList = (rpt.Data.Categories || []).map((x: any) => x.CategoryCod);
       this.dto.ActorCodList = (rpt.Data.Actors || []).map((x: any) => x.ActorCod);
       this.dto.TagCodList = (rpt.Data.Tags || []).map((x: any) => x.TagCod);
+      this.captures = this.sortCaptures(rpt.Data.Captures || []);
       this.loadPreview();
     }
   }
@@ -262,6 +268,7 @@ export class CreatevideoComponent implements OnInit {
         return;
       }
       this.dto.Video.Duration = rpt.Data?.Duration || this.dto.Video.Duration;
+      this.captures = this.sortCaptures(rpt.Data?.Captures || this.captures);
       this.generateCapturesMessage = `Capturas generadas correctamente: ${rpt.Data?.CaptureCount || 0}.`;
     } catch {
       this.generateCapturesMessage = 'No se pudieron generar las capturas del video.';
@@ -350,6 +357,44 @@ export class CreatevideoComponent implements OnInit {
     }
   }
 
+  async saveCurrentFrameAsCapture(): Promise<void> {
+    this.captureMessage = '';
+    if (!this.dto.Video.VideoCod) {
+      this.captureMessage = 'Primero guarde el video para poder asociar la captura al codigo del video.';
+      return;
+    }
+    const video = this.previewVideo?.nativeElement;
+    if (!video || !this.previewSource) {
+      this.captureMessage = 'Primero cargue la previsualizacion del video.';
+      return;
+    }
+    if (video.readyState < 2) {
+      this.captureMessage = 'El video todavia no esta listo para capturar.';
+      return;
+    }
+    this.captureLoading = true;
+    try {
+      const existing = new Set(this.captures.map(capture => capture.CaptureId));
+      const captureSecond = Number(video.currentTime.toFixed(3));
+      const rpt = await this.adminVideoService.captureAtSecond(this.dto.Video.VideoCod, captureSecond);
+      if (rpt.ErrorStatus) {
+        this.captureMessage = rpt.Message;
+        return;
+      }
+      if (!existing.has(rpt.Data.CaptureId)) {
+        this.captures.push(rpt.Data);
+        this.captures = this.sortCaptures(this.captures);
+        this.captureMessage = `Captura guardada correctamente en ${this.formatDuration(captureSecond)}.`;
+      } else {
+        this.captureMessage = 'La captura ya existia, no se guardo duplicada.';
+      }
+    } catch {
+      this.captureMessage = 'No se pudo guardar la captura. Verifique que el video sea de tipo PATH y que FFmpeg pueda leer el archivo.';
+    } finally {
+      this.captureLoading = false;
+    }
+  }
+
   selectThumbnail(image: string): void {
     this.dto.Video.ThumbnailUrl = image;
     this.showThumbnailModal = false;
@@ -357,6 +402,36 @@ export class CreatevideoComponent implements OnInit {
 
   closeThumbnailModal(): void {
     this.showThumbnailModal = false;
+  }
+
+  scrollAdminCaptures(direction: 'left' | 'right'): void {
+    const slider = this.adminCaptureSlider?.nativeElement;
+    if (!slider) return;
+    const distance = Math.max(260, slider.clientWidth * 0.8);
+    slider.scrollBy({ left: direction === 'left' ? -distance : distance, behavior: 'smooth' });
+  }
+
+  openCaptureModal(index: number): void {
+    this.selectedCaptureIndex = index;
+    this.showCaptureModal = true;
+  }
+
+  closeCaptureModal(): void {
+    this.showCaptureModal = false;
+  }
+
+  selectedCapture(): VideoCaptureEntity | null {
+    return this.captures[this.selectedCaptureIndex] || null;
+  }
+
+  previousCapture(): void {
+    if (this.captures.length === 0) return;
+    this.selectedCaptureIndex = this.selectedCaptureIndex === 0 ? this.captures.length - 1 : this.selectedCaptureIndex - 1;
+  }
+
+  nextCapture(): void {
+    if (this.captures.length === 0) return;
+    this.selectedCaptureIndex = this.selectedCaptureIndex >= this.captures.length - 1 ? 0 : this.selectedCaptureIndex + 1;
   }
 
   private createMetadataVideo(source: string): Promise<HTMLVideoElement> {
@@ -447,6 +522,15 @@ export class CreatevideoComponent implements OnInit {
       } catch {
         reject();
       }
+    });
+  }
+
+  private sortCaptures(captures: VideoCaptureEntity[]): VideoCaptureEntity[] {
+    return [...captures].sort((a, b) => {
+      const secondA = Number.isFinite(Number(a.CaptureSecond)) ? Number(a.CaptureSecond) : Number.MAX_SAFE_INTEGER;
+      const secondB = Number.isFinite(Number(b.CaptureSecond)) ? Number(b.CaptureSecond) : Number.MAX_SAFE_INTEGER;
+      if (secondA !== secondB) return secondA - secondB;
+      return (a.DisplayOrder || 0) - (b.DisplayOrder || 0);
     });
   }
 

@@ -8,8 +8,11 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface VideoCaptureRepository extends JpaRepository<VideoCaptureEntity, Long> {
-    @Query(value = "select * from video_capture where VideoCod = :VideoCod and Status = 'A' order by DisplayOrder", nativeQuery = true)
+    @Query(value = "select * from video_capture where VideoCod = :VideoCod and Status = 'A' order by CaptureSecond, DisplayOrder", nativeQuery = true)
     List<VideoCaptureEntity> findActiveByVideoCod(@Param("VideoCod") String VideoCod);
+
+    @Query(value = "select coalesce(max(DisplayOrder), 0) from video_capture where VideoCod = :VideoCod", nativeQuery = true)
+    Integer findMaxDisplayOrder(@Param("VideoCod") String VideoCod);
 
     @Modifying
     @Query(value = "delete from video_capture where VideoCod = :VideoCod", nativeQuery = true)

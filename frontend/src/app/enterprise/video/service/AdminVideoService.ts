@@ -50,6 +50,18 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostFormDataService(`${AppSetting.API}/api/v1/admin/videos/uploadThumbnail`, formData);
   }
 
+  async uploadCapture(VideoCod: string, file: Blob): Promise<ResponseWsDto> {
+    const formData = new FormData();
+    formData.append('VideoCod', VideoCod);
+    formData.append('File', file, `${VideoCod}-capture.jpg`);
+    return await this.apiService.ExecutePostFormDataService(`${AppSetting.API}/api/v1/admin/videos/uploadCapture`, formData);
+  }
+
+  async captureAtSecond(VideoCod: string, CaptureSecond: number): Promise<ResponseWsDto> {
+    const url = `${AppSetting.API}/api/v1/admin/videos/captureAtSecond?VideoCod=${encodeURIComponent(VideoCod)}&CaptureSecond=${encodeURIComponent(CaptureSecond)}`;
+    return await this.apiService.ExecutePostService(url, {});
+  }
+
   async generateCaptures(VideoCod: string): Promise<ResponseWsDto> {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/generateCaptures?VideoCod=${encodeURIComponent(VideoCod)}`, {});
   }

@@ -20,6 +20,8 @@ export class PublicplayerComponent implements OnInit {
   errorMessage = '';
   playerErrorMessage = '';
   viewRegistered = false;
+  showCaptureModal = false;
+  selectedCaptureIndex = 0;
 
   constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, private sanitizer: DomSanitizer) {}
 
@@ -100,5 +102,28 @@ export class PublicplayerComponent implements OnInit {
     }
     const distance = Math.max(260, slider.clientWidth * 0.8);
     slider.scrollBy({ left: direction === 'left' ? -distance : distance, behavior: 'smooth' });
+  }
+
+  openCaptureModal(index: number): void {
+    this.selectedCaptureIndex = index;
+    this.showCaptureModal = true;
+  }
+
+  closeCaptureModal(): void {
+    this.showCaptureModal = false;
+  }
+
+  selectedCapture(): any {
+    return this.detail.Captures[this.selectedCaptureIndex] || null;
+  }
+
+  previousCapture(): void {
+    if (!this.detail.Captures.length) return;
+    this.selectedCaptureIndex = this.selectedCaptureIndex === 0 ? this.detail.Captures.length - 1 : this.selectedCaptureIndex - 1;
+  }
+
+  nextCapture(): void {
+    if (!this.detail.Captures.length) return;
+    this.selectedCaptureIndex = this.selectedCaptureIndex >= this.detail.Captures.length - 1 ? 0 : this.selectedCaptureIndex + 1;
   }
 }

@@ -161,10 +161,10 @@ public class PublicVideoController {
         }
     }
 
-    @GetMapping("captures/{fileName}")
-    public void capture(@PathVariable String fileName, HttpServletResponse response) {
+    @GetMapping("captures/{folderName}/{fileName}")
+    public void capture(@PathVariable String folderName, @PathVariable String fileName, HttpServletResponse response) {
         try {
-            Path path = videoCaptureService.findCapture(fileName);
+            Path path = videoCaptureService.findCapture(folderName + "/" + fileName);
             if (!Files.exists(path) || !Files.isRegularFile(path) || !Files.isReadable(path)) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Captura no encontrada.");
                 return;

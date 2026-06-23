@@ -139,6 +139,30 @@ body {
   aspect-ratio: 16 / 9;
   object-fit: cover;
 }
+.capture-modal-body {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+.capture-modal-image {
+  max-width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
+}
+.capture-modal-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  transform: translateY(-50%);
+}
+.capture-modal-prev {
+  left: 12px;
+}
+.capture-modal-next {
+  right: 12px;
+}
 .admin-video-preview-resize {
   position: absolute;
   top: 0;

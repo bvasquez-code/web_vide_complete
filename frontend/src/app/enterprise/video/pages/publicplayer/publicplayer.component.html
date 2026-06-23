@@ -36,11 +36,27 @@
       </div>
     </div>
     <div #captureSlider class="capture-slider">
-      <button type="button" class="capture-slider-item" *ngFor="let capture of detail.Captures">
+      <button type="button" class="capture-slider-item" *ngFor="let capture of detail.Captures; let i = index" [title]="'Segundo ' + capture.CaptureSecond" (click)="openCaptureModal(i)">
         <img [src]="capture.ImageUrl" [alt]="'Captura ' + capture.DisplayOrder">
       </button>
     </div>
   </section>
+
+  <div class="modal d-block" tabindex="-1" role="dialog" *ngIf="showCaptureModal && selectedCapture()" style="background: rgba(0,0,0,.75);">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content bg-dark text-white">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Captura {{ selectedCaptureIndex + 1 }} de {{ detail.Captures.length }}</h5>
+          <button type="button" class="close text-white" (click)="closeCaptureModal()"><span>&times;</span></button>
+        </div>
+        <div class="modal-body capture-modal-body">
+          <button type="button" class="btn btn-light capture-modal-nav capture-modal-prev" (click)="previousCapture()"><i class="fas fa-chevron-left"></i></button>
+          <img [src]="selectedCapture()?.ImageUrl" class="capture-modal-image" alt="Captura">
+          <button type="button" class="btn btn-light capture-modal-nav capture-modal-next" (click)="nextCapture()"><i class="fas fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <section>
     <h2 class="h4 mb-3">Videos relacionados</h2>

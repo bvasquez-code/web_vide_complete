@@ -44,16 +44,35 @@
     <div class="form-section p-3 mb-3" *ngIf="previewSource || previewEmbedHtml || previewError">
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
         <h2 class="h6 mb-0">Previsualizacion</h2>
-        <button type="button" class="btn btn-outline-success btn-sm" (click)="captureCurrentFrame()" [disabled]="captureLoading || !previewSource">
-          <i class="fas fa-camera mr-1"></i> Capturar miniatura
-        </button>
+        <div>
+          <button type="button" class="btn btn-outline-success btn-sm mr-1" (click)="captureCurrentFrame()" [disabled]="captureLoading || !previewSource">
+            <i class="fas fa-camera mr-1"></i> Capturar miniatura
+          </button>
+          <button type="button" class="btn btn-outline-success btn-sm" (click)="saveCurrentFrameAsCapture()" [disabled]="captureLoading || !previewSource">
+            <i class="fas fa-image mr-1"></i> Guardar captura
+          </button>
+        </div>
       </div>
       <div class="alert alert-warning" *ngIf="previewError">{{ previewError }}</div>
-      <div class="alert" [class.alert-info]="captureLoading" [class.alert-warning]="!captureLoading" *ngIf="captureMessage || captureLoading">{{ captureLoading ? 'Guardando miniatura...' : captureMessage }}</div>
+      <div class="alert" [class.alert-info]="captureLoading" [class.alert-warning]="!captureLoading" *ngIf="captureMessage || captureLoading">{{ captureLoading ? 'Guardando imagen...' : captureMessage }}</div>
       <div class="embed-responsive embed-responsive-16by9 bg-dark" *ngIf="previewEmbedHtml" [innerHTML]="previewEmbedHtml"></div>
       <video #previewVideo class="w-100 bg-dark" style="aspect-ratio: 16 / 9;" controls preload="metadata" [src]="previewSource" (loadedmetadata)="onPreviewMetadata($event)" (error)="onPreviewError($event)" *ngIf="previewSource"></video>
       <small class="text-muted d-block mt-2" *ngIf="previewSource">Use Analizar para obtener duracion y opciones de miniatura.</small>
     </div>
+    <section class="form-section p-3 mb-3" *ngIf="captures.length > 0">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h6 mb-0">Capturas existentes</h2>
+        <div class="btn-group btn-group-sm">
+          <button type="button" class="btn btn-outline-primary" (click)="scrollAdminCaptures('left')"><i class="fas fa-chevron-left"></i></button>
+          <button type="button" class="btn btn-outline-primary" (click)="scrollAdminCaptures('right')"><i class="fas fa-chevron-right"></i></button>
+        </div>
+      </div>
+      <div #adminCaptureSlider class="capture-slider">
+        <button type="button" class="capture-slider-item" *ngFor="let capture of captures; let i = index" [title]="'Segundo ' + capture.CaptureSecond" (click)="openCaptureModal(i)">
+          <img [src]="capture.ImageUrl" [alt]="'Captura ' + capture.DisplayOrder">
+        </button>
+      </div>
+    </section>
     <div class="form-row">
       <div class="form-group col-md-4">
         <div class="d-flex justify-content-between align-items-center">
@@ -144,6 +163,22 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeQuickModal()">Cancelar</button>
         <button type="button" class="btn btn-primary" (click)="saveQuickEntity()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal d-block" tabindex="-1" role="dialog" *ngIf="showCaptureModal && selectedCapture()" style="background: rgba(0,0,0,.75);">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title">Captura {{ selectedCaptureIndex + 1 }} de {{ captures.length }}</h5>
+        <button type="button" class="close text-white" (click)="closeCaptureModal()"><span>&times;</span></button>
+      </div>
+      <div class="modal-body capture-modal-body">
+        <button type="button" class="btn btn-light capture-modal-nav capture-modal-prev" (click)="previousCapture()"><i class="fas fa-chevron-left"></i></button>
+        <img [src]="selectedCapture()?.ImageUrl" class="capture-modal-image" alt="Captura">
+        <button type="button" class="btn btn-light capture-modal-nav capture-modal-next" (click)="nextCapture()"><i class="fas fa-chevron-right"></i></button>
       </div>
     </div>
   </div>
