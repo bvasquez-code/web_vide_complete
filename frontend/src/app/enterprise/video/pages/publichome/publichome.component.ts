@@ -17,6 +17,7 @@ export class PublichomeComponent implements OnInit {
   searchQuery = '';
   searchMode = false;
   searchPage = 1;
+  searchPageInput = 1;
   searchLimit = 30;
   searchTotalRows = 0;
   listTitle = 'Videos';
@@ -77,6 +78,7 @@ export class PublichomeComponent implements OnInit {
     this.searchTotalRows = rpt.Data?.TotalRows || 0;
     this.searchPage = rpt.Data?.Page || this.searchPage;
     this.searchLimit = rpt.Data?.Limit || this.searchLimit;
+    this.searchPageInput = this.searchPage;
   }
 
   async clearSearch(): Promise<void> {
@@ -97,6 +99,28 @@ export class PublichomeComponent implements OnInit {
 
   canNextSearchPage(): boolean {
     return this.searchPage < this.totalSearchPages();
+  }
+
+  async goToFirstSearchPage(): Promise<void> {
+    await this.search(1);
+  }
+
+  async goToLastSearchPage(): Promise<void> {
+    await this.search(this.totalSearchPages());
+  }
+
+  async goToSearchPageInput(): Promise<void> {
+    const requestedPage = Number(this.searchPageInput);
+    if (!Number.isFinite(requestedPage)) {
+      this.searchPageInput = this.searchPage;
+      return;
+    }
+    const targetPage = Math.trunc(requestedPage);
+    if (targetPage < 1 || targetPage > this.totalSearchPages()) {
+      this.searchPageInput = this.searchPage;
+      return;
+    }
+    await this.search(targetPage);
   }
 
   thumb(video: VideoCardDto): string {

@@ -140,3 +140,20 @@
     </div>
   </div>
 </div>
+
+<div class="modal d-block" tabindex="-1" role="dialog" *ngIf="saveMessage" style="background: rgba(0,0,0,.35);">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ saveMessageType === 'success' ? 'Guardado correcto' : 'No se pudo guardar' }}</h5>
+        <button type="button" class="close" (click)="closeSaveMessage()"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert mb-0" [class.alert-success]="saveMessageType === 'success'" [class.alert-danger]="saveMessageType === 'error'">{{ saveMessage }}</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary btn-sm" (click)="closeSaveMessage()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>

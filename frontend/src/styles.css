@@ -55,6 +55,36 @@ body {
   flex: 1 1 auto;
   min-width: 180px;
 }
+.pagination-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pagination-toolbar .btn-group {
+  flex: 0 0 auto;
+}
+.pagination-jump {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1 1 220px;
+}
+.pagination-input {
+  width: 86px;
+}
+@media (max-width: 991.98px) {
+  .pagination-toolbar {
+    justify-content: center;
+  }
+  .pagination-jump {
+    order: -1;
+    flex: 0 0 100%;
+  }
+}
 .admin-video-preview {
   position: fixed;
   right: 18px;

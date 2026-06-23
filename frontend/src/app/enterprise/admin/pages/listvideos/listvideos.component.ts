@@ -1,5 +1,6 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AppSetting } from '../../../../config/AppSetting';
 import { AdminVideoService } from '../../../video/service/AdminVideoService';
 import { VideoEntity } from '../../../video/model/entity/VideoEntity';
@@ -15,6 +16,7 @@ export class ListvideosComponent implements OnInit {
   videos: VideoEntity[] = [];
   message = '';
   Page = 1;
+  pageInput = 1;
   Limit = 20;
   TotalRows = 0;
   previewVideo: VideoEntity | null = null;
@@ -26,23 +28,48 @@ export class ListvideosComponent implements OnInit {
   private resizeStartX = 0;
   private resizeStartWidth = 420;
 
-  constructor(private adminVideoService: AdminVideoService, private sanitizer: DomSanitizer) {}
+  constructor(private adminVideoService: AdminVideoService, private sanitizer: DomSanitizer, private route: ActivatedRoute, private router: Router) {}
 
   async ngOnInit(): Promise<void> {
-    await this.findAll(1);
+    const params = this.route.snapshot.queryParamMap;
+    this.Query = params.get('Query') || '';
+    this.Status = params.get('Status') || '';
+    this.SourceType = params.get('SourceType') || '';
+    this.Page = Number(params.get('Page') || '1');
+    this.Limit = Number(params.get('Limit') || '20');
+    await this.findAll(this.Page, false);
   }
 
-  async findAll(page: number = this.Page): Promise<void> {
+  async findAll(page: number = this.Page, syncUrl: boolean = true): Promise<void> {
     this.Page = page < 1 ? 1 : page;
     const rpt = await this.adminVideoService.findVideos({ Query: this.Query, Status: this.Status, SourceType: this.SourceType, Page: this.Page, Limit: this.Limit });
     this.videos = rpt.Data?.Data || [];
     this.TotalRows = rpt.Data?.TotalRows || 0;
     this.Page = rpt.Data?.Page || this.Page;
     this.Limit = rpt.Data?.Limit || this.Limit;
+    this.pageInput = this.Page;
+    if (syncUrl) {
+      await this.syncQueryParams();
+    }
   }
 
   async search(): Promise<void> {
     await this.findAll(1);
+  }
+
+  private async syncQueryParams(): Promise<void> {
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      replaceUrl: true,
+      queryParams: {
+        Page: this.Page,
+        Limit: this.Limit,
+        Query: this.Query || null,
+        Status: this.Status || null,
+        SourceType: this.SourceType || null
+      },
+      queryParamsHandling: 'merge'
+    });
   }
 
   totalPages(): number {
@@ -55,6 +82,28 @@ export class ListvideosComponent implements OnInit {
 
   canNextPage(): boolean {
     return this.Page < this.totalPages();
+  }
+
+  async goToFirstPage(): Promise<void> {
+    await this.findAll(1);
+  }
+
+  async goToLastPage(): Promise<void> {
+    await this.findAll(this.totalPages());
+  }
+
+  async goToPageInput(): Promise<void> {
+    const requestedPage = Number(this.pageInput);
+    if (!Number.isFinite(requestedPage)) {
+      this.pageInput = this.Page;
+      return;
+    }
+    const targetPage = Math.trunc(requestedPage);
+    if (targetPage < 1 || targetPage > this.totalPages()) {
+      this.pageInput = this.Page;
+      return;
+    }
+    await this.findAll(targetPage);
   }
 
   async enable(video: VideoEntity): Promise<void> {

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AdminVideoService } from '../../../video/service/AdminVideoService';
 import { ActorEntity } from '../../../video/model/entity/ActorEntity';
 import { TagEntity } from '../../../video/model/entity/TagEntity';
@@ -16,17 +16,25 @@ export class ListcatalogComponent implements OnInit {
   rows: any[] = [];
   entity: any = {};
   errorMessage = '';
+  saveMessage = '';
+  saveMessageType: 'success' | 'error' = 'success';
   Page = 1;
+  pageInput = 1;
   Limit = 20;
   TotalRows = 0;
 
-  constructor(private route: ActivatedRoute, private adminVideoService: AdminVideoService) {}
+  constructor(private route: ActivatedRoute, private router: Router, private adminVideoService: AdminVideoService) {}
 
   async ngOnInit(): Promise<void> {
     this.route.url.subscribe(async segments => {
       this.type = segments[1]?.path || 'categories';
+      const params = this.route.snapshot.queryParamMap;
+      this.Query = params.get('Query') || '';
+      this.Status = params.get('Status') || '';
+      this.Page = Number(params.get('Page') || '1');
+      this.Limit = Number(params.get('Limit') || '20');
       this.newEntity();
-      await this.findAll(1);
+      await this.findAll(this.Page, false);
     });
   }
 
@@ -37,16 +45,18 @@ export class ListcatalogComponent implements OnInit {
   }
 
   newEntity(): void {
+    this.saveMessage = '';
     if (this.type === 'actors') this.entity = new ActorEntity();
     else if (this.type === 'tags') this.entity = new TagEntity();
     else this.entity = new VideoCategoryEntity();
   }
 
   edit(row: any): void {
+    this.saveMessage = '';
     this.entity = { ...row };
   }
 
-  async findAll(page: number = this.Page): Promise<void> {
+  async findAll(page: number = this.Page, syncUrl: boolean = true): Promise<void> {
     this.Page = page < 1 ? 1 : page;
     const rpt = this.type === 'actors'
       ? await this.adminVideoService.findActors(this.Query, this.Status, this.Page, this.Limit)
@@ -57,10 +67,28 @@ export class ListcatalogComponent implements OnInit {
     this.TotalRows = rpt.Data?.TotalRows || 0;
     this.Page = rpt.Data?.Page || this.Page;
     this.Limit = rpt.Data?.Limit || this.Limit;
+    this.pageInput = this.Page;
+    if (syncUrl) {
+      await this.syncQueryParams();
+    }
   }
 
   async search(): Promise<void> {
     await this.findAll(1);
+  }
+
+  private async syncQueryParams(): Promise<void> {
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      replaceUrl: true,
+      queryParams: {
+        Page: this.Page,
+        Limit: this.Limit,
+        Query: this.Query || null,
+        Status: this.Status || null
+      },
+      queryParamsHandling: 'merge'
+    });
   }
 
   totalPages(): number {
@@ -75,8 +103,31 @@ export class ListcatalogComponent implements OnInit {
     return this.Page < this.totalPages();
   }
 
+  async goToFirstPage(): Promise<void> {
+    await this.findAll(1);
+  }
+
+  async goToLastPage(): Promise<void> {
+    await this.findAll(this.totalPages());
+  }
+
+  async goToPageInput(): Promise<void> {
+    const requestedPage = Number(this.pageInput);
+    if (!Number.isFinite(requestedPage)) {
+      this.pageInput = this.Page;
+      return;
+    }
+    const targetPage = Math.trunc(requestedPage);
+    if (targetPage < 1 || targetPage > this.totalPages()) {
+      this.pageInput = this.Page;
+      return;
+    }
+    await this.findAll(targetPage);
+  }
+
   async save(): Promise<void> {
     this.errorMessage = '';
+    this.saveMessage = '';
     const rpt = this.type === 'actors'
       ? await this.adminVideoService.saveActor(this.entity)
       : this.type === 'tags'
@@ -84,10 +135,21 @@ export class ListcatalogComponent implements OnInit {
         : await this.adminVideoService.saveCategory(this.entity);
     if (rpt.ErrorStatus) {
       this.errorMessage = rpt.Message;
+      this.showSaveMessage(rpt.Message || 'No se pudo guardar el registro.', 'error');
       return;
     }
-    this.newEntity();
+    this.entity = { ...rpt.Data };
+    this.showSaveMessage('Registro guardado correctamente.', 'success');
     await this.findAll(this.Page);
+  }
+
+  showSaveMessage(message: string, type: 'success' | 'error'): void {
+    this.saveMessage = message;
+    this.saveMessageType = type;
+  }
+
+  closeSaveMessage(): void {
+    this.saveMessage = '';
   }
 
   async enable(row: any): Promise<void> {

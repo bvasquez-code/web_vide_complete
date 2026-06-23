@@ -21,6 +21,8 @@ export class CreatevideoComponent implements OnInit {
   tags: TagEntity[] = [];
   sourceTypes: string[] = ['EMBED', 'URL', 'PATH'];
   errorMessage = '';
+  saveMessage = '';
+  saveMessageType: 'success' | 'error' = 'success';
   previewSource = '';
   previewError = '';
   previewEmbedHtml: SafeHtml | null = null;
@@ -434,12 +436,29 @@ export class CreatevideoComponent implements OnInit {
 
   async Save(): Promise<void> {
     this.errorMessage = '';
+    this.saveMessage = '';
     if (!this.validate()) return;
+    const wasNewVideo = !this.dto.Video.VideoCod;
     const rpt = await this.adminVideoService.saveVideo(this.dto);
     if (rpt.ErrorStatus) {
       this.errorMessage = rpt.Message;
+      this.showSaveMessage(rpt.Message || 'No se pudo guardar el video.', 'error');
       return;
     }
-    await this.router.navigate(['/admin/videos']);
+    this.dto.Video = rpt.Data;
+    this.showSaveMessage('Video guardado correctamente.', 'success');
+    if (wasNewVideo && this.dto.Video.VideoCod) {
+      await this.router.navigate(['/admin/videos/edit', this.dto.Video.VideoCod], { replaceUrl: true });
+      this.loadPreview();
+    }
+  }
+
+  showSaveMessage(message: string, type: 'success' | 'error'): void {
+    this.saveMessage = message;
+    this.saveMessageType = type;
+  }
+
+  closeSaveMessage(): void {
+    this.saveMessage = '';
   }
 }
