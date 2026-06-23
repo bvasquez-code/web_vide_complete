@@ -111,7 +111,7 @@ foreach ($file in $videoFiles) {
     $videoCod = Get-StableCode -Prefix "VID" -Value $file.FullName
     $videos.Add([pscustomobject]@{
         VideoCod = $videoCod
-        Title = $parsed.Title
+        Title = $file.BaseName.Trim()
         SourceValue = ConvertTo-VideoPathValue -Path $file.FullName
         ActorCodes = @($actorCodes)
     })

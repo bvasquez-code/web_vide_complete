@@ -1,0 +1,19 @@
+<article class="video-card">
+  <img class="video-thumb" [src]="thumb()" [alt]="video.Title">
+  <div class="p-3">
+    <div class="mb-2">
+      <a class="badge badge-soft mr-1" *ngFor="let category of video.Categories" [routerLink]="['/category', category.Cod]">{{ category.Name }}</a>
+      <span class="badge badge-soft" *ngIf="!video.Categories || video.Categories.length === 0">Sin categoria</span>
+    </div>
+    <h3 [class]="titleClass">{{ video.Title }}</h3>
+    <p class="text-muted small" *ngIf="video.ShortDescription">{{ video.ShortDescription }}</p>
+    <div class="mb-2">
+      <a class="badge badge-secondary mr-1" *ngFor="let actor of video.Actors" [routerLink]="['/actor', actor.Cod]">{{ actor.Name }}</a>
+      <a class="badge badge-light border mr-1" *ngFor="let tag of video.Tags" [routerLink]="['/']" [queryParams]="{ q: tag.Name }">#{{ tag.Name }}</a>
+    </div>
+    <div class="d-flex justify-content-between align-items-center">
+      <small>{{ video.ViewCount || 0 }} vistas</small>
+      <a [routerLink]="['/video', video.VideoCod]" class="btn btn-primary btn-sm">Ver video</a>
+    </div>
+  </div>
+</article>

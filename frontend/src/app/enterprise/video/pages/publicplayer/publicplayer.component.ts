@@ -22,8 +22,15 @@ export class PublicplayerComponent implements OnInit {
   constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, private sanitizer: DomSanitizer) {}
 
   async ngOnInit(): Promise<void> {
-    this.videoCod = this.route.snapshot.paramMap.get('videoCod') || '';
-    await this.load();
+    this.route.paramMap.subscribe(async params => {
+      const nextVideoCod = params.get('videoCod') || '';
+      if (!nextVideoCod) {
+        return;
+      }
+      this.videoCod = nextVideoCod;
+      this.resetState();
+      await this.load();
+    });
   }
 
   async load(): Promise<void> {
@@ -40,6 +47,15 @@ export class PublicplayerComponent implements OnInit {
     const relatedRpt = await this.publicVideoService.findRelated(this.videoCod);
     this.related = relatedRpt.Data || [];
     await this.registerViewOnce();
+  }
+
+  resetState(): void {
+    this.detail = new VideoDetailDto();
+    this.related = [];
+    this.embedHtml = null;
+    this.errorMessage = '';
+    this.playerErrorMessage = '';
+    this.viewRegistered = false;
   }
 
   async registerViewOnce(): Promise<void> {

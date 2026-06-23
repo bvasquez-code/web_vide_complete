@@ -11,6 +11,7 @@ import { PubliccategoryComponent } from './enterprise/video/pages/publiccategory
 import { PublicactorComponent } from './enterprise/video/pages/publicactor/publicactor.component';
 import { PubliccategoriesComponent } from './enterprise/video/pages/publiccategories/publiccategories.component';
 import { PublicplayerComponent } from './enterprise/video/pages/publicplayer/publicplayer.component';
+import { VideocardComponent } from './enterprise/video/component/videocard/videocard.component';
 import { LoginComponent } from './enterprise/admin/pages/login/login.component';
 import { DashboardComponent } from './enterprise/admin/pages/dashboard/dashboard.component';
 import { ListvideosComponent } from './enterprise/admin/pages/listvideos/listvideos.component';
@@ -25,6 +26,7 @@ import { ListcatalogComponent } from './enterprise/admin/pages/listcatalog/listc
     PubliccategoryComponent,
     PublicactorComponent,
     PublicplayerComponent,
+    VideocardComponent,
     LoginComponent,
     DashboardComponent,
     ListvideosComponent,

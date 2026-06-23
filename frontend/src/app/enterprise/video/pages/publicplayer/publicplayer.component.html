@@ -18,9 +18,9 @@
     <h1 class="h3">{{ detail.Video.Title }}</h1>
     <p>{{ detail.Video.LongDescription || detail.Video.ShortDescription }}</p>
     <div class="mb-2">
-      <span class="badge badge-soft mr-1" *ngFor="let category of detail.Categories">{{ category.Name }}</span>
-      <span class="badge badge-secondary mr-1" *ngFor="let actor of detail.Actors">{{ actor.Name }}</span>
-      <span class="badge badge-light border mr-1" *ngFor="let tag of detail.Tags">#{{ tag.Name }}</span>
+      <a class="badge badge-soft mr-1" *ngFor="let category of detail.Categories" [routerLink]="['/category', category.CategoryCod]">{{ category.Name }}</a>
+      <a class="badge badge-secondary mr-1" *ngFor="let actor of detail.Actors" [routerLink]="['/actor', actor.ActorCod]">{{ actor.Name }}</a>
+      <a class="badge badge-light border mr-1" *ngFor="let tag of detail.Tags" [routerLink]="['/']" [queryParams]="{ q: tag.Name }">#{{ tag.Name }}</a>
     </div>
     <small class="text-muted">
       {{ detail.Video.ViewCount || 0 }} vistas · Origen {{ detail.Video.SourceType }} · Duracion {{ detail.Video.Duration || 'No registrada' }}
@@ -31,20 +31,7 @@
     <h2 class="h4 mb-3">Videos relacionados</h2>
     <div class="row">
       <div class="col-sm-6 col-lg-3 mb-4" *ngFor="let video of related">
-        <article class="video-card">
-          <img class="video-thumb" [src]="thumb(video)" [alt]="video.Title">
-          <div class="p-3">
-            <div class="mb-2">
-              <a class="badge badge-soft mr-1" *ngFor="let category of video.Categories" [routerLink]="['/category', category.Cod]">{{ category.Name }}</a>
-            </div>
-            <h3 class="h6">{{ video.Title }}</h3>
-            <div class="mb-2">
-              <a class="badge badge-secondary mr-1" *ngFor="let actor of video.Actors" [routerLink]="['/actor', actor.Cod]">{{ actor.Name }}</a>
-              <a class="badge badge-light border mr-1" *ngFor="let tag of video.Tags" [routerLink]="['/']" [queryParams]="{ q: tag.Name }">#{{ tag.Name }}</a>
-            </div>
-            <a [routerLink]="['/video', video.VideoCod]" class="btn btn-outline-primary btn-sm">Ver</a>
-          </div>
-        </article>
+        <app-videocard [video]="video" titleClass="h6"></app-videocard>
       </div>
     </div>
   </section>
