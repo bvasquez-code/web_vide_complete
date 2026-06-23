@@ -13,6 +13,11 @@ export class PublichomeComponent implements OnInit {
   sortMode = 'recent';
   loading = false;
   errorMessage = '';
+  searchQuery = '';
+  searchMode = false;
+  searchPage = 1;
+  searchLimit = 30;
+  searchTotalRows = 0;
 
   constructor(private publicVideoService: PublicVideoService) {}
 
@@ -30,6 +35,7 @@ export class PublichomeComponent implements OnInit {
   }
 
   async loadVideos(mode: string): Promise<void> {
+    this.searchMode = false;
     this.sortMode = mode;
     const rpt = mode === 'views' ? await this.publicVideoService.findMostViewed(12) : await this.publicVideoService.findRecent(12);
     if (rpt.ErrorStatus) {
@@ -37,6 +43,48 @@ export class PublichomeComponent implements OnInit {
       return;
     }
     this.videos = rpt.Data || [];
+  }
+
+  async search(page: number = 1): Promise<void> {
+    this.errorMessage = '';
+    this.searchPage = page < 1 ? 1 : page;
+    const query = this.searchQuery.trim();
+    if (!query) {
+      this.searchMode = false;
+      this.searchTotalRows = 0;
+      await this.loadVideos(this.sortMode);
+      return;
+    }
+    this.searchMode = true;
+    const rpt = await this.publicVideoService.search(query, this.searchPage, this.searchLimit);
+    if (rpt.ErrorStatus) {
+      this.errorMessage = rpt.Message;
+      return;
+    }
+    this.videos = rpt.Data?.Data || [];
+    this.searchTotalRows = rpt.Data?.TotalRows || 0;
+    this.searchPage = rpt.Data?.Page || this.searchPage;
+    this.searchLimit = rpt.Data?.Limit || this.searchLimit;
+  }
+
+  async clearSearch(): Promise<void> {
+    this.searchQuery = '';
+    this.searchMode = false;
+    this.searchPage = 1;
+    this.searchTotalRows = 0;
+    await this.loadVideos(this.sortMode);
+  }
+
+  totalSearchPages(): number {
+    return Math.max(1, Math.ceil(this.searchTotalRows / this.searchLimit));
+  }
+
+  canPreviousSearchPage(): boolean {
+    return this.searchMode && this.searchPage > 1;
+  }
+
+  canNextSearchPage(): boolean {
+    return this.searchMode && this.searchPage < this.totalSearchPages();
   }
 
   thumb(video: VideoCardDto): string {

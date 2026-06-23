@@ -36,6 +36,26 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String> {
 
     @Query(value = """
             select distinct v.* from video v
+            left join video_actor_rel ar on ar.VideoCod = v.VideoCod and ar.Status = 'A'
+            left join actor a on a.ActorCod = ar.ActorCod and a.Status = 'A'
+            where v.Status = 'A'
+              and (:query = '' or v.Title like concat('%', :query, '%') or a.Name like concat('%', :query, '%'))
+            order by coalesce(v.PublishDate, v.CreationDate) desc
+            limit :init, :limit
+            """, nativeQuery = true)
+    List<VideoEntity> searchPublic(@Param("query") String query, @Param("init") Integer init, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select count(distinct v.VideoCod) from video v
+            left join video_actor_rel ar on ar.VideoCod = v.VideoCod and ar.Status = 'A'
+            left join actor a on a.ActorCod = ar.ActorCod and a.Status = 'A'
+            where v.Status = 'A'
+              and (:query = '' or v.Title like concat('%', :query, '%') or a.Name like concat('%', :query, '%'))
+            """, nativeQuery = true)
+    Long countSearchPublic(@Param("query") String query);
+
+    @Query(value = """
+            select distinct v.* from video v
             left join video_category_rel cr on cr.VideoCod = v.VideoCod and cr.Status = 'A'
             left join video_actor_rel ar on ar.VideoCod = v.VideoCod and ar.Status = 'A'
             left join video_tag_rel tr on tr.VideoCod = v.VideoCod and tr.Status = 'A'

@@ -33,6 +33,18 @@ public class VideoSearchService {
     public List<VideoCardDto> findByCategory(String categoryCod, String sort, Integer limit) { return videoRepository.findByCategory(categoryCod, sort == null ? "recent" : sort, safeLimit(limit)).stream().map(this::toCard).toList(); }
     public List<VideoCardDto> findRelated(String videoCod, Integer limit) { return videoRepository.findRelated(videoCod, safeLimit(limit)).stream().map(this::toCard).toList(); }
 
+    public ResponsePageSearchT<VideoCardDto> searchPublic(String query, Integer page, Integer limit) {
+        int safePage = page == null || page < 1 ? 1 : page;
+        int safeLimit = limit == null || limit < 1 ? 30 : Math.min(limit, 30);
+        String q = query == null ? "" : query.trim();
+        return new ResponsePageSearchT<>(
+                videoRepository.searchPublic(q, (safePage - 1) * safeLimit, safeLimit).stream().map(this::toCard).toList(),
+                videoRepository.countSearchPublic(q),
+                safePage,
+                safeLimit
+        );
+    }
+
     public ResponsePageSearchT<VideoEntity> findAll(String query, String status, String sourceType, String categoryCod, String actorCod, String tagCod, Integer page, Integer limit) {
         int safePage = page == null || page < 1 ? 1 : page;
         int safeLimit = limit == null || limit < 1 ? 10 : limit;

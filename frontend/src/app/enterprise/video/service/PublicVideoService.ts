@@ -19,6 +19,10 @@ export class PublicVideoService {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/mostViewed`, { Limit: limit });
   }
 
+  async search(Query: string, Page: number = 1, Limit: number = 30): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/search`, { Query, Page, Limit });
+  }
+
   async findByCategory(categoryCod: string, sort: string = 'recent'): Promise<ResponseWsDto> {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/categories/${categoryCod}/videos`, { Sort: sort, Limit: 24 });
   }
