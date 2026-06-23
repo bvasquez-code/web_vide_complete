@@ -54,7 +54,8 @@
     <button class="btn btn-outline-primary btn-sm" [disabled]="!canNextPage()" (click)="findAll(Page + 1)">Siguiente <i class="fas fa-chevron-right ml-1"></i></button>
   </div>
 
-  <aside class="admin-video-preview shadow" *ngIf="previewVideo">
+  <aside class="admin-video-preview shadow" [style.width.px]="previewWidth" *ngIf="previewVideo">
+    <div class="admin-video-preview-resize" (mousedown)="startPreviewResize($event)" title="Cambiar tamano"></div>
     <div class="admin-video-preview-header">
       <div class="admin-video-preview-title">{{ previewVideo.Title }}</div>
       <button type="button" class="btn btn-sm btn-link text-white p-0" (click)="closePreview()" title="Cerrar"><i class="fas fa-times"></i></button>

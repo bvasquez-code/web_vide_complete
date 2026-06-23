@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AppSetting } from '../../../../config/AppSetting';
 import { AdminVideoService } from '../../../video/service/AdminVideoService';
@@ -21,6 +21,10 @@ export class ListvideosComponent implements OnInit {
   previewSource = '';
   previewEmbedHtml: SafeHtml | null = null;
   previewError = '';
+  previewWidth = 420;
+  private resizingPreview = false;
+  private resizeStartX = 0;
+  private resizeStartWidth = 420;
 
   constructor(private adminVideoService: AdminVideoService, private sanitizer: DomSanitizer) {}
 
@@ -95,5 +99,27 @@ export class ListvideosComponent implements OnInit {
     const video = event.target as HTMLVideoElement;
     const code = video.error?.code;
     this.previewError = `No se pudo cargar la previsualizacion. Codigo: ${code || 'desconocido'}.`;
+  }
+
+  startPreviewResize(event: MouseEvent): void {
+    event.preventDefault();
+    this.resizingPreview = true;
+    this.resizeStartX = event.clientX;
+    this.resizeStartWidth = this.previewWidth;
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onPreviewResize(event: MouseEvent): void {
+    if (!this.resizingPreview) {
+      return;
+    }
+    const maxWidth = Math.max(280, window.innerWidth - 36);
+    const nextWidth = this.resizeStartWidth + (this.resizeStartX - event.clientX);
+    this.previewWidth = Math.min(maxWidth, Math.max(280, nextWidth));
+  }
+
+  @HostListener('document:mouseup')
+  stopPreviewResize(): void {
+    this.resizingPreview = false;
   }
 }
