@@ -17,7 +17,13 @@
     <div class="form-group"><label>Descripcion corta</label><input class="form-control" [(ngModel)]="dto.Video.ShortDescription" name="ShortDescription"></div>
     <div class="form-group"><label>Descripcion larga</label><textarea class="form-control" rows="4" [(ngModel)]="dto.Video.LongDescription" name="LongDescription"></textarea></div>
     <div class="form-row">
-      <div class="form-group col-md-6"><label>Miniatura</label><input class="form-control" [(ngModel)]="dto.Video.ThumbnailUrl" name="ThumbnailUrl"></div>
+      <div class="form-group col-md-6">
+        <label>Miniatura</label>
+        <input class="form-control" [(ngModel)]="dto.Video.ThumbnailUrl" name="ThumbnailUrl">
+        <div class="admin-image-preview admin-video-thumbnail-preview mt-2" *ngIf="dto.Video.ThumbnailUrl">
+          <img [src]="dto.Video.ThumbnailUrl" alt="Previsualizacion de miniatura">
+        </div>
+      </div>
       <div class="form-group col-md-3"><label>Origen</label><select class="form-control" [(ngModel)]="dto.Video.SourceType" name="SourceType" (ngModelChange)="clearPreview()"><option *ngFor="let type of sourceTypes" [value]="type">{{ type }}</option></select></div>
       <div class="form-group col-md-3"><label>Duracion</label><input class="form-control" [(ngModel)]="dto.Video.Duration" name="Duration"></div>
     </div>

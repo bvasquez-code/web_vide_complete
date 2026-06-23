@@ -15,7 +15,13 @@
         <h2 class="h5">Registro</h2>
         <div class="form-group"><label>Nombre</label><input class="form-control" [(ngModel)]="entity.Name" name="Name"></div>
         <div class="form-group" *ngIf="type !== 'tags'"><label>Descripcion</label><textarea class="form-control" [(ngModel)]="entity.Description" name="Description"></textarea></div>
-        <div class="form-group" *ngIf="type !== 'tags'"><label>Imagen</label><input class="form-control" [(ngModel)]="entity.ImageUrl" name="ImageUrl"></div>
+        <div class="form-group" *ngIf="type !== 'tags'">
+          <label>Imagen</label>
+          <input class="form-control" [(ngModel)]="entity.ImageUrl" name="ImageUrl">
+          <div class="admin-image-preview mt-2" *ngIf="entity.ImageUrl">
+            <img [src]="entity.ImageUrl" alt="Previsualizacion de imagen">
+          </div>
+        </div>
         <div class="form-group" *ngIf="type === 'categories'"><label>Orden</label><input type="number" class="form-control" [(ngModel)]="entity.DisplayOrder" name="DisplayOrder"></div>
         <div class="form-group"><label>Estado</label><select class="form-control" [(ngModel)]="entity.Status" name="Status"><option value="A">Activo</option><option value="I">Inactivo</option></select></div>
         <button class="btn btn-primary" (click)="save()">Guardar</button>
