@@ -32,6 +32,7 @@
         <label>Referencia del video</label>
         <div>
           <button type="button" class="btn btn-outline-secondary btn-sm mb-2 mr-1" (click)="analyzeVideo()" [disabled]="analyzeLoading"><i class="fas fa-search mr-1"></i> Analizar</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm mb-2 mr-1" (click)="generateVideoCaptures()" [disabled]="generateCapturesLoading || !dto.Video.VideoCod"><i class="fas fa-images mr-1"></i> Generar capturas de video</button>
           <button type="button" class="btn btn-outline-primary btn-sm mb-2" (click)="loadPreview()"><i class="fas fa-play mr-1"></i> Previsualizar</button>
         </div>
       </div>
@@ -39,6 +40,7 @@
     </div>
     <div class="alert alert-info" *ngIf="analyzeLoading">Analizando video...</div>
     <div class="alert alert-warning" *ngIf="analyzeMessage">{{ analyzeMessage }}</div>
+    <div class="alert" [class.alert-info]="generateCapturesLoading" [class.alert-warning]="!generateCapturesLoading" *ngIf="generateCapturesMessage || generateCapturesLoading">{{ generateCapturesLoading ? 'Generando capturas...' : generateCapturesMessage }}</div>
     <div class="form-section p-3 mb-3" *ngIf="previewSource || previewEmbedHtml || previewError">
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
         <h2 class="h6 mb-0">Previsualizacion</h2>

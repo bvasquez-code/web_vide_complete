@@ -18,8 +18,9 @@ public class VideoSearchService {
     private final VideoCategoryRelRepository categoryRelRepository;
     private final VideoActorRelRepository actorRelRepository;
     private final VideoTagRelRepository tagRelRepository;
+    private final VideoCaptureRepository captureRepository;
 
-    public VideoSearchService(VideoRepository videoRepository, VideoCategoryRepository categoryRepository, ActorRepository actorRepository, TagRepository tagRepository, VideoCategoryRelRepository categoryRelRepository, VideoActorRelRepository actorRelRepository, VideoTagRelRepository tagRelRepository) {
+    public VideoSearchService(VideoRepository videoRepository, VideoCategoryRepository categoryRepository, ActorRepository actorRepository, TagRepository tagRepository, VideoCategoryRelRepository categoryRelRepository, VideoActorRelRepository actorRelRepository, VideoTagRelRepository tagRelRepository, VideoCaptureRepository captureRepository) {
         this.videoRepository = videoRepository;
         this.categoryRepository = categoryRepository;
         this.actorRepository = actorRepository;
@@ -27,6 +28,7 @@ public class VideoSearchService {
         this.categoryRelRepository = categoryRelRepository;
         this.actorRelRepository = actorRelRepository;
         this.tagRelRepository = tagRelRepository;
+        this.captureRepository = captureRepository;
     }
 
     public List<VideoCardDto> findRecent(Integer limit) { return videoRepository.findRecent(safeLimit(limit)).stream().map(this::toCard).toList(); }
@@ -65,7 +67,7 @@ public class VideoSearchService {
         List<String> categoryCods = categoryRelRepository.findByVideoCodAndStatus(videoCod, "A").stream().map(r -> r.CategoryCod).toList();
         List<String> actorCods = actorRelRepository.findByVideoCodAndStatus(videoCod, "A").stream().map(r -> r.ActorCod).toList();
         List<String> tagCods = tagRelRepository.findByVideoCodAndStatus(videoCod, "A").stream().map(r -> r.TagCod).toList();
-        return new VideoDetailDto(video, categoryRepository.findAllById(categoryCods), actorRepository.findAllById(actorCods), tagRepository.findAllById(tagCods));
+        return new VideoDetailDto(video, categoryRepository.findAllById(categoryCods), actorRepository.findAllById(actorCods), tagRepository.findAllById(tagCods), captureRepository.findActiveByVideoCod(videoCod));
     }
 
     public VideoEntity findEntity(String videoCod) {

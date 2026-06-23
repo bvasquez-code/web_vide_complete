@@ -30,6 +30,8 @@ export class CreatevideoComponent implements OnInit {
   analyzeMessage = '';
   captureLoading = false;
   captureMessage = '';
+  generateCapturesLoading = false;
+  generateCapturesMessage = '';
   thumbnailOptions: string[] = [];
   showThumbnailModal = false;
   quickModalType: 'category' | 'actor' | 'tag' | '' = '';
@@ -244,6 +246,28 @@ export class CreatevideoComponent implements OnInit {
     this.previewEmbedHtml = null;
     this.analyzeMessage = '';
     this.captureMessage = '';
+  }
+
+  async generateVideoCaptures(): Promise<void> {
+    this.generateCapturesMessage = '';
+    if (!this.dto.Video.VideoCod) {
+      this.generateCapturesMessage = 'Primero guarde el video para generar sus capturas.';
+      return;
+    }
+    this.generateCapturesLoading = true;
+    try {
+      const rpt = await this.adminVideoService.generateCaptures(this.dto.Video.VideoCod);
+      if (rpt.ErrorStatus) {
+        this.generateCapturesMessage = rpt.Message;
+        return;
+      }
+      this.dto.Video.Duration = rpt.Data?.Duration || this.dto.Video.Duration;
+      this.generateCapturesMessage = `Capturas generadas correctamente: ${rpt.Data?.CaptureCount || 0}.`;
+    } catch {
+      this.generateCapturesMessage = 'No se pudieron generar las capturas del video.';
+    } finally {
+      this.generateCapturesLoading = false;
+    }
   }
 
   onPreviewMetadata(event: Event): void {

@@ -27,6 +27,21 @@
     </small>
   </section>
 
+  <section class="form-section p-3 mb-4" *ngIf="detail.Captures && detail.Captures.length > 0">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h4 mb-0">Capturas del video</h2>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-primary" (click)="scrollCaptures('left')"><i class="fas fa-chevron-left"></i></button>
+        <button type="button" class="btn btn-outline-primary" (click)="scrollCaptures('right')"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+    <div #captureSlider class="capture-slider">
+      <button type="button" class="capture-slider-item" *ngFor="let capture of detail.Captures">
+        <img [src]="capture.ImageUrl" [alt]="'Captura ' + capture.DisplayOrder">
+      </button>
+    </div>
+  </section>
+
   <section>
     <h2 class="h4 mb-3">Videos relacionados</h2>
     <div class="row">

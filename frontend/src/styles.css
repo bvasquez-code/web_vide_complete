@@ -118,6 +118,27 @@ body {
   border-radius: 6px;
   background: #111827;
 }
+.capture-slider {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 6px;
+}
+.capture-slider-item {
+  flex: 0 0 220px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #d9e2ec;
+  border-radius: 6px;
+  background: #000000;
+}
+.capture-slider-item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
 .admin-video-preview-resize {
   position: absolute;
   top: 0;

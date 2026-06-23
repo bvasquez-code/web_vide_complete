@@ -4,6 +4,7 @@ import com.ccadmin.app.shared.model.dto.ResponseWsDto;
 import com.ccadmin.app.video.model.dto.VideoRegisterDto;
 import com.ccadmin.app.video.service.ThumbnailStorageService;
 import com.ccadmin.app.video.service.VideoCreateService;
+import com.ccadmin.app.video.service.VideoCaptureService;
 import com.ccadmin.app.video.service.VideoMetadataProcessService;
 import com.ccadmin.app.video.service.VideoSearchService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,12 +20,14 @@ public class AdminVideoController {
     private final VideoCreateService createService;
     private final ThumbnailStorageService thumbnailStorageService;
     private final VideoMetadataProcessService metadataProcessService;
+    private final VideoCaptureService videoCaptureService;
 
-    public AdminVideoController(VideoSearchService searchService, VideoCreateService createService, ThumbnailStorageService thumbnailStorageService, VideoMetadataProcessService metadataProcessService) {
+    public AdminVideoController(VideoSearchService searchService, VideoCreateService createService, ThumbnailStorageService thumbnailStorageService, VideoMetadataProcessService metadataProcessService, VideoCaptureService videoCaptureService) {
         this.searchService = searchService;
         this.createService = createService;
         this.thumbnailStorageService = thumbnailStorageService;
         this.metadataProcessService = metadataProcessService;
+        this.videoCaptureService = videoCaptureService;
     }
 
     @GetMapping("findAll")
@@ -87,6 +90,16 @@ public class AdminVideoController {
         try {
             String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
             return new ResponseEntity<>(new ResponseWsDto(metadataProcessService.process(Percentage, VideoCod, Mode, Overwrite, baseUrl)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("generateCaptures")
+    public ResponseEntity<ResponseWsDto> generateCaptures(@RequestParam String VideoCod, HttpServletRequest request) {
+        try {
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.generate(VideoCod, baseUrl)), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }

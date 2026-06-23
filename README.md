@@ -24,8 +24,9 @@ Ejecutar los scripts en este orden sobre el schema MySQL seleccionado:
 6. `database/tables/table_video_category_rel.sql`
 7. `database/tables/table_video_actor_rel.sql`
 8. `database/tables/table_video_tag_rel.sql`
-9. `database/tables/table_video_view_log.sql`
-10. `database/inserts/initial_video_data.sql`
+9. `database/tables/table_video_capture.sql`
+10. `database/tables/table_video_view_log.sql`
+11. `database/inserts/initial_video_data.sql`
 
 Usuario inicial:
 

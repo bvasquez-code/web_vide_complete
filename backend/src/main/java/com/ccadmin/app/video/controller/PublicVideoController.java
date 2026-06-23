@@ -3,6 +3,7 @@ package com.ccadmin.app.video.controller;
 import com.ccadmin.app.shared.model.dto.ResponseWsDto;
 import com.ccadmin.app.video.model.entity.VideoEntity;
 import com.ccadmin.app.video.service.ThumbnailStorageService;
+import com.ccadmin.app.video.service.VideoCaptureService;
 import com.ccadmin.app.video.service.VideoCatalogService;
 import com.ccadmin.app.video.service.VideoCreateService;
 import com.ccadmin.app.video.service.VideoSearchService;
@@ -27,12 +28,14 @@ public class PublicVideoController {
     private final VideoSearchService searchService;
     private final VideoCreateService createService;
     private final ThumbnailStorageService thumbnailStorageService;
+    private final VideoCaptureService videoCaptureService;
 
-    public PublicVideoController(VideoCatalogService catalogService, VideoSearchService searchService, VideoCreateService createService, ThumbnailStorageService thumbnailStorageService) {
+    public PublicVideoController(VideoCatalogService catalogService, VideoSearchService searchService, VideoCreateService createService, ThumbnailStorageService thumbnailStorageService, VideoCaptureService videoCaptureService) {
         this.catalogService = catalogService;
         this.searchService = searchService;
         this.createService = createService;
         this.thumbnailStorageService = thumbnailStorageService;
+        this.videoCaptureService = videoCaptureService;
     }
 
     @GetMapping("categories")
@@ -139,6 +142,31 @@ public class PublicVideoController {
             Path path = thumbnailStorageService.findThumbnail(fileName);
             if (!Files.exists(path) || !Files.isRegularFile(path) || !Files.isReadable(path)) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Miniatura no encontrada.");
+                return;
+            }
+            response.setContentType(resolveContentType(path));
+            response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+            response.setHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=86400");
+            response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(Files.size(path)));
+            try (InputStream inputStream = Files.newInputStream(path, StandardOpenOption.READ)) {
+                inputStream.transferTo(response.getOutputStream());
+            }
+        } catch (Exception ex) {
+            try {
+                if (!response.isCommitted()) {
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+                }
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    @GetMapping("captures/{fileName}")
+    public void capture(@PathVariable String fileName, HttpServletResponse response) {
+        try {
+            Path path = videoCaptureService.findCapture(fileName);
+            if (!Files.exists(path) || !Files.isRegularFile(path) || !Files.isReadable(path)) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Captura no encontrada.");
                 return;
             }
             response.setContentType(resolveContentType(path));

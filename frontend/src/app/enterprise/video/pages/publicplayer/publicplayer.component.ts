@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { AppSetting } from '../../../../config/AppSetting';
@@ -11,6 +11,8 @@ import { VideoCardDto } from '../../model/dto/VideoCardDto';
   templateUrl: './publicplayer.component.html'
 })
 export class PublicplayerComponent implements OnInit {
+  @ViewChild('captureSlider') captureSlider?: ElementRef<HTMLDivElement>;
+
   videoCod = '';
   detail: VideoDetailDto = new VideoDetailDto();
   related: VideoCardDto[] = [];
@@ -89,5 +91,14 @@ export class PublicplayerComponent implements OnInit {
 
   thumb(video: VideoCardDto): string {
     return video.ThumbnailUrl || 'assets/default-video.svg';
+  }
+
+  scrollCaptures(direction: 'left' | 'right'): void {
+    const slider = this.captureSlider?.nativeElement;
+    if (!slider) {
+      return;
+    }
+    const distance = Math.max(260, slider.clientWidth * 0.8);
+    slider.scrollBy({ left: direction === 'left' ? -distance : distance, behavior: 'smooth' });
   }
 }
