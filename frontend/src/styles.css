@@ -31,3 +31,43 @@ body {
   background: #e8f1ff;
   color: #1d4ed8;
 }
+.admin-video-preview {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1050;
+  width: min(420px, calc(100vw - 36px));
+  min-width: 280px;
+  max-width: calc(100vw - 36px);
+  overflow: hidden;
+  resize: horizontal;
+  border: 1px solid #263241;
+  border-radius: 6px;
+  background: #111827;
+}
+.admin-video-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  color: #ffffff;
+  background: #1f2937;
+}
+.admin-video-preview-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.admin-video-preview-body {
+  background: #000000;
+}
+.admin-video-preview-player {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000000;
+}
