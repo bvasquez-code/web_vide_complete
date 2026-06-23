@@ -30,6 +30,12 @@ export class CreatevideoComponent implements OnInit {
   captureMessage = '';
   thumbnailOptions: string[] = [];
   showThumbnailModal = false;
+  quickModalType: 'category' | 'actor' | 'tag' | '' = '';
+  quickName = '';
+  quickDescription = '';
+  quickError = '';
+  actorQuery = '';
+  tagQuery = '';
 
   constructor(private adminVideoService: AdminVideoService, private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer) {}
 
@@ -60,6 +66,137 @@ export class CreatevideoComponent implements OnInit {
       const idx = list.indexOf(value);
       if (idx >= 0) list.splice(idx, 1);
     }
+  }
+
+  selectedActors(): ActorEntity[] {
+    return this.actors.filter(item => this.dto.ActorCodList.includes(item.ActorCod));
+  }
+
+  selectedTags(): TagEntity[] {
+    return this.tags.filter(item => this.dto.TagCodList.includes(item.TagCod));
+  }
+
+  filteredActors(): ActorEntity[] {
+    const query = this.actorQuery.trim().toLowerCase();
+    if (!query) return [];
+    return this.actors
+      .filter(item => item.Name.toLowerCase().includes(query) && !this.dto.ActorCodList.includes(item.ActorCod))
+      .slice(0, 8);
+  }
+
+  filteredTags(): TagEntity[] {
+    const query = this.tagQuery.trim().toLowerCase();
+    if (!query) return [];
+    return this.tags
+      .filter(item => item.Name.toLowerCase().includes(query) && !this.dto.TagCodList.includes(item.TagCod))
+      .slice(0, 8);
+  }
+
+  addActor(actor: ActorEntity): void {
+    if (!this.dto.ActorCodList.includes(actor.ActorCod)) {
+      this.dto.ActorCodList.push(actor.ActorCod);
+    }
+    this.actorQuery = '';
+  }
+
+  addTag(tag: TagEntity): void {
+    if (!this.dto.TagCodList.includes(tag.TagCod)) {
+      this.dto.TagCodList.push(tag.TagCod);
+    }
+    this.tagQuery = '';
+  }
+
+  removeActor(actorCod: string): void {
+    this.dto.ActorCodList = this.dto.ActorCodList.filter(item => item !== actorCod);
+  }
+
+  removeTag(tagCod: string): void {
+    this.dto.TagCodList = this.dto.TagCodList.filter(item => item !== tagCod);
+  }
+
+  async addActorFromQuery(): Promise<void> {
+    const existing = this.actors.find(item => item.Name.toLowerCase() === this.actorQuery.trim().toLowerCase());
+    if (existing) {
+      this.addActor(existing);
+      return;
+    }
+    this.openQuickModal('actor', this.actorQuery);
+  }
+
+  async addTagFromQuery(): Promise<void> {
+    const existing = this.tags.find(item => item.Name.toLowerCase() === this.tagQuery.trim().toLowerCase());
+    if (existing) {
+      this.addTag(existing);
+      return;
+    }
+    this.openQuickModal('tag', this.tagQuery);
+  }
+
+  openQuickModal(type: 'category' | 'actor' | 'tag', initialName: string = ''): void {
+    this.quickModalType = type;
+    this.quickName = initialName.trim();
+    this.quickDescription = '';
+    this.quickError = '';
+  }
+
+  closeQuickModal(): void {
+    this.quickModalType = '';
+    this.quickName = '';
+    this.quickDescription = '';
+    this.quickError = '';
+  }
+
+  quickTitle(): string {
+    if (this.quickModalType === 'category') return 'Nueva categoria';
+    if (this.quickModalType === 'actor') return 'Nuevo actor';
+    return 'Nuevo tag';
+  }
+
+  async saveQuickEntity(): Promise<void> {
+    this.quickError = '';
+    if (!this.quickName.trim()) {
+      this.quickError = 'El nombre es obligatorio.';
+      return;
+    }
+    if (this.quickModalType === 'category') {
+      const entity = new VideoCategoryEntity();
+      entity.Name = this.quickName.trim();
+      entity.Description = this.quickDescription.trim();
+      entity.Status = 'A';
+      const rpt = await this.adminVideoService.saveCategory(entity);
+      if (rpt.ErrorStatus) {
+        this.quickError = rpt.Message;
+        return;
+      }
+      this.categories.push(rpt.Data);
+      this.toggle(this.dto.CategoryCodList, rpt.Data.CategoryCod, true);
+    }
+    if (this.quickModalType === 'actor') {
+      const entity = new ActorEntity();
+      entity.Name = this.quickName.trim();
+      entity.Description = this.quickDescription.trim();
+      entity.Status = 'A';
+      const rpt = await this.adminVideoService.saveActor(entity);
+      if (rpt.ErrorStatus) {
+        this.quickError = rpt.Message;
+        return;
+      }
+      this.actors.push(rpt.Data);
+      this.addActor(rpt.Data);
+    }
+    if (this.quickModalType === 'tag') {
+      const entity = new TagEntity();
+      entity.Name = this.quickName.trim();
+      entity.Status = 'A';
+      const rpt = await this.adminVideoService.saveTag(entity);
+      if (rpt.ErrorStatus) {
+        this.quickError = rpt.Message;
+        return;
+      }
+      this.tags.push(rpt.Data);
+      this.addTag(rpt.Data);
+    }
+    this.closeQuickModal();
   }
 
   validate(): boolean {

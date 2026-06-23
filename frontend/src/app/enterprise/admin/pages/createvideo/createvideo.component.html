@@ -1,6 +1,9 @@
 <header class="app-header">
   <div class="container py-3 d-flex justify-content-between align-items-center">
-    <a routerLink="/admin/videos" class="h4 mb-0 text-dark">Formulario de video</a>
+    <div class="d-flex align-items-center">
+      <a routerLink="/admin/videos" class="btn btn-outline-secondary btn-sm mr-2"><i class="fas fa-arrow-left mr-1"></i> Volver</a>
+      <a routerLink="/admin/videos" class="h4 mb-0 text-dark">Formulario de video</a>
+    </div>
     <button class="btn btn-primary btn-sm" (click)="Save()"><i class="fas fa-save mr-1"></i> Guardar</button>
   </div>
 </header>
@@ -45,21 +48,44 @@
     </div>
     <div class="form-row">
       <div class="form-group col-md-4">
-        <label>Categorias</label>
+        <div class="d-flex justify-content-between align-items-center">
+          <label>Categorias</label>
+          <button type="button" class="btn btn-outline-secondary btn-sm mb-2" (click)="openQuickModal('category')"><i class="fas fa-plus mr-1"></i> Categoria</button>
+        </div>
         <div class="border rounded p-2" style="max-height: 180px; overflow:auto">
           <label class="d-block" *ngFor="let item of categories"><input type="checkbox" [checked]="isChecked(dto.CategoryCodList, item.CategoryCod)" (change)="toggle(dto.CategoryCodList, item.CategoryCod, $any($event.target).checked)"> {{ item.Name }}</label>
         </div>
       </div>
       <div class="form-group col-md-4">
-        <label>Actores</label>
-        <div class="border rounded p-2" style="max-height: 180px; overflow:auto">
-          <label class="d-block" *ngFor="let item of actors"><input type="checkbox" [checked]="isChecked(dto.ActorCodList, item.ActorCod)" (change)="toggle(dto.ActorCodList, item.ActorCod, $any($event.target).checked)"> {{ item.Name }}</label>
+        <div class="d-flex justify-content-between align-items-center">
+          <label>Actores</label>
+          <button type="button" class="btn btn-outline-secondary btn-sm mb-2" (click)="openQuickModal('actor')"><i class="fas fa-plus mr-1"></i> Actor</button>
+        </div>
+        <div class="input-group mb-2">
+          <input class="form-control" placeholder="Buscar o crear actor" [(ngModel)]="actorQuery" name="actorQuery" (keyup.enter)="addActorFromQuery()">
+          <div class="input-group-append"><button type="button" class="btn btn-outline-primary" (click)="addActorFromQuery()">Agregar</button></div>
+        </div>
+        <div class="border rounded mb-2" *ngIf="filteredActors().length > 0">
+          <button type="button" class="btn btn-link btn-sm d-block text-left w-100" *ngFor="let item of filteredActors()" (click)="addActor(item)">{{ item.Name }}</button>
+        </div>
+        <div>
+          <span class="badge badge-secondary mr-1 mb-1" *ngFor="let item of selectedActors()">{{ item.Name }} <button type="button" class="btn btn-link btn-sm text-white p-0 ml-1" (click)="removeActor(item.ActorCod)">&times;</button></span>
         </div>
       </div>
       <div class="form-group col-md-4">
-        <label>Tags</label>
-        <div class="border rounded p-2" style="max-height: 180px; overflow:auto">
-          <label class="d-block" *ngFor="let item of tags"><input type="checkbox" [checked]="isChecked(dto.TagCodList, item.TagCod)" (change)="toggle(dto.TagCodList, item.TagCod, $any($event.target).checked)"> {{ item.Name }}</label>
+        <div class="d-flex justify-content-between align-items-center">
+          <label>Tags</label>
+          <button type="button" class="btn btn-outline-secondary btn-sm mb-2" (click)="openQuickModal('tag')"><i class="fas fa-plus mr-1"></i> Tag</button>
+        </div>
+        <div class="input-group mb-2">
+          <input class="form-control" placeholder="Buscar o crear tag" [(ngModel)]="tagQuery" name="tagQuery" (keyup.enter)="addTagFromQuery()">
+          <div class="input-group-append"><button type="button" class="btn btn-outline-primary" (click)="addTagFromQuery()">Agregar</button></div>
+        </div>
+        <div class="border rounded mb-2" *ngIf="filteredTags().length > 0">
+          <button type="button" class="btn btn-link btn-sm d-block text-left w-100" *ngFor="let item of filteredTags()" (click)="addTag(item)">#{{ item.Name }}</button>
+        </div>
+        <div>
+          <span class="badge badge-light border mr-1 mb-1" *ngFor="let item of selectedTags()">#{{ item.Name }} <button type="button" class="btn btn-link btn-sm p-0 ml-1" (click)="removeTag(item.TagCod)">&times;</button></span>
         </div>
       </div>
     </div>
@@ -84,6 +110,32 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeThumbnailModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal d-block" tabindex="-1" role="dialog" *ngIf="quickModalType" style="background: rgba(0,0,0,.55);">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ quickTitle() }}</h5>
+        <button type="button" class="close" (click)="closeQuickModal()"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger" *ngIf="quickError">{{ quickError }}</div>
+        <div class="form-group">
+          <label>Nombre</label>
+          <input class="form-control" [(ngModel)]="quickName" name="quickName">
+        </div>
+        <div class="form-group" *ngIf="quickModalType !== 'tag'">
+          <label>Descripcion</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="quickDescription" name="quickDescription"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeQuickModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="saveQuickEntity()">Guardar</button>
       </div>
     </div>
   </div>
