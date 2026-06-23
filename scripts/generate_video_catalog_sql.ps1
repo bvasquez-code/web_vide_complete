@@ -8,7 +8,11 @@ param(
 
     [string]$CreationUser = "IMPORT",
 
-    [string[]]$Extensions = @(".mp4", ".webm", ".mkv", ".avi", ".mov", ".m4v")
+    [string[]]$Extensions = @(".mp4", ".webm", ".mkv", ".avi", ".mov", ".m4v"),
+
+    [switch]$IncludeHidden,
+
+    [switch]$OnlyHidden
 )
 
 Set-StrictMode -Version Latest
@@ -75,14 +79,48 @@ function Parse-VideoFileName {
     }
 }
 
+function Test-IsHiddenUnderRoot {
+    param(
+        [System.IO.FileInfo]$File,
+        [string]$Root
+    )
+    if (($File.Attributes -band [System.IO.FileAttributes]::Hidden) -ne 0) {
+        return $true
+    }
+
+    $rootPath = (Resolve-Path -LiteralPath $Root).Path.TrimEnd("\")
+    $directory = $File.Directory
+    while ($null -ne $directory) {
+        if ($directory.FullName.TrimEnd("\") -eq $rootPath) {
+            return $false
+        }
+        if (($directory.Attributes -band [System.IO.FileAttributes]::Hidden) -ne 0) {
+            return $true
+        }
+        $directory = $directory.Parent
+    }
+
+    return $false
+}
+
 $runStamp = Get-Date -Format "yyyyMMdd_HHmmss"
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
     $OutputPath = "database/inserts/generated_video_catalog_$runStamp.sql"
 }
 
 $resolvedRoot = (Resolve-Path -LiteralPath $RootPath).Path
-$videoFiles = Get-ChildItem -LiteralPath $resolvedRoot -Recurse -File |
+$childItemParams = @{
+    LiteralPath = $resolvedRoot
+    Recurse = $true
+    File = $true
+}
+if ($IncludeHidden -or $OnlyHidden) {
+    $childItemParams.Force = $true
+}
+
+$videoFiles = Get-ChildItem @childItemParams |
     Where-Object { $Extensions -contains $_.Extension.ToLowerInvariant() } |
+    Where-Object { -not $OnlyHidden -or (Test-IsHiddenUnderRoot -File $_ -Root $resolvedRoot) } |
     Sort-Object FullName
 
 $actorsByKey = [ordered]@{}
