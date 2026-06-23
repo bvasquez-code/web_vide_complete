@@ -56,8 +56,8 @@ public class PublicVideoController {
     }
 
     @GetMapping("videos/search")
-    public ResponseEntity<ResponseWsDto> search(@RequestParam(defaultValue = "") String Query, @RequestParam(defaultValue = "1") Integer Page, @RequestParam(defaultValue = "30") Integer Limit) {
-        return new ResponseEntity<>(new ResponseWsDto(searchService.searchPublic(Query, Page, Limit)), HttpStatus.OK);
+    public ResponseEntity<ResponseWsDto> search(@RequestParam(defaultValue = "") String Query, @RequestParam(defaultValue = "recent") String Sort, @RequestParam(defaultValue = "1") Integer Page, @RequestParam(defaultValue = "30") Integer Limit) {
+        return new ResponseEntity<>(new ResponseWsDto(searchService.searchPublic(Query, Sort, Page, Limit)), HttpStatus.OK);
     }
 
     @GetMapping("categories/{categoryCod}/videos")

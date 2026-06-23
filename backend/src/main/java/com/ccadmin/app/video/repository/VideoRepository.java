@@ -51,10 +51,10 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String> {
             left join tag t on t.TagCod = tr.TagCod and t.Status = 'A'
             where v.Status = 'A'
               and (:query = '' or v.Title like concat('%', :query, '%') or a.Name like concat('%', :query, '%') or t.Name like concat('%', :query, '%'))
-            order by coalesce(v.PublishDate, v.CreationDate) desc
+            order by case when :sort = 'views' then v.ViewCount else 0 end desc, coalesce(v.PublishDate, v.CreationDate) desc
             limit :init, :limit
             """, nativeQuery = true)
-    List<VideoEntity> searchPublic(@Param("query") String query, @Param("init") Integer init, @Param("limit") Integer limit);
+    List<VideoEntity> searchPublic(@Param("query") String query, @Param("sort") String sort, @Param("init") Integer init, @Param("limit") Integer limit);
 
     @Query(value = """
             select count(distinct v.VideoCod) from video v

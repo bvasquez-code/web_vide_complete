@@ -12,6 +12,7 @@ import { PublicactorComponent } from './enterprise/video/pages/publicactor/publi
 import { PubliccategoriesComponent } from './enterprise/video/pages/publiccategories/publiccategories.component';
 import { PublicplayerComponent } from './enterprise/video/pages/publicplayer/publicplayer.component';
 import { VideocardComponent } from './enterprise/video/component/videocard/videocard.component';
+import { BackbuttonComponent } from './enterprise/shared/component/backbutton/backbutton.component';
 import { LoginComponent } from './enterprise/admin/pages/login/login.component';
 import { DashboardComponent } from './enterprise/admin/pages/dashboard/dashboard.component';
 import { ListvideosComponent } from './enterprise/admin/pages/listvideos/listvideos.component';
@@ -27,6 +28,7 @@ import { ListcatalogComponent } from './enterprise/admin/pages/listcatalog/listc
     PublicactorComponent,
     PublicplayerComponent,
     VideocardComponent,
+    BackbuttonComponent,
     LoginComponent,
     DashboardComponent,
     ListvideosComponent,

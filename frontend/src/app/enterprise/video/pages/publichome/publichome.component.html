@@ -40,10 +40,11 @@
   <section>
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
       <div>
-        <h2 class="h4 mb-1">{{ searchMode ? 'Resultados de busqueda' : 'Videos' }}</h2>
+        <h2 class="h4 mb-1">{{ listTitle }}</h2>
         <small class="text-muted" *ngIf="searchMode">{{ searchTotalRows }} coincidencias para "{{ searchQuery }}"</small>
+        <small class="text-muted" *ngIf="!searchMode">{{ searchTotalRows }} videos disponibles</small>
       </div>
-      <div class="btn-group btn-group-sm mb-2" *ngIf="!searchMode">
+      <div class="btn-group btn-group-sm mb-2">
         <button class="btn" [class.btn-primary]="sortMode === 'recent'" [class.btn-outline-primary]="sortMode !== 'recent'" (click)="loadVideos('recent')">Recientes</button>
         <button class="btn" [class.btn-primary]="sortMode === 'views'" [class.btn-outline-primary]="sortMode !== 'views'" (click)="loadVideos('views')">Mas vistos</button>
       </div>
@@ -55,7 +56,7 @@
         <app-videocard [video]="video"></app-videocard>
       </div>
     </div>
-    <div class="d-flex justify-content-between align-items-center form-section p-3 mt-2" *ngIf="searchMode && searchTotalRows > searchLimit">
+    <div class="d-flex justify-content-between align-items-center form-section p-3 mt-2" *ngIf="searchTotalRows > searchLimit">
       <button class="btn btn-outline-primary btn-sm" [disabled]="!canPreviousSearchPage()" (click)="search(searchPage - 1)"><i class="fas fa-chevron-left mr-1"></i> Anterior</button>
       <span class="text-muted">Pagina {{ searchPage }} de {{ totalSearchPages() }}</span>
       <button class="btn btn-outline-primary btn-sm" [disabled]="!canNextSearchPage()" (click)="search(searchPage + 1)">Siguiente <i class="fas fa-chevron-right ml-1"></i></button>

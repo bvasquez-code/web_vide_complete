@@ -50,8 +50,8 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostFormDataService(`${AppSetting.API}/api/v1/admin/videos/uploadThumbnail`, formData);
   }
 
-  async findCategories(Query: string = '', Status: string = '', Page: number = 1): Promise<ResponseWsDto> {
-    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/categories/findAll`, { Query, Status, Page, Limit: 20 });
+  async findCategories(Query: string = '', Status: string = '', Page: number = 1, Limit: number = 20): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/categories/findAll`, { Query, Status, Page, Limit });
   }
 
   async saveCategory(entity: VideoCategoryEntity): Promise<ResponseWsDto> {
@@ -66,8 +66,8 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/categories/disable`, entity);
   }
 
-  async findActors(Query: string = '', Status: string = '', Page: number = 1): Promise<ResponseWsDto> {
-    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/actors/findAll`, { Query, Status, Page, Limit: 20 });
+  async findActors(Query: string = '', Status: string = '', Page: number = 1, Limit: number = 20): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/actors/findAll`, { Query, Status, Page, Limit });
   }
 
   async saveActor(entity: ActorEntity): Promise<ResponseWsDto> {
@@ -82,8 +82,8 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/actors/disable`, entity);
   }
 
-  async findTags(Query: string = '', Status: string = '', Page: number = 1): Promise<ResponseWsDto> {
-    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/tags/findAll`, { Query, Status, Page, Limit: 20 });
+  async findTags(Query: string = '', Status: string = '', Page: number = 1, Limit: number = 20): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/tags/findAll`, { Query, Status, Page, Limit });
   }
 
   async saveTag(entity: TagEntity): Promise<ResponseWsDto> {

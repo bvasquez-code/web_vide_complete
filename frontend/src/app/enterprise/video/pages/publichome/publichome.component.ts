@@ -19,6 +19,7 @@ export class PublichomeComponent implements OnInit {
   searchPage = 1;
   searchLimit = 30;
   searchTotalRows = 0;
+  listTitle = 'Videos';
   private initialized = false;
 
   constructor(private publicVideoService: PublicVideoService, private route: ActivatedRoute) {}
@@ -56,28 +57,18 @@ export class PublichomeComponent implements OnInit {
   }
 
   async loadVideos(mode: string): Promise<void> {
-    this.searchMode = false;
     this.sortMode = mode;
-    const rpt = mode === 'views' ? await this.publicVideoService.findMostViewed(12) : await this.publicVideoService.findRecent(12);
-    if (rpt.ErrorStatus) {
-      this.errorMessage = rpt.Message;
-      return;
-    }
-    this.videos = rpt.Data || [];
+    this.searchPage = 1;
+    await this.search(1);
   }
 
   async search(page: number = 1): Promise<void> {
     this.errorMessage = '';
     this.searchPage = page < 1 ? 1 : page;
     const query = this.searchQuery.trim();
-    if (!query) {
-      this.searchMode = false;
-      this.searchTotalRows = 0;
-      await this.loadVideos(this.sortMode);
-      return;
-    }
-    this.searchMode = true;
-    const rpt = await this.publicVideoService.search(query, this.searchPage, this.searchLimit);
+    this.searchMode = !!query;
+    this.listTitle = this.searchMode ? 'Resultados de busqueda' : 'Videos';
+    const rpt = await this.publicVideoService.search(query, this.searchPage, this.searchLimit, this.sortMode);
     if (rpt.ErrorStatus) {
       this.errorMessage = rpt.Message;
       return;
@@ -93,7 +84,7 @@ export class PublichomeComponent implements OnInit {
     this.searchMode = false;
     this.searchPage = 1;
     this.searchTotalRows = 0;
-    await this.loadVideos(this.sortMode);
+    await this.search(1);
   }
 
   totalSearchPages(): number {
@@ -101,11 +92,11 @@ export class PublichomeComponent implements OnInit {
   }
 
   canPreviousSearchPage(): boolean {
-    return this.searchMode && this.searchPage > 1;
+    return this.searchPage > 1;
   }
 
   canNextSearchPage(): boolean {
-    return this.searchMode && this.searchPage < this.totalSearchPages();
+    return this.searchPage < this.totalSearchPages();
   }
 
   thumb(video: VideoCardDto): string {
