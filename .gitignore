@@ -4,3 +4,4 @@ target/
 .angular/
 *.log
 uploads/thumbnails/
+backend/uploads/thumbnails/
