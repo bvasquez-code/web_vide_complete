@@ -21,9 +21,22 @@ export class ApiService {
     return await firstValueFrom(this.http.post<ResponseWsDto>(url, body, { headers: this.headers() }));
   }
 
+  async ExecutePostFormDataService(url: string, body: FormData): Promise<ResponseWsDto> {
+    return await firstValueFrom(this.http.post<ResponseWsDto>(url, body, { headers: this.formDataHeaders() }));
+  }
+
   private headers(): HttpHeaders {
     const token = sessionStorage.getItem('Token');
     let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
+
+  private formDataHeaders(): HttpHeaders {
+    const token = sessionStorage.getItem('Token');
+    let headers = new HttpHeaders();
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }

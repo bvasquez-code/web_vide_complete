@@ -2,6 +2,7 @@ package com.ccadmin.app.video.controller;
 
 import com.ccadmin.app.shared.model.dto.ResponseWsDto;
 import com.ccadmin.app.video.model.entity.VideoEntity;
+import com.ccadmin.app.video.service.ThumbnailStorageService;
 import com.ccadmin.app.video.service.VideoCatalogService;
 import com.ccadmin.app.video.service.VideoCreateService;
 import com.ccadmin.app.video.service.VideoSearchService;
@@ -25,11 +26,13 @@ public class PublicVideoController {
     private final VideoCatalogService catalogService;
     private final VideoSearchService searchService;
     private final VideoCreateService createService;
+    private final ThumbnailStorageService thumbnailStorageService;
 
-    public PublicVideoController(VideoCatalogService catalogService, VideoSearchService searchService, VideoCreateService createService) {
+    public PublicVideoController(VideoCatalogService catalogService, VideoSearchService searchService, VideoCreateService createService, ThumbnailStorageService thumbnailStorageService) {
         this.catalogService = catalogService;
         this.searchService = searchService;
         this.createService = createService;
+        this.thumbnailStorageService = thumbnailStorageService;
     }
 
     @GetMapping("categories")
@@ -89,6 +92,8 @@ public class PublicVideoController {
             response.reset();
             response.setBufferSize(64 * 1024);
             response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
+            response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+            response.setHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Content-Length, Content-Range, Accept-Ranges");
             response.setContentType(resolveContentType(path));
 
             if (range.isPresent()) {
@@ -101,6 +106,31 @@ public class PublicVideoController {
             response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(value.Length));
             response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + path.getFileName() + "\"");
             copyRange(path, response.getOutputStream(), value);
+        } catch (Exception ex) {
+            try {
+                if (!response.isCommitted()) {
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+                }
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    @GetMapping("thumbnails/{fileName}")
+    public void thumbnail(@PathVariable String fileName, HttpServletResponse response) {
+        try {
+            Path path = thumbnailStorageService.findThumbnail(fileName);
+            if (!Files.exists(path) || !Files.isRegularFile(path) || !Files.isReadable(path)) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Miniatura no encontrada.");
+                return;
+            }
+            response.setContentType(resolveContentType(path));
+            response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+            response.setHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=86400");
+            response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(Files.size(path)));
+            try (InputStream inputStream = Files.newInputStream(path, StandardOpenOption.READ)) {
+                inputStream.transferTo(response.getOutputStream());
+            }
         } catch (Exception ex) {
             try {
                 if (!response.isCommitted()) {
@@ -137,6 +167,12 @@ public class PublicVideoController {
         }
         if (fileName.endsWith(".ogg") || fileName.endsWith(".ogv")) {
             return "video/ogg";
+        }
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        if (fileName.endsWith(".png")) {
+            return "image/png";
         }
         return "application/octet-stream";
     }

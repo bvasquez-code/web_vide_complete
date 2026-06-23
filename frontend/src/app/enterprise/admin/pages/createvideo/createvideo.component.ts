@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AppSetting } from '../../../../config/AppSetting';
@@ -13,6 +13,8 @@ import { TagEntity } from '../../../video/model/entity/TagEntity';
   templateUrl: './createvideo.component.html'
 })
 export class CreatevideoComponent implements OnInit {
+  @ViewChild('previewVideo') previewVideo?: ElementRef<HTMLVideoElement>;
+
   dto: VideoRegisterDto = new VideoRegisterDto();
   categories: VideoCategoryEntity[] = [];
   actors: ActorEntity[] = [];
@@ -24,6 +26,8 @@ export class CreatevideoComponent implements OnInit {
   previewEmbedHtml: SafeHtml | null = null;
   analyzeLoading = false;
   analyzeMessage = '';
+  captureLoading = false;
+  captureMessage = '';
   thumbnailOptions: string[] = [];
   showThumbnailModal = false;
 
@@ -100,6 +104,7 @@ export class CreatevideoComponent implements OnInit {
     this.previewSource = '';
     this.previewEmbedHtml = null;
     this.analyzeMessage = '';
+    this.captureMessage = '';
   }
 
   onPreviewMetadata(event: Event): void {
@@ -147,6 +152,38 @@ export class CreatevideoComponent implements OnInit {
       this.analyzeMessage = 'No se pudo analizar el video desde esta URL. Verifique que sea reproducible por el navegador y que permita lectura para miniaturas.';
     } finally {
       this.analyzeLoading = false;
+    }
+  }
+
+  async captureCurrentFrame(): Promise<void> {
+    this.captureMessage = '';
+    if (!this.dto.Video.VideoCod) {
+      this.captureMessage = 'Primero guarde el video para poder asociar la miniatura al codigo del video.';
+      return;
+    }
+    const video = this.previewVideo?.nativeElement;
+    if (!video || !this.previewSource) {
+      this.captureMessage = 'Primero cargue la previsualizacion del video.';
+      return;
+    }
+    if (video.readyState < 2) {
+      this.captureMessage = 'El video todavia no esta listo para capturar.';
+      return;
+    }
+    this.captureLoading = true;
+    try {
+      const blob = await this.captureFrameFromSource(this.previewSource, video.currentTime);
+      const rpt = await this.adminVideoService.uploadThumbnail(this.dto.Video.VideoCod, blob);
+      if (rpt.ErrorStatus) {
+        this.captureMessage = rpt.Message;
+        return;
+      }
+      this.dto.Video.ThumbnailUrl = rpt.Data;
+      this.captureMessage = 'Miniatura guardada correctamente.';
+    } catch {
+      this.captureMessage = 'No se pudo capturar la miniatura. Si es una URL externa, el servidor puede estar bloqueando CORS.';
+    } finally {
+      this.captureLoading = false;
     }
   }
 
@@ -203,6 +240,51 @@ export class CreatevideoComponent implements OnInit {
     } catch {
       return '';
     }
+  }
+
+  private captureFrameFromSource(source: string, currentTime: number): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'auto';
+      video.crossOrigin = 'anonymous';
+      video.muted = true;
+      video.src = source;
+      video.onloadedmetadata = () => {
+        try {
+          video.currentTime = Math.max(0, Math.min(currentTime, Number.isFinite(video.duration) ? video.duration : currentTime));
+        } catch {
+          reject();
+        }
+      };
+      video.onseeked = () => this.captureCurrentFrameBlob(video).then(resolve).catch(reject);
+      video.onerror = () => reject();
+      video.load();
+    });
+  }
+
+  private captureCurrentFrameBlob(video: HTMLVideoElement): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 960;
+        canvas.height = Math.round(960 * (video.videoHeight || 360) / (video.videoWidth || 640));
+        const context = canvas.getContext('2d');
+        if (!context) {
+          reject();
+          return;
+        }
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => {
+          if (!blob) {
+            reject();
+            return;
+          }
+          resolve(blob);
+        }, 'image/jpeg', 0.85);
+      } catch {
+        reject();
+      }
+    });
   }
 
   private formatDuration(totalSeconds: number): string {

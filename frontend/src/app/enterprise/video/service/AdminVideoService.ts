@@ -43,6 +43,13 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/disable`, dto);
   }
 
+  async uploadThumbnail(VideoCod: string, file: Blob): Promise<ResponseWsDto> {
+    const formData = new FormData();
+    formData.append('VideoCod', VideoCod);
+    formData.append('File', file, `${VideoCod}.jpg`);
+    return await this.apiService.ExecutePostFormDataService(`${AppSetting.API}/api/v1/admin/videos/uploadThumbnail`, formData);
+  }
+
   async findCategories(Query: string = '', Status: string = '', Page: number = 1): Promise<ResponseWsDto> {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/categories/findAll`, { Query, Status, Page, Limit: 20 });
   }

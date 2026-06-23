@@ -2,21 +2,26 @@ package com.ccadmin.app.video.controller;
 
 import com.ccadmin.app.shared.model.dto.ResponseWsDto;
 import com.ccadmin.app.video.model.dto.VideoRegisterDto;
+import com.ccadmin.app.video.service.ThumbnailStorageService;
 import com.ccadmin.app.video.service.VideoCreateService;
 import com.ccadmin.app.video.service.VideoSearchService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("api/v1/admin/videos")
 public class AdminVideoController {
     private final VideoSearchService searchService;
     private final VideoCreateService createService;
+    private final ThumbnailStorageService thumbnailStorageService;
 
-    public AdminVideoController(VideoSearchService searchService, VideoCreateService createService) {
+    public AdminVideoController(VideoSearchService searchService, VideoCreateService createService, ThumbnailStorageService thumbnailStorageService) {
         this.searchService = searchService;
         this.createService = createService;
+        this.thumbnailStorageService = thumbnailStorageService;
     }
 
     @GetMapping("findAll")
@@ -60,6 +65,15 @@ public class AdminVideoController {
     public ResponseEntity<ResponseWsDto> disable(@RequestBody VideoRegisterDto dto) {
         try {
             return new ResponseEntity<>(new ResponseWsDto(createService.disable(dto.Video.VideoCod)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("uploadThumbnail")
+    public ResponseEntity<ResponseWsDto> uploadThumbnail(@RequestParam String VideoCod, @RequestParam("File") MultipartFile file, HttpServletRequest request) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(thumbnailStorageService.saveThumbnail(VideoCod, file, request)), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }
