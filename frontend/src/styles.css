@@ -37,6 +37,24 @@ body {
   justify-content: flex-end;
   gap: 8px;
 }
+.actor-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.actor-profile-image {
+  width: auto;
+  max-width: 180px;
+  max-height: 180px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  object-fit: contain;
+  background: #e5e7eb;
+}
+.actor-profile-content {
+  flex: 1 1 auto;
+  min-width: 180px;
+}
 .admin-video-preview {
   position: fixed;
   right: 18px;

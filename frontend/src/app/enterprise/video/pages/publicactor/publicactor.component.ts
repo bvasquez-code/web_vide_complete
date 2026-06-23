@@ -34,6 +34,19 @@ export class PublicactorComponent implements OnInit {
     this.actor = rpt.DataAdditional?.Actor || new ActorEntity();
   }
 
+  actorImage(): string {
+    return this.actor.ImageUrl || 'assets/default-actor.svg';
+  }
+
+  actorDescription(): string {
+    return this.actor.Description || 'Descripcion no registrada.';
+  }
+
+  onActorImageError(event: Event): void {
+    const image = event.target as HTMLImageElement;
+    image.src = 'assets/default-actor.svg';
+  }
+
   thumb(video: VideoCardDto): string {
     return video.ThumbnailUrl || 'assets/default-video.svg';
   }

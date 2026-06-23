@@ -7,16 +7,17 @@
 
 <main class="container py-4">
   <app-backbutton></app-backbutton>
-  <div class="d-flex flex-wrap justify-content-between align-items-start mb-3">
-    <div>
-      <h1 class="h3 mb-1">{{ actor.Name }}</h1>
-      <p class="text-muted mb-0">{{ actor.Description }}</p>
+  <section class="form-section actor-profile p-3 mb-3">
+    <img class="actor-profile-image" [src]="actorImage()" [alt]="actor.Name || 'Actor'" (error)="onActorImageError($event)">
+    <div class="actor-profile-content">
+      <h1 class="h3 mb-1">{{ actor.Name || 'Actor' }}</h1>
+      <p class="text-muted mb-0">{{ actorDescription() }}</p>
     </div>
     <div class="btn-group btn-group-sm mt-2">
       <button class="btn" [class.btn-primary]="sortMode === 'recent'" [class.btn-outline-primary]="sortMode !== 'recent'" (click)="loadVideos('recent')">Recientes</button>
       <button class="btn" [class.btn-primary]="sortMode === 'views'" [class.btn-outline-primary]="sortMode !== 'views'" (click)="loadVideos('views')">Mas vistos</button>
     </div>
-  </div>
+  </section>
   <div class="row">
     <div class="col-sm-6 col-lg-4 mb-4" *ngFor="let video of videos">
       <app-videocard [video]="video"></app-videocard>
