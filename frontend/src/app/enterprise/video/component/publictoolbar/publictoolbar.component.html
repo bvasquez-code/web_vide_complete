@@ -1,0 +1,7 @@
+<div class="public-toolbar">
+  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="publicPreferenceService.toggleThumbnails()">
+    <i class="fas mr-1" [class.fa-eye]="publicPreferenceService.showThumbnails()" [class.fa-eye-slash]="!publicPreferenceService.showThumbnails()"></i>
+    {{ publicPreferenceService.showThumbnails() ? 'Ocultar miniaturas' : 'Mostrar miniaturas' }}
+  </button>
+  <a routerLink="/admin/login" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-shield mr-1"></i> Admin</a>
+</div>
