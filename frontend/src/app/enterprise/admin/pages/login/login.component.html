@@ -1,0 +1,20 @@
+<main class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="form-section p-4">
+        <h1 class="h4 mb-3">Administracion</h1>
+        <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <div class="form-group">
+          <label>Usuario</label>
+          <input class="form-control" [(ngModel)]="UserName" name="UserName">
+        </div>
+        <div class="form-group">
+          <label>Contrasena</label>
+          <input class="form-control" type="password" [(ngModel)]="Password" name="Password">
+        </div>
+        <button class="btn btn-primary btn-block" (click)="Login()">Ingresar</button>
+        <a routerLink="/" class="btn btn-link btn-block">Volver a la web</a>
+      </div>
+    </div>
+  </div>
+</main>

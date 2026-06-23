@@ -1,0 +1,84 @@
+<header class="app-header">
+  <div class="container py-3 d-flex justify-content-between align-items-center">
+    <a routerLink="/admin/videos" class="h4 mb-0 text-dark">Formulario de video</a>
+    <button class="btn btn-primary btn-sm" (click)="Save()"><i class="fas fa-save mr-1"></i> Guardar</button>
+  </div>
+</header>
+<main class="container py-4">
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="form-section p-3">
+    <div class="form-row">
+      <div class="form-group col-md-8"><label>Titulo</label><input class="form-control" [(ngModel)]="dto.Video.Title" name="Title"></div>
+      <div class="form-group col-md-4"><label>Estado</label><select class="form-control" [(ngModel)]="dto.Video.Status" name="Status"><option value="A">Activo</option><option value="I">Inactivo</option></select></div>
+    </div>
+    <div class="form-group"><label>Descripcion corta</label><input class="form-control" [(ngModel)]="dto.Video.ShortDescription" name="ShortDescription"></div>
+    <div class="form-group"><label>Descripcion larga</label><textarea class="form-control" rows="4" [(ngModel)]="dto.Video.LongDescription" name="LongDescription"></textarea></div>
+    <div class="form-row">
+      <div class="form-group col-md-6"><label>Miniatura</label><input class="form-control" [(ngModel)]="dto.Video.ThumbnailUrl" name="ThumbnailUrl"></div>
+      <div class="form-group col-md-3"><label>Origen</label><select class="form-control" [(ngModel)]="dto.Video.SourceType" name="SourceType" (ngModelChange)="clearPreview()"><option *ngFor="let type of sourceTypes" [value]="type">{{ type }}</option></select></div>
+      <div class="form-group col-md-3"><label>Duracion</label><input class="form-control" [(ngModel)]="dto.Video.Duration" name="Duration"></div>
+    </div>
+    <div class="form-group">
+      <div class="d-flex justify-content-between align-items-center">
+        <label>Referencia del video</label>
+        <div>
+          <button type="button" class="btn btn-outline-secondary btn-sm mb-2 mr-1" (click)="analyzeVideo()" [disabled]="analyzeLoading"><i class="fas fa-search mr-1"></i> Analizar</button>
+          <button type="button" class="btn btn-outline-primary btn-sm mb-2" (click)="loadPreview()"><i class="fas fa-play mr-1"></i> Previsualizar</button>
+        </div>
+      </div>
+      <textarea class="form-control" rows="4" [(ngModel)]="dto.Video.SourceValue" name="SourceValue" (ngModelChange)="clearPreview()"></textarea>
+    </div>
+    <div class="alert alert-info" *ngIf="analyzeLoading">Analizando video...</div>
+    <div class="alert alert-warning" *ngIf="analyzeMessage">{{ analyzeMessage }}</div>
+    <div class="form-section p-3 mb-3" *ngIf="previewSource || previewEmbedHtml || previewError">
+      <h2 class="h6 mb-3">Previsualizacion</h2>
+      <div class="alert alert-warning" *ngIf="previewError">{{ previewError }}</div>
+      <div class="embed-responsive embed-responsive-16by9 bg-dark" *ngIf="previewEmbedHtml" [innerHTML]="previewEmbedHtml"></div>
+      <video class="w-100 bg-dark" style="aspect-ratio: 16 / 9;" controls preload="metadata" [src]="previewSource" (loadedmetadata)="onPreviewMetadata($event)" (error)="onPreviewError($event)" *ngIf="previewSource"></video>
+      <small class="text-muted d-block mt-2" *ngIf="previewSource">Use Analizar para obtener duracion y opciones de miniatura.</small>
+    </div>
+    <div class="form-row">
+      <div class="form-group col-md-4">
+        <label>Categorias</label>
+        <div class="border rounded p-2" style="max-height: 180px; overflow:auto">
+          <label class="d-block" *ngFor="let item of categories"><input type="checkbox" [checked]="isChecked(dto.CategoryCodList, item.CategoryCod)" (change)="toggle(dto.CategoryCodList, item.CategoryCod, $any($event.target).checked)"> {{ item.Name }}</label>
+        </div>
+      </div>
+      <div class="form-group col-md-4">
+        <label>Actores</label>
+        <div class="border rounded p-2" style="max-height: 180px; overflow:auto">
+          <label class="d-block" *ngFor="let item of actors"><input type="checkbox" [checked]="isChecked(dto.ActorCodList, item.ActorCod)" (change)="toggle(dto.ActorCodList, item.ActorCod, $any($event.target).checked)"> {{ item.Name }}</label>
+        </div>
+      </div>
+      <div class="form-group col-md-4">
+        <label>Tags</label>
+        <div class="border rounded p-2" style="max-height: 180px; overflow:auto">
+          <label class="d-block" *ngFor="let item of tags"><input type="checkbox" [checked]="isChecked(dto.TagCodList, item.TagCod)" (change)="toggle(dto.TagCodList, item.TagCod, $any($event.target).checked)"> {{ item.Name }}</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal d-block" tabindex="-1" role="dialog" *ngIf="showThumbnailModal" style="background: rgba(0,0,0,.55);">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Seleccionar miniatura</h5>
+        <button type="button" class="close" (click)="closeThumbnailModal()"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6 mb-3" *ngFor="let image of thumbnailOptions">
+            <button type="button" class="btn btn-link p-0 w-100" (click)="selectThumbnail(image)">
+              <img [src]="image" class="img-fluid border rounded" alt="Miniatura">
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeThumbnailModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>

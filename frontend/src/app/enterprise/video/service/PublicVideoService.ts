@@ -1,0 +1,37 @@
+import { Injectable } from '@angular/core';
+import { AppSetting } from '../../../config/AppSetting';
+import { ApiService } from '../../shared/service/ApiService';
+import { ResponseWsDto } from '../../shared/model/dto/ResponseWsDto';
+
+@Injectable({ providedIn: 'root' })
+export class PublicVideoService {
+  constructor(private apiService: ApiService) {}
+
+  async findCategories(): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/categories`);
+  }
+
+  async findRecent(limit: number = 12): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/recent`, { Limit: limit });
+  }
+
+  async findMostViewed(limit: number = 12): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/mostViewed`, { Limit: limit });
+  }
+
+  async findByCategory(categoryCod: string, sort: string = 'recent'): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/categories/${categoryCod}/videos`, { Sort: sort, Limit: 24 });
+  }
+
+  async findDetail(videoCod: string): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/${videoCod}`);
+  }
+
+  async findRelated(videoCod: string): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/${videoCod}/related`, { Limit: 8 });
+  }
+
+  async registerView(videoCod: string): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/public/videos/${videoCod}/view`, {});
+  }
+}

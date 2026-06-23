@@ -1,0 +1,49 @@
+<header class="app-header">
+  <div class="container py-3 d-flex justify-content-between align-items-center">
+    <a routerLink="/" class="h4 mb-0 text-dark">Videos</a>
+    <a routerLink="/admin/login" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-shield mr-1"></i> Admin</a>
+  </div>
+</header>
+
+<main class="container py-4">
+  <section class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h3 mb-0">Categorias</h1>
+    </div>
+    <div class="row">
+      <div class="col-6 col-md-3 mb-3" *ngFor="let category of categories">
+        <a [routerLink]="['/category', category.CategoryCod]" class="d-block form-section p-3 text-decoration-none text-dark">
+          <strong>{{ category.Name }}</strong>
+          <small class="d-block text-muted mt-1">{{ category.Description }}</small>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+      <h2 class="h4 mb-2">Videos</h2>
+      <div class="btn-group btn-group-sm mb-2">
+        <button class="btn" [class.btn-primary]="sortMode === 'recent'" [class.btn-outline-primary]="sortMode !== 'recent'" (click)="loadVideos('recent')">Recientes</button>
+        <button class="btn" [class.btn-primary]="sortMode === 'views'" [class.btn-outline-primary]="sortMode !== 'views'" (click)="loadVideos('views')">Mas vistos</button>
+      </div>
+    </div>
+    <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+    <div class="row">
+      <div class="col-sm-6 col-lg-4 mb-4" *ngFor="let video of videos">
+        <article class="video-card">
+          <img class="video-thumb" [src]="thumb(video)" [alt]="video.Title">
+          <div class="p-3">
+            <span class="badge badge-soft mb-2">{{ video.PrimaryCategoryName || 'Sin categoria' }}</span>
+            <h3 class="h5">{{ video.Title }}</h3>
+            <p class="text-muted small">{{ video.ShortDescription }}</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <small>{{ video.ViewCount || 0 }} vistas</small>
+              <a [routerLink]="['/video', video.VideoCod]" class="btn btn-primary btn-sm">Ver video</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>

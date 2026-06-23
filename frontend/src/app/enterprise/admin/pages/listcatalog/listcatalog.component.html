@@ -1,0 +1,47 @@
+<header class="app-header">
+  <div class="container py-3 d-flex justify-content-between align-items-center">
+    <a routerLink="/admin" class="h4 mb-0 text-dark">{{ title() }}</a>
+    <button class="btn btn-outline-secondary btn-sm" (click)="newEntity()">Nuevo</button>
+  </div>
+</header>
+<main class="container py-4">
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="row">
+    <div class="col-lg-4 mb-3">
+      <div class="form-section p-3">
+        <h2 class="h5">Registro</h2>
+        <div class="form-group"><label>Nombre</label><input class="form-control" [(ngModel)]="entity.Name" name="Name"></div>
+        <div class="form-group" *ngIf="type !== 'tags'"><label>Descripcion</label><textarea class="form-control" [(ngModel)]="entity.Description" name="Description"></textarea></div>
+        <div class="form-group" *ngIf="type !== 'tags'"><label>Imagen</label><input class="form-control" [(ngModel)]="entity.ImageUrl" name="ImageUrl"></div>
+        <div class="form-group" *ngIf="type === 'categories'"><label>Orden</label><input type="number" class="form-control" [(ngModel)]="entity.DisplayOrder" name="DisplayOrder"></div>
+        <div class="form-group"><label>Estado</label><select class="form-control" [(ngModel)]="entity.Status" name="Status"><option value="A">Activo</option><option value="I">Inactivo</option></select></div>
+        <button class="btn btn-primary" (click)="save()">Guardar</button>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="form-section p-3 mb-3">
+        <div class="form-row">
+          <div class="col-md-7 mb-2"><input class="form-control" placeholder="Buscar nombre" [(ngModel)]="Query" name="Query"></div>
+          <div class="col-md-3 mb-2"><select class="form-control" [(ngModel)]="Status" name="Status"><option value="">Todos</option><option value="A">Activo</option><option value="I">Inactivo</option></select></div>
+          <div class="col-md-2 mb-2"><button class="btn btn-outline-primary btn-block" (click)="findAll()"><i class="fas fa-search"></i></button></div>
+        </div>
+      </div>
+      <div class="table-responsive form-section">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let row of rows">
+              <td>{{ row.Name }}</td>
+              <td>{{ row.Status }}</td>
+              <td class="text-right">
+                <button class="btn btn-sm btn-outline-primary mr-1" (click)="edit(row)"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-outline-success mr-1" (click)="enable(row)" *ngIf="row.Status !== 'A'"><i class="fas fa-check"></i></button>
+                <button class="btn btn-sm btn-outline-warning" (click)="disable(row)" *ngIf="row.Status === 'A'"><i class="fas fa-ban"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>

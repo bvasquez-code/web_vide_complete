@@ -1,0 +1,33 @@
+body {
+  background: #f5f7fb;
+  color: #1f2937;
+}
+.app-header {
+  background: #ffffff;
+  border-bottom: 1px solid #d9e2ec;
+}
+.video-card {
+  height: 100%;
+  border: 1px solid #d9e2ec;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+.video-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #d9e2ec;
+}
+.admin-shell {
+  min-height: 100vh;
+}
+.form-section {
+  border: 1px solid #d9e2ec;
+  border-radius: 6px;
+  background: #fff;
+}
+.badge-soft {
+  background: #e8f1ff;
+  color: #1d4ed8;
+}

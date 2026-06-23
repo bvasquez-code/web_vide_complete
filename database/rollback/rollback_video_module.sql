@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS `video_view_log`;
+DROP TABLE IF EXISTS `video_tag_rel`;
+DROP TABLE IF EXISTS `video_actor_rel`;
+DROP TABLE IF EXISTS `video_category_rel`;
+DROP TABLE IF EXISTS `video`;
+DROP TABLE IF EXISTS `tag`;
+DROP TABLE IF EXISTS `actor`;
+DROP TABLE IF EXISTS `video_category`;
+DROP TABLE IF EXISTS `admin_user`;

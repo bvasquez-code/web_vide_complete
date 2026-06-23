@@ -1,0 +1,44 @@
+<header class="app-header">
+  <div class="container py-3 d-flex justify-content-between align-items-center">
+    <a routerLink="/" class="h4 mb-0 text-dark">Videos</a>
+    <a routerLink="/admin/login" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-shield mr-1"></i> Admin</a>
+  </div>
+</header>
+
+<main class="container py-4">
+  <a routerLink="/" class="btn btn-link px-0 mb-2"><i class="fas fa-arrow-left mr-1"></i> Volver</a>
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <section class="form-section p-3 mb-4" *ngIf="!errorMessage">
+    <div class="embed-responsive embed-responsive-16by9 bg-dark mb-3" *ngIf="detail.Video.SourceType === 'EMBED' && embedHtml" [innerHTML]="embedHtml"></div>
+    <video class="w-100 bg-dark mb-3" style="aspect-ratio: 16 / 9;" controls preload="metadata" [src]="videoSource()" (error)="onPlayerError($event)" *ngIf="canUseHtmlVideo() && detail.Video.SourceValue"></video>
+    <div class="alert alert-warning" *ngIf="playerErrorMessage">{{ playerErrorMessage }}</div>
+    <div class="alert alert-warning" *ngIf="!detail.Video.SourceValue">La referencia del video no es valida.</div>
+
+    <h1 class="h3">{{ detail.Video.Title }}</h1>
+    <p>{{ detail.Video.LongDescription || detail.Video.ShortDescription }}</p>
+    <div class="mb-2">
+      <span class="badge badge-soft mr-1" *ngFor="let category of detail.Categories">{{ category.Name }}</span>
+      <span class="badge badge-secondary mr-1" *ngFor="let actor of detail.Actors">{{ actor.Name }}</span>
+      <span class="badge badge-light border mr-1" *ngFor="let tag of detail.Tags">#{{ tag.Name }}</span>
+    </div>
+    <small class="text-muted">
+      {{ detail.Video.ViewCount || 0 }} vistas · Origen {{ detail.Video.SourceType }} · Duracion {{ detail.Video.Duration || 'No registrada' }}
+    </small>
+  </section>
+
+  <section>
+    <h2 class="h4 mb-3">Videos relacionados</h2>
+    <div class="row">
+      <div class="col-sm-6 col-lg-3 mb-4" *ngFor="let video of related">
+        <article class="video-card">
+          <img class="video-thumb" [src]="thumb(video)" [alt]="video.Title">
+          <div class="p-3">
+            <h3 class="h6">{{ video.Title }}</h3>
+            <a [routerLink]="['/video', video.VideoCod]" class="btn btn-outline-primary btn-sm">Ver</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
