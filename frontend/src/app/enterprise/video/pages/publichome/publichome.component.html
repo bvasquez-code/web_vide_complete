@@ -10,7 +10,7 @@
     <div class="form-section p-3">
       <div class="form-row align-items-center">
         <div class="col-md-9 mb-2 mb-md-0">
-          <input class="form-control" placeholder="Buscar por titulo o actor" [(ngModel)]="searchQuery" name="searchQuery" (keyup.enter)="search(1)">
+          <input class="form-control" placeholder="Buscar por titulo, actor o tag" [(ngModel)]="searchQuery" name="searchQuery" (keyup.enter)="search(1)">
         </div>
         <div class="col-md-3">
           <div class="btn-group w-100">
@@ -54,9 +54,16 @@
         <article class="video-card">
           <img class="video-thumb" [src]="thumb(video)" [alt]="video.Title">
           <div class="p-3">
-            <span class="badge badge-soft mb-2">{{ video.PrimaryCategoryName || 'Sin categoria' }}</span>
+            <div class="mb-2">
+              <a class="badge badge-soft mr-1" *ngFor="let category of video.Categories" [routerLink]="['/category', category.Cod]">{{ category.Name }}</a>
+              <span class="badge badge-soft" *ngIf="!video.Categories || video.Categories.length === 0">Sin categoria</span>
+            </div>
             <h3 class="h5">{{ video.Title }}</h3>
             <p class="text-muted small">{{ video.ShortDescription }}</p>
+            <div class="mb-2">
+              <a class="badge badge-secondary mr-1" *ngFor="let actor of video.Actors" [routerLink]="['/actor', actor.Cod]">{{ actor.Name }}</a>
+              <a class="badge badge-light border mr-1" *ngFor="let tag of video.Tags" [routerLink]="['/']" [queryParams]="{ q: tag.Name }">#{{ tag.Name }}</a>
+            </div>
             <div class="d-flex justify-content-between align-items-center">
               <small>{{ video.ViewCount || 0 }} vistas</small>
               <a [routerLink]="['/video', video.VideoCod]" class="btn btn-primary btn-sm">Ver video</a>

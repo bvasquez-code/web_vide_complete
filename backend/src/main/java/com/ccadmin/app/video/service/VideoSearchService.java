@@ -3,6 +3,7 @@ package com.ccadmin.app.video.service;
 import com.ccadmin.app.shared.model.dto.ResponsePageSearchT;
 import com.ccadmin.app.video.model.dto.VideoCardDto;
 import com.ccadmin.app.video.model.dto.VideoDetailDto;
+import com.ccadmin.app.video.model.dto.VideoLabelDto;
 import com.ccadmin.app.video.model.entity.*;
 import com.ccadmin.app.video.repository.*;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class VideoSearchService {
     public List<VideoCardDto> findRecent(Integer limit) { return videoRepository.findRecent(safeLimit(limit)).stream().map(this::toCard).toList(); }
     public List<VideoCardDto> findMostViewed(Integer limit) { return videoRepository.findMostViewed(safeLimit(limit)).stream().map(this::toCard).toList(); }
     public List<VideoCardDto> findByCategory(String categoryCod, String sort, Integer limit) { return videoRepository.findByCategory(categoryCod, sort == null ? "recent" : sort, safeLimit(limit)).stream().map(this::toCard).toList(); }
+    public List<VideoCardDto> findByActor(String actorCod, String sort, Integer limit) { return videoRepository.findByActor(actorCod, sort == null ? "recent" : sort, safeLimit(limit)).stream().map(this::toCard).toList(); }
     public List<VideoCardDto> findRelated(String videoCod, Integer limit) { return videoRepository.findRelated(videoCod, safeLimit(limit)).stream().map(this::toCard).toList(); }
 
     public ResponsePageSearchT<VideoCardDto> searchPublic(String query, Integer page, Integer limit) {
@@ -73,6 +75,10 @@ public class VideoSearchService {
         return categoryRepository.findById(categoryCod).orElseThrow(() -> new IllegalArgumentException("Categoria no encontrada."));
     }
 
+    public ActorEntity findActorById(String actorCod) {
+        return actorRepository.findById(actorCod).orElseThrow(() -> new IllegalArgumentException("Actor no encontrado."));
+    }
+
     public Object findDataForm() {
         return new FormData(categoryRepository.findActives(), actorRepository.findActives(), tagRepository.findActives(), List.of("EMBED", "URL", "PATH"));
     }
@@ -89,10 +95,16 @@ public class VideoSearchService {
         dto.ViewCount = video.ViewCount;
         dto.PublishDate = video.PublishDate;
         dto.CreationDate = video.CreationDate;
-        categoryRelRepository.findByVideoCodAndStatus(video.VideoCod, "A").stream().findFirst().ifPresent(rel -> {
-            dto.PrimaryCategoryCod = rel.CategoryCod;
-            categoryRepository.findById(rel.CategoryCod).ifPresent(cat -> dto.PrimaryCategoryName = cat.Name);
-        });
+        List<String> categoryCods = categoryRelRepository.findByVideoCodAndStatus(video.VideoCod, "A").stream().map(rel -> rel.CategoryCod).toList();
+        List<String> actorCods = actorRelRepository.findByVideoCodAndStatus(video.VideoCod, "A").stream().map(rel -> rel.ActorCod).toList();
+        List<String> tagCods = tagRelRepository.findByVideoCodAndStatus(video.VideoCod, "A").stream().map(rel -> rel.TagCod).toList();
+        dto.Categories = categoryRepository.findAllById(categoryCods).stream().map(item -> new VideoLabelDto(item.CategoryCod, item.Name)).toList();
+        dto.Actors = actorRepository.findAllById(actorCods).stream().map(item -> new VideoLabelDto(item.ActorCod, item.Name)).toList();
+        dto.Tags = tagRepository.findAllById(tagCods).stream().limit(3).map(item -> new VideoLabelDto(item.TagCod, item.Name)).toList();
+        if (!dto.Categories.isEmpty()) {
+            dto.PrimaryCategoryCod = dto.Categories.get(0).Cod;
+            dto.PrimaryCategoryName = dto.Categories.get(0).Name;
+        }
         return dto;
     }
 

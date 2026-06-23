@@ -1,3 +1,8 @@
+export class VideoLabelDto {
+  Cod: string = '';
+  Name: string = '';
+}
+
 export class VideoCardDto {
   VideoCod: string = '';
   Title: string = '';
@@ -9,4 +14,7 @@ export class VideoCardDto {
   CreationDate: string = '';
   PrimaryCategoryCod: string = '';
   PrimaryCategoryName: string = '';
+  Categories: VideoLabelDto[] = [];
+  Actors: VideoLabelDto[] = [];
+  Tags: VideoLabelDto[] = [];
 }

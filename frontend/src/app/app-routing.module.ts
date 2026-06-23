@@ -7,12 +7,14 @@ import { ListvideosComponent } from './enterprise/admin/pages/listvideos/listvid
 import { CreatevideoComponent } from './enterprise/admin/pages/createvideo/createvideo.component';
 import { AdminAuthGuard } from './enterprise/shared/guard/AdminAuthGuard';
 import { PubliccategoryComponent } from './enterprise/video/pages/publiccategory/publiccategory.component';
+import { PublicactorComponent } from './enterprise/video/pages/publicactor/publicactor.component';
 import { PublichomeComponent } from './enterprise/video/pages/publichome/publichome.component';
 import { PublicplayerComponent } from './enterprise/video/pages/publicplayer/publicplayer.component';
 
 const routes: Routes = [
   { path: '', component: PublichomeComponent },
   { path: 'category/:categoryCod', component: PubliccategoryComponent },
+  { path: 'actor/:actorCod', component: PublicactorComponent },
   { path: 'video/:videoCod', component: PublicplayerComponent },
   { path: 'admin/login', component: LoginComponent },
   { path: 'admin', component: DashboardComponent, canActivate: [AdminAuthGuard] },

@@ -8,6 +8,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { PublichomeComponent } from './enterprise/video/pages/publichome/publichome.component';
 import { PubliccategoryComponent } from './enterprise/video/pages/publiccategory/publiccategory.component';
+import { PublicactorComponent } from './enterprise/video/pages/publicactor/publicactor.component';
 import { PublicplayerComponent } from './enterprise/video/pages/publicplayer/publicplayer.component';
 import { LoginComponent } from './enterprise/admin/pages/login/login.component';
 import { DashboardComponent } from './enterprise/admin/pages/dashboard/dashboard.component';
@@ -20,6 +21,7 @@ import { ListcatalogComponent } from './enterprise/admin/pages/listcatalog/listc
     AppComponent,
     PublichomeComponent,
     PubliccategoryComponent,
+    PublicactorComponent,
     PublicplayerComponent,
     LoginComponent,
     DashboardComponent,

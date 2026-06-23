@@ -62,6 +62,13 @@ public class PublicVideoController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("actors/{actorCod}/videos")
+    public ResponseEntity<ResponseWsDto> byActor(@PathVariable String actorCod, @RequestParam(defaultValue = "recent") String Sort, @RequestParam(defaultValue = "12") Integer Limit) {
+        ResponseWsDto response = new ResponseWsDto(searchService.findByActor(actorCod, Sort, Limit));
+        response.AddResponseAdditional("Actor", searchService.findActorById(actorCod));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @GetMapping("videos/{videoCod}")
     public ResponseEntity<ResponseWsDto> detail(@PathVariable String videoCod) {
         try {

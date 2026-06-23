@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { PublicVideoService } from '../../service/PublicVideoService';
 import { VideoCategoryEntity } from '../../model/entity/VideoCategoryEntity';
 import { VideoCardDto } from '../../model/dto/VideoCardDto';
@@ -18,11 +19,25 @@ export class PublichomeComponent implements OnInit {
   searchPage = 1;
   searchLimit = 30;
   searchTotalRows = 0;
+  private initialized = false;
 
-  constructor(private publicVideoService: PublicVideoService) {}
+  constructor(private publicVideoService: PublicVideoService, private route: ActivatedRoute) {}
 
   async ngOnInit(): Promise<void> {
     await this.load();
+    this.route.queryParamMap.subscribe(async params => {
+      if (!this.initialized) {
+        this.initialized = true;
+        return;
+      }
+      const queryParam = params.get('q');
+      if (queryParam && queryParam.trim()) {
+        this.searchQuery = queryParam.trim();
+        await this.search(1);
+      } else if (this.searchMode) {
+        await this.clearSearch();
+      }
+    });
   }
 
   async load(): Promise<void> {
@@ -30,7 +45,13 @@ export class PublichomeComponent implements OnInit {
     this.errorMessage = '';
     const categoryRpt = await this.publicVideoService.findCategories();
     this.categories = categoryRpt.Data || [];
-    await this.loadVideos('recent');
+    const queryParam = this.route.snapshot.queryParamMap.get('q');
+    if (queryParam && queryParam.trim()) {
+      this.searchQuery = queryParam.trim();
+      await this.search(1);
+    } else {
+      await this.loadVideos('recent');
+    }
     this.loading = false;
   }
 
