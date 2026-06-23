@@ -1,0 +1,21 @@
+<header class="app-header">
+  <div class="container py-3 d-flex justify-content-between align-items-center">
+    <a routerLink="/" class="h4 mb-0 text-dark">Videos</a>
+    <a routerLink="/admin/login" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-shield mr-1"></i> Admin</a>
+  </div>
+</header>
+
+<main class="container py-4">
+  <a routerLink="/" class="btn btn-link px-0 mb-3"><i class="fas fa-arrow-left mr-1"></i> Volver</a>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Todas las categorias</h1>
+  </div>
+  <div class="row">
+    <div class="col-6 col-md-3 mb-3" *ngFor="let category of categories">
+      <a [routerLink]="['/category', category.CategoryCod]" class="d-block form-section p-3 text-decoration-none text-dark">
+        <strong>{{ category.Name }}</strong>
+        <small class="d-block text-muted mt-1">{{ category.Description }}</small>
+      </a>
+    </div>
+  </div>
+</main>

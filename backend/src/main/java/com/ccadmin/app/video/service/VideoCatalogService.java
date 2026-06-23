@@ -27,6 +27,7 @@ public class VideoCatalogService extends SessionService {
     }
 
     public List<VideoCategoryEntity> findActiveCategories() { return categoryRepository.findActives(); }
+    public List<VideoCategoryEntity> findTopViewedCategories(Integer limit) { return categoryRepository.findTopViewed(limit == null || limit < 1 ? 8 : Math.min(limit, 30)); }
     public List<ActorEntity> findActiveActors() { return actorRepository.findActives(); }
     public List<TagEntity> findActiveTags() { return tagRepository.findActives(); }
 

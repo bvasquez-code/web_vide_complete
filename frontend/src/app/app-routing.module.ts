@@ -8,11 +8,13 @@ import { CreatevideoComponent } from './enterprise/admin/pages/createvideo/creat
 import { AdminAuthGuard } from './enterprise/shared/guard/AdminAuthGuard';
 import { PubliccategoryComponent } from './enterprise/video/pages/publiccategory/publiccategory.component';
 import { PublicactorComponent } from './enterprise/video/pages/publicactor/publicactor.component';
+import { PubliccategoriesComponent } from './enterprise/video/pages/publiccategories/publiccategories.component';
 import { PublichomeComponent } from './enterprise/video/pages/publichome/publichome.component';
 import { PublicplayerComponent } from './enterprise/video/pages/publicplayer/publicplayer.component';
 
 const routes: Routes = [
   { path: '', component: PublichomeComponent },
+  { path: 'categories', component: PubliccategoriesComponent },
   { path: 'category/:categoryCod', component: PubliccategoryComponent },
   { path: 'actor/:actorCod', component: PublicactorComponent },
   { path: 'video/:videoCod', component: PublicplayerComponent },

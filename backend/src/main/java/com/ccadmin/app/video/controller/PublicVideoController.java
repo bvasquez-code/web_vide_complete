@@ -40,6 +40,11 @@ public class PublicVideoController {
         return new ResponseEntity<>(new ResponseWsDto(catalogService.findActiveCategories()), HttpStatus.OK);
     }
 
+    @GetMapping("categories/top")
+    public ResponseEntity<ResponseWsDto> topCategories(@RequestParam(defaultValue = "8") Integer Limit) {
+        return new ResponseEntity<>(new ResponseWsDto(catalogService.findTopViewedCategories(Limit)), HttpStatus.OK);
+    }
+
     @GetMapping("videos/recent")
     public ResponseEntity<ResponseWsDto> recent(@RequestParam(defaultValue = "12") Integer Limit) {
         return new ResponseEntity<>(new ResponseWsDto(searchService.findRecent(Limit)), HttpStatus.OK);

@@ -11,6 +11,10 @@ export class PublicVideoService {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/categories`);
   }
 
+  async findTopCategories(limit: number = 8): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/categories/top`, { Limit: limit });
+  }
+
   async findRecent(limit: number = 12): Promise<ResponseWsDto> {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/recent`, { Limit: limit });
   }

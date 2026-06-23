@@ -43,7 +43,7 @@ export class PublichomeComponent implements OnInit {
   async load(): Promise<void> {
     this.loading = true;
     this.errorMessage = '';
-    const categoryRpt = await this.publicVideoService.findCategories();
+    const categoryRpt = await this.publicVideoService.findTopCategories(8);
     this.categories = categoryRpt.Data || [];
     const queryParam = this.route.snapshot.queryParamMap.get('q');
     if (queryParam && queryParam.trim()) {
