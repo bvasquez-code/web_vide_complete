@@ -1,0 +1,34 @@
+<header class="app-header">
+  <div class="container py-3 d-flex justify-content-between align-items-center">
+    <a routerLink="/" class="h4 mb-0 text-dark">Videos</a>
+  </div>
+</header>
+
+<main class="container py-4">
+  <section class="form-section p-3 mx-auto public-auth-panel">
+    <div class="btn-group btn-group-sm mb-3">
+      <button type="button" class="btn" [class.btn-primary]="mode === 'login'" [class.btn-outline-primary]="mode !== 'login'" (click)="mode = 'login'">Ingresar</button>
+      <button type="button" class="btn" [class.btn-primary]="mode === 'register'" [class.btn-outline-primary]="mode !== 'register'" (click)="mode = 'register'">Registrarme</button>
+    </div>
+
+    <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <div class="form-group" *ngIf="mode === 'register'">
+      <label>Nombre</label>
+      <input class="form-control" [(ngModel)]="Names" name="Names">
+    </div>
+    <div class="form-group" *ngIf="mode === 'register'">
+      <label>Correo</label>
+      <input class="form-control" [(ngModel)]="Email" name="Email">
+    </div>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input class="form-control" [(ngModel)]="UserName" name="UserName">
+    </div>
+    <div class="form-group">
+      <label>Contrasena</label>
+      <input type="password" class="form-control" [(ngModel)]="Password" name="Password" (keyup.enter)="submit()">
+    </div>
+    <button class="btn btn-primary btn-block" (click)="submit()">{{ mode === 'login' ? 'Ingresar' : 'Crear cuenta' }}</button>
+  </section>
+</main>

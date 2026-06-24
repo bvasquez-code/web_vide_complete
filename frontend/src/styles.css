@@ -37,6 +37,15 @@ body {
   justify-content: flex-end;
   gap: 8px;
 }
+.public-auth-panel {
+  max-width: 420px;
+}
+.viewer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
 .actor-profile {
   display: flex;
   align-items: center;

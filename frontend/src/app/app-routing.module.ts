@@ -11,6 +11,9 @@ import { PublicactorComponent } from './enterprise/video/pages/publicactor/publi
 import { PubliccategoriesComponent } from './enterprise/video/pages/publiccategories/publiccategories.component';
 import { PublichomeComponent } from './enterprise/video/pages/publichome/publichome.component';
 import { PublicplayerComponent } from './enterprise/video/pages/publicplayer/publicplayer.component';
+import { PublicloginComponent } from './enterprise/video/pages/publiclogin/publiclogin.component';
+import { PublicprofileComponent } from './enterprise/video/pages/publicprofile/publicprofile.component';
+import { CapturesuggestionsComponent } from './enterprise/admin/pages/capturesuggestions/capturesuggestions.component';
 
 const routes: Routes = [
   { path: '', component: PublichomeComponent },
@@ -18,6 +21,8 @@ const routes: Routes = [
   { path: 'category/:categoryCod', component: PubliccategoryComponent },
   { path: 'actor/:actorCod', component: PublicactorComponent },
   { path: 'video/:videoCod', component: PublicplayerComponent },
+  { path: 'login', component: PublicloginComponent },
+  { path: 'profile', component: PublicprofileComponent },
   { path: 'admin/login', component: LoginComponent },
   { path: 'admin', component: DashboardComponent, canActivate: [AdminAuthGuard] },
   { path: 'admin/videos', component: ListvideosComponent, canActivate: [AdminAuthGuard] },
@@ -26,6 +31,7 @@ const routes: Routes = [
   { path: 'admin/categories', component: ListcatalogComponent, canActivate: [AdminAuthGuard] },
   { path: 'admin/actors', component: ListcatalogComponent, canActivate: [AdminAuthGuard] },
   { path: 'admin/tags', component: ListcatalogComponent, canActivate: [AdminAuthGuard] },
+  { path: 'admin/capture-suggestions', component: CapturesuggestionsComponent, canActivate: [AdminAuthGuard] },
   { path: '**', redirectTo: '' }
 ];
 

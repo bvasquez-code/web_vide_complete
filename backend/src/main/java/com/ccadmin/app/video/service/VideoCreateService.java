@@ -74,9 +74,11 @@ public class VideoCreateService extends SessionService {
         videoRepository.incrementView(videoCod);
         VideoViewLogEntity log = new VideoViewLogEntity();
         log.VideoCod = videoCod;
+        String userCod = getUserCod();
+        log.ViewerUserCod = userCod != null && userCod.startsWith("SUB") ? userCod : null;
         log.ViewerIp = request.getRemoteAddr();
         log.UserAgent = request.getHeader("User-Agent");
-        log.addSessionCreate("PUBLIC");
+        log.addSessionCreate(log.ViewerUserCod == null ? "PUBLIC" : log.ViewerUserCod);
         viewLogRepository.save(log);
     }
 

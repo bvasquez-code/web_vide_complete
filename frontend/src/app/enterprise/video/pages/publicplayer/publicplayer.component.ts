@@ -2,6 +2,8 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { AppSetting } from '../../../../config/AppSetting';
+import { PublicAuthService } from '../../service/PublicAuthService';
+import { PublicSubscriberService } from '../../service/PublicSubscriberService';
 import { PublicVideoService } from '../../service/PublicVideoService';
 import { VideoDetailDto } from '../../model/dto/VideoDetailDto';
 import { VideoCardDto } from '../../model/dto/VideoCardDto';
@@ -12,6 +14,7 @@ import { VideoCardDto } from '../../model/dto/VideoCardDto';
 })
 export class PublicplayerComponent implements OnInit {
   @ViewChild('captureSlider') captureSlider?: ElementRef<HTMLDivElement>;
+  @ViewChild('videoPlayer') videoPlayer?: ElementRef<HTMLVideoElement>;
 
   videoCod = '';
   detail: VideoDetailDto = new VideoDetailDto();
@@ -22,8 +25,12 @@ export class PublicplayerComponent implements OnInit {
   viewRegistered = false;
   showCaptureModal = false;
   selectedCaptureIndex = 0;
+  viewerState: any = {};
+  interactionMessage = '';
+  suggestionComment = '';
+  suggestionMessage = '';
 
-  constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, private sanitizer: DomSanitizer) {}
+  constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, private publicSubscriberService: PublicSubscriberService, public publicAuthService: PublicAuthService, private sanitizer: DomSanitizer) {}
 
   async ngOnInit(): Promise<void> {
     this.route.paramMap.subscribe(async params => {
@@ -51,6 +58,7 @@ export class PublicplayerComponent implements OnInit {
     const relatedRpt = await this.publicVideoService.findRelated(this.videoCod);
     this.related = relatedRpt.Data || [];
     await this.registerViewOnce();
+    await this.loadViewerState();
   }
 
   resetState(): void {
@@ -60,6 +68,10 @@ export class PublicplayerComponent implements OnInit {
     this.errorMessage = '';
     this.playerErrorMessage = '';
     this.viewRegistered = false;
+    this.viewerState = {};
+    this.interactionMessage = '';
+    this.suggestionComment = '';
+    this.suggestionMessage = '';
   }
 
   async registerViewOnce(): Promise<void> {
@@ -125,5 +137,47 @@ export class PublicplayerComponent implements OnInit {
   nextCapture(): void {
     if (!this.detail.Captures.length) return;
     this.selectedCaptureIndex = this.selectedCaptureIndex >= this.detail.Captures.length - 1 ? 0 : this.selectedCaptureIndex + 1;
+  }
+
+  async loadViewerState(): Promise<void> {
+    if (!this.publicAuthService.isLogged()) return;
+    const rpt = await this.publicSubscriberService.state(this.videoCod);
+    if (!rpt.ErrorStatus) this.viewerState = rpt.Data || {};
+  }
+
+  async react(reactionType: 'LIKE' | 'DISLIKE'): Promise<void> {
+    const enabled = this.viewerState.ReactionType !== reactionType;
+    const rpt = await this.publicSubscriberService.reaction(this.videoCod, reactionType, enabled);
+    this.handleInteractionResponse(rpt);
+  }
+
+  async rate(value: number): Promise<void> {
+    const rpt = await this.publicSubscriberService.rating(this.videoCod, value);
+    this.handleInteractionResponse(rpt);
+  }
+
+  async toggleWatchLater(): Promise<void> {
+    const rpt = await this.publicSubscriberService.watchLater(this.videoCod, !this.viewerState.WatchLater);
+    this.handleInteractionResponse(rpt);
+  }
+
+  async suggestCurrentCapture(): Promise<void> {
+    const second = this.videoPlayer?.nativeElement?.currentTime || 0;
+    const rpt = await this.publicSubscriberService.suggestCapture(this.videoCod, second, this.suggestionComment);
+    if (rpt.ErrorStatus) {
+      this.suggestionMessage = rpt.Message;
+      return;
+    }
+    this.suggestionComment = '';
+    this.suggestionMessage = 'Captura enviada para revision del administrador.';
+  }
+
+  private handleInteractionResponse(rpt: any): void {
+    if (rpt.ErrorStatus) {
+      this.interactionMessage = rpt.Message;
+      return;
+    }
+    this.viewerState = rpt.Data || {};
+    this.interactionMessage = 'Preferencia guardada.';
   }
 }

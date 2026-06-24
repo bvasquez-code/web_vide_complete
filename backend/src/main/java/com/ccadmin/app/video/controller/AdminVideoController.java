@@ -1,6 +1,7 @@
 package com.ccadmin.app.video.controller;
 
 import com.ccadmin.app.shared.model.dto.ResponseWsDto;
+import com.ccadmin.app.subscriber.model.dto.VideoCaptureSuggestionDto;
 import com.ccadmin.app.video.model.dto.VideoRegisterDto;
 import com.ccadmin.app.video.service.ThumbnailStorageService;
 import com.ccadmin.app.video.service.VideoCreateService;
@@ -129,6 +130,35 @@ public class AdminVideoController {
     public ResponseEntity<ResponseWsDto> cleanUnlinkedCaptures(@RequestParam(defaultValue = "false") Boolean DryRun) {
         try {
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.cleanUnlinkedCaptures(DryRun)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("captureSuggestions")
+    public ResponseEntity<ResponseWsDto> captureSuggestions() {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.findPendingSuggestions()), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("captureSuggestions/{suggestionId}/approve")
+    public ResponseEntity<ResponseWsDto> approveCaptureSuggestion(@PathVariable Long suggestionId, @RequestBody(required = false) VideoCaptureSuggestionDto dto) {
+        try {
+            String comment = dto == null ? "" : dto.ReviewComment;
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.approveSuggestion(suggestionId, comment)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("captureSuggestions/{suggestionId}/reject")
+    public ResponseEntity<ResponseWsDto> rejectCaptureSuggestion(@PathVariable Long suggestionId, @RequestBody(required = false) VideoCaptureSuggestionDto dto) {
+        try {
+            String comment = dto == null ? "" : dto.ReviewComment;
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.rejectSuggestion(suggestionId, comment)), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }

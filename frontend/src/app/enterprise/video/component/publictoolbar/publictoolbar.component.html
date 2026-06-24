@@ -3,5 +3,7 @@
     <i class="fas mr-1" [class.fa-eye]="publicPreferenceService.showThumbnails()" [class.fa-eye-slash]="!publicPreferenceService.showThumbnails()"></i>
     {{ publicPreferenceService.showThumbnails() ? 'Ocultar miniaturas' : 'Mostrar miniaturas' }}
   </button>
-  <a routerLink="/admin/login" class="btn btn-outline-primary btn-sm"><i class="fas fa-user-shield mr-1"></i> Admin</a>
+  <a routerLink="/profile" class="btn btn-outline-primary btn-sm" *ngIf="publicAuthService.isLogged()"><i class="fas fa-user mr-1"></i> {{ publicAuthService.viewerName() }}</a>
+  <button type="button" class="btn btn-outline-secondary btn-sm" *ngIf="publicAuthService.isLogged()" (click)="logout()"><i class="fas fa-sign-out-alt mr-1"></i> Salir</button>
+  <a routerLink="/login" class="btn btn-primary btn-sm" *ngIf="!publicAuthService.isLogged()"><i class="fas fa-user mr-1"></i> Ingresar</a>
 </div>

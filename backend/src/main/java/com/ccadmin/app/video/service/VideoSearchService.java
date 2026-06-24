@@ -110,7 +110,7 @@ public class VideoSearchService {
 
     private Integer safeLimit(Integer limit) { return limit == null || limit < 1 ? 12 : Math.min(limit, 50); }
 
-    private VideoCardDto toCard(VideoEntity video) {
+    public VideoCardDto toCard(VideoEntity video) {
         VideoCardDto dto = new VideoCardDto();
         dto.VideoCod = video.VideoCod;
         dto.Title = video.Title;

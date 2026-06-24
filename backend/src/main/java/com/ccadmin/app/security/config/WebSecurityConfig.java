@@ -26,7 +26,7 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/public/**", "/api/v1/admin/auth/login").permitAll()
-                        .requestMatchers("/api/v1/admin/**").authenticated()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().permitAll())
                 .addFilterBefore(new JwtAuthorizationFilter(tokenUtil), UsernamePasswordAuthenticationFilter.class);
         return http.build();

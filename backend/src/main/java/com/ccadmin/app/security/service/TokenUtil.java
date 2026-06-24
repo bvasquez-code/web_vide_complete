@@ -20,8 +20,13 @@ public class TokenUtil {
     }
 
     public String createToken(String userCod) {
+        return createToken(userCod, "ADMIN");
+    }
+
+    public String createToken(String userCod, String userType) {
         return Jwts.builder()
                 .setSubject(userCod)
+                .claim("UserType", userType)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
                 .signWith(key(), SignatureAlgorithm.HS256)
@@ -31,5 +36,11 @@ public class TokenUtil {
     public String getSubject(String token) {
         Claims claims = Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(token).getBody();
         return claims.getSubject();
+    }
+
+    public String getUserType(String token) {
+        Claims claims = Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(token).getBody();
+        Object userType = claims.get("UserType");
+        return userType == null ? "ADMIN" : userType.toString();
     }
 }

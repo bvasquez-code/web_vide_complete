@@ -20,9 +20,9 @@ export class LoginComponent {
       this.errorMessage = rpt.Message;
       return;
     }
-    sessionStorage.setItem('Token', rpt.Data.Token);
-    sessionStorage.setItem('UserCod', rpt.Data.UserCod);
-    sessionStorage.setItem('UserName', rpt.Data.UserName);
+    sessionStorage.setItem('AdminToken', rpt.Data.Token);
+    sessionStorage.setItem('AdminUserCod', rpt.Data.UserCod);
+    sessionStorage.setItem('AdminUserName', rpt.Data.UserName);
     await this.router.navigate(['/admin']);
   }
 }

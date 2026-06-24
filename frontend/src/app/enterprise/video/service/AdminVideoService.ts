@@ -15,6 +15,18 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/auth/login`, { UserName, Password });
   }
 
+  async findCaptureSuggestions(): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/videos/captureSuggestions`);
+  }
+
+  async approveCaptureSuggestion(suggestionId: number, reviewComment: string = ''): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/captureSuggestions/${suggestionId}/approve`, { ReviewComment: reviewComment });
+  }
+
+  async rejectCaptureSuggestion(suggestionId: number, reviewComment: string = ''): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/captureSuggestions/${suggestionId}/reject`, { ReviewComment: reviewComment });
+  }
+
   async findVideos(filters: any): Promise<ResponseWsDto> {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/videos/findAll`, filters);
   }

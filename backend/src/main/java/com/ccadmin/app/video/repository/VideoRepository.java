@@ -114,4 +114,36 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String> {
     @Modifying
     @Query(value = "update video set ViewCount = ViewCount + 1 where VideoCod = :videoCod", nativeQuery = true)
     void incrementView(@Param("videoCod") String videoCod);
+
+    @Query(value = """
+            select v.* from video_watch_later w
+            inner join video v on v.VideoCod = w.VideoCod and v.Status = 'A'
+            where w.SubscriberUserCod = :SubscriberUserCod and w.Status = 'A'
+            order by w.CreationDate desc
+            limit :limit
+            """, nativeQuery = true)
+    List<VideoEntity> findWatchLaterVideos(@Param("SubscriberUserCod") String SubscriberUserCod, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select v.* from video v
+            inner join (
+                select VideoCod, max(CreationDate) LastViewDate
+                from video_view_log
+                where ViewerUserCod = :ViewerUserCod and Status = 'A'
+                group by VideoCod
+            ) l on l.VideoCod = v.VideoCod
+            where v.Status = 'A'
+            order by l.LastViewDate desc
+            limit :limit
+            """, nativeQuery = true)
+    List<VideoEntity> findHistoryVideos(@Param("ViewerUserCod") String ViewerUserCod, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select v.* from video_reaction r
+            inner join video v on v.VideoCod = r.VideoCod and v.Status = 'A'
+            where r.SubscriberUserCod = :SubscriberUserCod and r.ReactionType = 'LIKE' and r.Status = 'A'
+            order by r.ModifyDate desc
+            limit :limit
+            """, nativeQuery = true)
+    List<VideoEntity> findLikedVideos(@Param("SubscriberUserCod") String SubscriberUserCod, @Param("limit") Integer limit);
 }

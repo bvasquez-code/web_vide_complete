@@ -11,7 +11,7 @@
 
   <section class="form-section p-3 mb-4" *ngIf="!errorMessage">
     <div class="embed-responsive embed-responsive-16by9 bg-dark mb-3" *ngIf="detail.Video.SourceType === 'EMBED' && embedHtml" [innerHTML]="embedHtml"></div>
-    <video class="w-100 bg-dark mb-3" style="aspect-ratio: 16 / 9;" controls preload="metadata" [src]="videoSource()" (error)="onPlayerError($event)" *ngIf="canUseHtmlVideo() && detail.Video.SourceValue"></video>
+    <video #videoPlayer class="w-100 bg-dark mb-3" style="aspect-ratio: 16 / 9;" controls preload="metadata" [src]="videoSource()" (error)="onPlayerError($event)" *ngIf="canUseHtmlVideo() && detail.Video.SourceValue"></video>
     <div class="alert alert-warning" *ngIf="playerErrorMessage">{{ playerErrorMessage }}</div>
     <div class="alert alert-warning" *ngIf="!detail.Video.SourceValue">La referencia del video no es valida.</div>
 
@@ -25,6 +25,41 @@
     <small class="text-muted">
       {{ detail.Video.ViewCount || 0 }} vistas · Origen {{ detail.Video.SourceType }} · Duracion {{ detail.Video.Duration || 'No registrada' }}
     </small>
+  </section>
+
+  <section class="form-section p-3 mb-4" *ngIf="!errorMessage">
+    <div *ngIf="!publicAuthService.isLogged()" class="d-flex flex-wrap justify-content-between align-items-center">
+      <span class="text-muted">Ingresa para dar like, valorar, guardar y sugerir capturas.</span>
+      <a routerLink="/login" class="btn btn-primary btn-sm">Ingresar</a>
+    </div>
+
+    <div *ngIf="publicAuthService.isLogged()">
+      <div class="viewer-actions mb-3">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="viewerState.ReactionType === 'LIKE'" [class.btn-outline-primary]="viewerState.ReactionType !== 'LIKE'" (click)="react('LIKE')">
+          <i class="fas fa-thumbs-up mr-1"></i> Like
+        </button>
+        <button type="button" class="btn btn-sm" [class.btn-danger]="viewerState.ReactionType === 'DISLIKE'" [class.btn-outline-danger]="viewerState.ReactionType !== 'DISLIKE'" (click)="react('DISLIKE')">
+          <i class="fas fa-thumbs-down mr-1"></i> Dislike
+        </button>
+        <button type="button" class="btn btn-sm" [class.btn-warning]="viewerState.WatchLater" [class.btn-outline-warning]="!viewerState.WatchLater" (click)="toggleWatchLater()">
+          <i class="fas fa-clock mr-1"></i> Ver despues
+        </button>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Valoracion">
+          <button type="button" class="btn" *ngFor="let star of [1,2,3,4,5]" [class.btn-warning]="viewerState.RatingValue >= star" [class.btn-outline-warning]="viewerState.RatingValue < star" (click)="rate(star)">
+            <i class="fas fa-star"></i>
+          </button>
+        </div>
+      </div>
+      <div class="small text-success mb-3" *ngIf="interactionMessage">{{ interactionMessage }}</div>
+
+      <div *ngIf="detail.Video.SourceType === 'PATH'">
+        <textarea class="form-control form-control-sm mb-2" rows="2" [(ngModel)]="suggestionComment" name="suggestionComment" placeholder="Comentario para el administrador"></textarea>
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="suggestCurrentCapture()">
+          <i class="fas fa-camera mr-1"></i> Sugerir captura del instante actual
+        </button>
+        <div class="small text-success mt-2" *ngIf="suggestionMessage">{{ suggestionMessage }}</div>
+      </div>
+    </div>
   </section>
 
   <section class="form-section p-3 mb-4" *ngIf="detail.Captures && detail.Captures.length > 0">

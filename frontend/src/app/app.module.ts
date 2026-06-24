@@ -11,6 +11,8 @@ import { PubliccategoryComponent } from './enterprise/video/pages/publiccategory
 import { PublicactorComponent } from './enterprise/video/pages/publicactor/publicactor.component';
 import { PubliccategoriesComponent } from './enterprise/video/pages/publiccategories/publiccategories.component';
 import { PublicplayerComponent } from './enterprise/video/pages/publicplayer/publicplayer.component';
+import { PublicloginComponent } from './enterprise/video/pages/publiclogin/publiclogin.component';
+import { PublicprofileComponent } from './enterprise/video/pages/publicprofile/publicprofile.component';
 import { VideocardComponent } from './enterprise/video/component/videocard/videocard.component';
 import { PublictoolbarComponent } from './enterprise/video/component/publictoolbar/publictoolbar.component';
 import { BackbuttonComponent } from './enterprise/shared/component/backbutton/backbutton.component';
@@ -19,6 +21,7 @@ import { DashboardComponent } from './enterprise/admin/pages/dashboard/dashboard
 import { ListvideosComponent } from './enterprise/admin/pages/listvideos/listvideos.component';
 import { CreatevideoComponent } from './enterprise/admin/pages/createvideo/createvideo.component';
 import { ListcatalogComponent } from './enterprise/admin/pages/listcatalog/listcatalog.component';
+import { CapturesuggestionsComponent } from './enterprise/admin/pages/capturesuggestions/capturesuggestions.component';
 
 @NgModule({
   declarations: [
@@ -28,6 +31,8 @@ import { ListcatalogComponent } from './enterprise/admin/pages/listcatalog/listc
     PubliccategoryComponent,
     PublicactorComponent,
     PublicplayerComponent,
+    PublicloginComponent,
+    PublicprofileComponent,
     VideocardComponent,
     PublictoolbarComponent,
     BackbuttonComponent,
@@ -35,7 +40,8 @@ import { ListcatalogComponent } from './enterprise/admin/pages/listcatalog/listc
     DashboardComponent,
     ListvideosComponent,
     CreatevideoComponent,
-    ListcatalogComponent
+    ListcatalogComponent,
+    CapturesuggestionsComponent
   ],
   imports: [
     BrowserModule,

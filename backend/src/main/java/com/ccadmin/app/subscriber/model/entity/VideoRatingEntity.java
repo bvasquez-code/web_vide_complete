@@ -1,4 +1,4 @@
-package com.ccadmin.app.video.model.entity;
+package com.ccadmin.app.subscriber.model.entity;
 
 import com.ccadmin.app.shared.model.entity.AuditTableEntity;
 import jakarta.persistence.Entity;
@@ -8,13 +8,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "video_view_log")
-public class VideoViewLogEntity extends AuditTableEntity {
+@Table(name = "video_rating")
+public class VideoRatingEntity extends AuditTableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long ViewLogId;
+    public Long RatingId;
     public String VideoCod;
-    public String ViewerUserCod;
-    public String ViewerIp;
-    public String UserAgent;
+    public String SubscriberUserCod;
+    public Integer RatingValue;
 }

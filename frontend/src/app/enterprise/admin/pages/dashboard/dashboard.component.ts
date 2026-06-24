@@ -9,7 +9,9 @@ export class DashboardComponent {
   constructor(private router: Router) {}
 
   logout(): void {
-    sessionStorage.clear();
+    sessionStorage.removeItem('AdminToken');
+    sessionStorage.removeItem('AdminUserCod');
+    sessionStorage.removeItem('AdminUserName');
     this.router.navigate(['/admin/login']);
   }
 }

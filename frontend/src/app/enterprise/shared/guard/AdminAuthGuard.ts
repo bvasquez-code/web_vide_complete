@@ -6,7 +6,7 @@ export class AdminAuthGuard implements CanActivate {
   constructor(private router: Router) {}
 
   canActivate(): boolean {
-    if (sessionStorage.getItem('Token')) {
+    if (sessionStorage.getItem('AdminToken')) {
       return true;
     }
     this.router.navigate(['/admin/login']);

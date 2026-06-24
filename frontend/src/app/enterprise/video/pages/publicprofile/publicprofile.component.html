@@ -1,0 +1,40 @@
+<header class="app-header">
+  <div class="container py-3 d-flex justify-content-between align-items-center">
+    <a routerLink="/" class="h4 mb-0 text-dark">Videos</a>
+    <app-publictoolbar></app-publictoolbar>
+  </div>
+</header>
+
+<main class="container py-4">
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <section class="mb-4">
+    <h1 class="h4 mb-3">Ver despues</h1>
+    <div class="row" *ngIf="watchLater.length; else emptyWatchLater">
+      <div class="col-sm-6 col-lg-3 mb-4" *ngFor="let video of watchLater">
+        <app-videocard [video]="video" titleClass="h6"></app-videocard>
+      </div>
+    </div>
+    <ng-template #emptyWatchLater><div class="form-section p-3 text-muted">No hay videos guardados.</div></ng-template>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="h4 mb-3">Videos que me gustaron</h2>
+    <div class="row" *ngIf="liked.length; else emptyLiked">
+      <div class="col-sm-6 col-lg-3 mb-4" *ngFor="let video of liked">
+        <app-videocard [video]="video" titleClass="h6"></app-videocard>
+      </div>
+    </div>
+    <ng-template #emptyLiked><div class="form-section p-3 text-muted">Aun no marcaste videos con like.</div></ng-template>
+  </section>
+
+  <section>
+    <h2 class="h4 mb-3">Historial</h2>
+    <div class="row" *ngIf="history.length; else emptyHistory">
+      <div class="col-sm-6 col-lg-3 mb-4" *ngFor="let video of history">
+        <app-videocard [video]="video" titleClass="h6"></app-videocard>
+      </div>
+    </div>
+    <ng-template #emptyHistory><div class="form-section p-3 text-muted">Aun no hay videos vistos.</div></ng-template>
+  </section>
+</main>
