@@ -12,7 +12,10 @@
       <a class="badge badge-light border mr-1" *ngFor="let tag of video.Tags" [routerLink]="['/']" [queryParams]="{ q: publicPreferenceService.showThumbnails() ? tag.Name : tag.Cod }">#{{ publicPreferenceService.showThumbnails() ? tag.Name : tag.Cod }}</a>
     </div>
     <div class="d-flex justify-content-between align-items-center">
-      <small>{{ video.ViewCount || 0 }} vistas</small>
+      <small>
+        {{ video.ViewCount || 0 }} vistas
+        <span *ngIf="video.Duration"> · {{ video.Duration }}</span>
+      </small>
       <a [routerLink]="['/video', video.VideoCod]" class="btn btn-primary btn-sm">Ver video</a>
     </div>
   </div>

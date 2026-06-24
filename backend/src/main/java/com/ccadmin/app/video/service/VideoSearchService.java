@@ -148,6 +148,7 @@ public class VideoSearchService {
         dto.ShortDescription = video.ShortDescription;
         dto.ThumbnailUrl = video.ThumbnailUrl;
         dto.SourceType = video.SourceType;
+        dto.Duration = video.Duration;
         dto.ViewCount = video.ViewCount;
         dto.PublishDate = video.PublishDate;
         dto.CreationDate = video.CreationDate;

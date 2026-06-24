@@ -10,6 +10,7 @@ public class VideoCardDto {
     public String ShortDescription;
     public String ThumbnailUrl;
     public String SourceType;
+    public String Duration;
     public Long ViewCount;
     public LocalDateTime PublishDate;
     public LocalDateTime CreationDate;

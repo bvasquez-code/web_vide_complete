@@ -9,6 +9,7 @@ export class VideoCardDto {
   ShortDescription: string = '';
   ThumbnailUrl: string = '';
   SourceType: string = '';
+  Duration: string = '';
   ViewCount: number = 0;
   PublishDate: string = '';
   CreationDate: string = '';
