@@ -14,6 +14,9 @@ public interface VideoCaptureRepository extends JpaRepository<VideoCaptureEntity
     @Query(value = "select * from video_capture where VideoCod = :VideoCod and CaptureSource = :CaptureSource and Status = 'A' order by CaptureSecond, DisplayOrder", nativeQuery = true)
     List<VideoCaptureEntity> findActiveByVideoCodAndCaptureSource(@Param("VideoCod") String VideoCod, @Param("CaptureSource") String CaptureSource);
 
+    @Query(value = "select count(1) from video_capture where VideoCod = :VideoCod and CaptureSource = :CaptureSource and Status = 'A'", nativeQuery = true)
+    Long countActiveByVideoCodAndCaptureSource(@Param("VideoCod") String VideoCod, @Param("CaptureSource") String CaptureSource);
+
     @Query(value = "select ImageUrl from video_capture where ImageUrl is not null and ImageUrl <> ''", nativeQuery = true)
     List<String> findAllImageUrls();
 

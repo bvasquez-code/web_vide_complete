@@ -31,8 +31,10 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -47,7 +49,8 @@ public class VideoCaptureService extends SessionService {
     private final VideoCaptureSuggestionRepository videoCaptureSuggestionRepository;
     private final TransactionTemplate transactionTemplate;
     private final Path capturePath = Path.of("uploads", "captures");
-    private final Integer defaultCaptureCount = 20;
+    private final Integer defaultCaptureCount = 30;
+    private final Set<String> runningAutomaticGeneration = ConcurrentHashMap.newKeySet();
 
     public VideoCaptureService(VideoRepository videoRepository, VideoCaptureRepository videoCaptureRepository, VideoCaptureSuggestionRepository videoCaptureSuggestionRepository, PlatformTransactionManager transactionManager) {
         this.videoRepository = videoRepository;
@@ -126,6 +129,86 @@ public class VideoCaptureService extends SessionService {
         } catch (Exception ex) {
             throw new IllegalStateException(ex.getMessage(), ex);
         }
+    }
+
+    public VideoCaptureProcessResultDto ensureAutomaticCaptures(String videoCod, String baseUrl) {
+        if (videoCod == null || videoCod.isBlank()) {
+            return null;
+        }
+        Long activeAutoCaptures = videoCaptureRepository.countActiveByVideoCodAndCaptureSource(videoCod, CAPTURE_SOURCE_AUTO);
+        if (activeAutoCaptures != null && activeAutoCaptures > 0) {
+            return null;
+        }
+        return generate(videoCod, baseUrl);
+    }
+
+    public Map<String, Object> requestAutomaticCaptures(String videoCod, String baseUrl) {
+        if (videoCod == null || videoCod.isBlank()) {
+            throw new IllegalArgumentException("Codigo de video obligatorio.");
+        }
+        Long activeAutoCaptures = videoCaptureRepository.countActiveByVideoCodAndCaptureSource(videoCod, CAPTURE_SOURCE_AUTO);
+        if (activeAutoCaptures != null && activeAutoCaptures > 0) {
+            return Map.of("Status", "EXISTS", "VideoCod", videoCod, "CaptureCount", activeAutoCaptures);
+        }
+        if (!runningAutomaticGeneration.add(videoCod)) {
+            return Map.of("Status", "RUNNING", "VideoCod", videoCod, "CaptureCount", 0);
+        }
+        CompletableFuture.runAsync(() -> {
+            try {
+                ensureAutomaticCaptures(videoCod, baseUrl);
+            } catch (Exception ignored) {
+            } finally {
+                runningAutomaticGeneration.remove(videoCod);
+            }
+        });
+        return Map.of("Status", "STARTED", "VideoCod", videoCod, "CaptureCount", 0);
+    }
+
+    @Transactional
+    public VideoCaptureEntity useCaptureAsThumbnail(String videoCod, Long captureId) {
+        if (videoCod == null || videoCod.isBlank()) {
+            throw new IllegalArgumentException("Codigo de video obligatorio.");
+        }
+        if (captureId == null) {
+            throw new IllegalArgumentException("Codigo de captura obligatorio.");
+        }
+        VideoEntity video = videoRepository.findById(videoCod)
+                .orElseThrow(() -> new IllegalArgumentException("Video no encontrado."));
+        VideoCaptureEntity capture = videoCaptureRepository.findById(captureId)
+                .orElseThrow(() -> new IllegalArgumentException("Captura no encontrada."));
+        if (!video.VideoCod.equals(capture.VideoCod) || !"A".equals(capture.Status)) {
+            throw new IllegalArgumentException("La captura no pertenece al video o no esta activa.");
+        }
+        video.ThumbnailUrl = capture.ImageUrl;
+        video.addSessionModify(getUserCod());
+        videoRepository.save(video);
+        return capture;
+    }
+
+    @Transactional
+    public VideoCaptureEntity deleteCapture(String videoCod, Long captureId) {
+        if (videoCod == null || videoCod.isBlank()) {
+            throw new IllegalArgumentException("Codigo de video obligatorio.");
+        }
+        if (captureId == null) {
+            throw new IllegalArgumentException("Codigo de captura obligatorio.");
+        }
+        VideoEntity video = videoRepository.findById(videoCod)
+                .orElseThrow(() -> new IllegalArgumentException("Video no encontrado."));
+        VideoCaptureEntity capture = videoCaptureRepository.findById(captureId)
+                .orElseThrow(() -> new IllegalArgumentException("Captura no encontrada."));
+        if (!video.VideoCod.equals(capture.VideoCod) || !"A".equals(capture.Status)) {
+            throw new IllegalArgumentException("La captura no pertenece al video o no esta activa.");
+        }
+        if (capture.ImageUrl != null && capture.ImageUrl.equals(video.ThumbnailUrl)) {
+            video.ThumbnailUrl = "";
+            video.addSessionModify(getUserCod());
+            videoRepository.save(video);
+        }
+        deleteCaptureFile(capture);
+        capture.Status = "I";
+        capture.addSessionModify(getUserCod());
+        return videoCaptureRepository.save(capture);
     }
 
     public Path findCapture(String fileName) {
@@ -336,16 +419,20 @@ public class VideoCaptureService extends SessionService {
 
     private void deleteExistingCaptureFiles(String videoCod, String captureSource) {
         for (VideoCaptureEntity capture : videoCaptureRepository.findActiveByVideoCodAndCaptureSource(videoCod, captureSource)) {
-            if (capture.ImageUrl == null || capture.ImageUrl.isBlank()) {
-                continue;
+            deleteCaptureFile(capture);
+        }
+    }
+
+    private void deleteCaptureFile(VideoCaptureEntity capture) {
+        if (capture.ImageUrl == null || capture.ImageUrl.isBlank()) {
+            return;
+        }
+        try {
+            Path target = resolvePathFromCaptureUrl(capture.ImageUrl);
+            if (target != null && target.startsWith(capturePath.normalize())) {
+                Files.deleteIfExists(target);
             }
-            try {
-                Path target = resolvePathFromCaptureUrl(capture.ImageUrl);
-                if (target != null && target.startsWith(capturePath.normalize())) {
-                    Files.deleteIfExists(target);
-                }
-            } catch (Exception ignored) {
-            }
+        } catch (Exception ignored) {
         }
     }
 

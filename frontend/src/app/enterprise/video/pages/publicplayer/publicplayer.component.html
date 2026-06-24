@@ -9,7 +9,7 @@
   <app-backbutton></app-backbutton>
   <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-  <section class="form-section p-3 mb-4" *ngIf="!errorMessage">
+  <section class="form-section p-3 mb-4" *ngIf="detailLoaded && !errorMessage">
     <div class="embed-responsive embed-responsive-16by9 bg-dark mb-3" *ngIf="detail.Video.SourceType === 'EMBED' && embedHtml" [innerHTML]="embedHtml"></div>
     <video #videoPlayer class="w-100 bg-dark mb-3" style="aspect-ratio: 16 / 9;" controls preload="metadata" [src]="videoSource()" (play)="onPlayerPlay($event)" (timeupdate)="onPlayerTimeUpdate($event)" (pause)="onPlayerPause($event)" (seeked)="onPlayerSeeked($event)" (ended)="onPlayerEnded($event)" (error)="onPlayerError($event)" *ngIf="canUseHtmlVideo() && detail.Video.SourceValue"></video>
     <div class="alert alert-warning" *ngIf="playerErrorMessage">{{ playerErrorMessage }}</div>
@@ -27,7 +27,7 @@
     </small>
   </section>
 
-  <section class="form-section p-3 mb-4" *ngIf="!errorMessage">
+  <section class="form-section p-3 mb-4" *ngIf="detailLoaded && !errorMessage">
     <div *ngIf="!publicAuthService.isLogged()" class="d-flex flex-wrap justify-content-between align-items-center">
       <span class="text-muted">Ingresa para dar like, valorar, guardar y sugerir capturas.</span>
       <a routerLink="/login" class="btn btn-primary btn-sm">Ingresar</a>
@@ -62,7 +62,7 @@
     </div>
   </section>
 
-  <section class="form-section p-3 mb-4" *ngIf="detail.Captures && detail.Captures.length > 0">
+  <section class="form-section p-3 mb-4" *ngIf="detailLoaded && detail.Captures && detail.Captures.length > 0">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h2 class="h4 mb-0">Capturas del video</h2>
       <div class="btn-group btn-group-sm">
@@ -93,7 +93,7 @@
     </div>
   </div>
 
-  <section>
+  <section *ngIf="detailLoaded && !errorMessage">
     <h2 class="h4 mb-3">Videos relacionados</h2>
     <div class="row">
       <div class="col-sm-6 col-lg-3 mb-4" *ngFor="let video of related">

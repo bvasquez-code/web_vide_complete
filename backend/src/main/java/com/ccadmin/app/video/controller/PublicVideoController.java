@@ -87,6 +87,16 @@ public class PublicVideoController {
         }
     }
 
+    @PostMapping("videos/{videoCod}/ensureCaptures")
+    public ResponseEntity<ResponseWsDto> ensureCaptures(@PathVariable String videoCod, HttpServletRequest request) {
+        try {
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.requestAutomaticCaptures(videoCod, baseUrl)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @GetMapping("videos/{videoCod}/related")
     public ResponseEntity<ResponseWsDto> related(@PathVariable String videoCod, @RequestParam(defaultValue = "8") Integer Limit) {
         return new ResponseEntity<>(new ResponseWsDto(searchService.findRelated(videoCod, Limit)), HttpStatus.OK);

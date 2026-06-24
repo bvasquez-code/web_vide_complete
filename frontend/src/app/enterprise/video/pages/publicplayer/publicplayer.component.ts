@@ -22,6 +22,7 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
   embedHtml: SafeHtml | null = null;
   errorMessage = '';
   playerErrorMessage = '';
+  detailLoaded = false;
   viewRegistered = false;
   showCaptureModal = false;
   selectedCaptureIndex = 0;
@@ -33,6 +34,8 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
   private pendingWatchSeconds = 0;
   private lastWatchPosition: number | null = null;
   private lastWatchFlushAt = 0;
+  private capturesGenerationRunning = false;
+  private captureRefreshTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, private publicSubscriberService: PublicSubscriberService, public publicAuthService: PublicAuthService, private sanitizer: DomSanitizer) {}
 
@@ -51,6 +54,7 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.flushWatchProgress();
+    this.stopCaptureRefresh();
   }
 
   @HostListener('window:beforeunload')
@@ -65,6 +69,7 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
       return;
     }
     this.detail = detailRpt.Data;
+    this.detailLoaded = true;
     this.playerErrorMessage = '';
     if (this.detail.Video.SourceType === 'EMBED' && this.detail.Video.SourceValue) {
       this.embedHtml = this.sanitizer.bypassSecurityTrustHtml(this.detail.Video.SourceValue);
@@ -73,6 +78,7 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
     this.related = relatedRpt.Data || [];
     await this.registerViewOnce();
     await this.loadViewerState();
+    void this.ensureAutomaticCapturesInBackground(this.videoCod);
   }
 
   resetState(): void {
@@ -81,6 +87,7 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
     this.embedHtml = null;
     this.errorMessage = '';
     this.playerErrorMessage = '';
+    this.detailLoaded = false;
     this.viewRegistered = false;
     this.viewLogId = null;
     this.pendingWatchSeconds = 0;
@@ -90,6 +97,8 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
     this.interactionMessage = '';
     this.suggestionComment = '';
     this.suggestionMessage = '';
+    this.capturesGenerationRunning = false;
+    this.stopCaptureRefresh();
   }
 
   async registerViewOnce(): Promise<void> {
@@ -222,6 +231,59 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
     }
     this.suggestionComment = '';
     this.suggestionMessage = 'Captura enviada para revision del administrador.';
+  }
+
+  private async ensureAutomaticCapturesInBackground(videoCod: string): Promise<void> {
+    if (this.capturesGenerationRunning || this.detail.Video.SourceType !== 'PATH') {
+      return;
+    }
+    const hasAutomaticCaptures = (this.detail.Captures || []).some(capture => capture.CaptureSource === 'AUTO');
+    if (hasAutomaticCaptures) {
+      return;
+    }
+    this.capturesGenerationRunning = true;
+    try {
+      await this.publicVideoService.ensureCaptures(videoCod);
+      this.startCaptureRefresh(videoCod);
+    } catch {
+    } finally {
+      if (this.videoCod === videoCod) {
+        this.capturesGenerationRunning = false;
+      }
+    }
+  }
+
+  private startCaptureRefresh(videoCod: string): void {
+    this.stopCaptureRefresh();
+    this.captureRefreshTimer = setInterval(() => {
+      void this.refreshCapturesIfReady(videoCod);
+    }, 15000);
+  }
+
+  private stopCaptureRefresh(): void {
+    if (!this.captureRefreshTimer) {
+      return;
+    }
+    clearInterval(this.captureRefreshTimer);
+    this.captureRefreshTimer = null;
+  }
+
+  private async refreshCapturesIfReady(videoCod: string): Promise<void> {
+    if (this.videoCod !== videoCod) {
+      this.stopCaptureRefresh();
+      return;
+    }
+    try {
+      const detailRpt = await this.publicVideoService.findDetail(videoCod);
+      const captures = detailRpt.Data?.Captures || [];
+      const hasAutomaticCaptures = captures.some((capture: any) => capture.CaptureSource === 'AUTO');
+      if (!detailRpt.ErrorStatus && hasAutomaticCaptures && this.videoCod === videoCod) {
+        this.detail.Captures = captures;
+        this.detail.Video.Duration = detailRpt.Data?.Video?.Duration || this.detail.Video.Duration;
+        this.stopCaptureRefresh();
+      }
+    } catch {
+    }
   }
 
   private handleInteractionResponse(rpt: any): void {

@@ -39,6 +39,10 @@ export class PublicVideoService {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/${videoCod}`);
   }
 
+  async ensureCaptures(videoCod: string): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/public/videos/${videoCod}/ensureCaptures`, {});
+  }
+
   async findRelated(videoCod: string): Promise<ResponseWsDto> {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/${videoCod}/related`, { Limit: 8 });
   }

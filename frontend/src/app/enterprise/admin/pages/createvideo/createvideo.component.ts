@@ -482,6 +482,56 @@ export class CreatevideoComponent implements OnInit, OnDestroy {
     this.selectedCaptureIndex = this.selectedCaptureIndex >= this.captures.length - 1 ? 0 : this.selectedCaptureIndex + 1;
   }
 
+  async useSelectedCaptureAsThumbnail(): Promise<void> {
+    const capture = this.selectedCapture();
+    if (!capture || !this.dto.Video.VideoCod) return;
+    this.captureMessage = '';
+    this.captureLoading = true;
+    try {
+      const rpt = await this.adminVideoService.useCaptureAsThumbnail(this.dto.Video.VideoCod, capture.CaptureId);
+      if (rpt.ErrorStatus) {
+        this.captureMessage = rpt.Message;
+        return;
+      }
+      this.dto.Video.ThumbnailUrl = capture.ImageUrl;
+      this.captureMessage = 'Miniatura actualizada desde la captura seleccionada.';
+    } catch {
+      this.captureMessage = 'No se pudo actualizar la miniatura desde esta captura.';
+    } finally {
+      this.captureLoading = false;
+    }
+  }
+
+  async deleteSelectedCapture(): Promise<void> {
+    const capture = this.selectedCapture();
+    if (!capture || !this.dto.Video.VideoCod) return;
+    const confirmed = window.confirm('Se eliminara esta captura del video. Desea continuar?');
+    if (!confirmed) return;
+    this.captureMessage = '';
+    this.captureLoading = true;
+    try {
+      const rpt = await this.adminVideoService.deleteCapture(this.dto.Video.VideoCod, capture.CaptureId);
+      if (rpt.ErrorStatus) {
+        this.captureMessage = rpt.Message;
+        return;
+      }
+      if (this.dto.Video.ThumbnailUrl === capture.ImageUrl) {
+        this.dto.Video.ThumbnailUrl = '';
+      }
+      this.captures = this.captures.filter(item => item.CaptureId !== capture.CaptureId);
+      if (this.captures.length === 0) {
+        this.closeCaptureModal();
+      } else if (this.selectedCaptureIndex >= this.captures.length) {
+        this.selectedCaptureIndex = this.captures.length - 1;
+      }
+      this.captureMessage = 'Captura eliminada correctamente.';
+    } catch {
+      this.captureMessage = 'No se pudo eliminar la captura seleccionada.';
+    } finally {
+      this.captureLoading = false;
+    }
+  }
+
   private createMetadataVideo(source: string): Promise<HTMLVideoElement> {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');

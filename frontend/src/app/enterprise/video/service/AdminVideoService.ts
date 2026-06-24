@@ -78,6 +78,14 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/generateCaptures?VideoCod=${encodeURIComponent(VideoCod)}`, {});
   }
 
+  async useCaptureAsThumbnail(VideoCod: string, CaptureId: number): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/${encodeURIComponent(VideoCod)}/captures/${encodeURIComponent(CaptureId)}/thumbnail`, {});
+  }
+
+  async deleteCapture(VideoCod: string, CaptureId: number): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/${encodeURIComponent(VideoCod)}/captures/${encodeURIComponent(CaptureId)}/delete`, {});
+  }
+
   async registerWatchProgress(VideoCod: string, dto: any): Promise<ResponseWsDto> {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/${encodeURIComponent(VideoCod)}/watchProgress`, dto);
   }

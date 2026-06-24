@@ -130,6 +130,24 @@ public class AdminVideoController {
         }
     }
 
+    @PostMapping("{videoCod}/captures/{captureId}/thumbnail")
+    public ResponseEntity<ResponseWsDto> useCaptureAsThumbnail(@PathVariable String videoCod, @PathVariable Long captureId) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.useCaptureAsThumbnail(videoCod, captureId)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("{videoCod}/captures/{captureId}/delete")
+    public ResponseEntity<ResponseWsDto> deleteCapture(@PathVariable String videoCod, @PathVariable Long captureId) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.deleteCapture(videoCod, captureId)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PostMapping("cleanUnlinkedCaptures")
     public ResponseEntity<ResponseWsDto> cleanUnlinkedCaptures(@RequestParam(defaultValue = "false") Boolean DryRun) {
         try {

@@ -181,6 +181,14 @@
         <img [src]="selectedCapture()?.ImageUrl" class="capture-modal-image" alt="Captura">
         <button type="button" class="btn btn-light capture-modal-nav capture-modal-next" (click)="nextCapture()"><i class="fas fa-chevron-right"></i></button>
       </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-light btn-sm" (click)="useSelectedCaptureAsThumbnail()" [disabled]="captureLoading">
+          <i class="fas fa-image mr-1"></i> Usar como miniatura
+        </button>
+        <button type="button" class="btn btn-outline-danger btn-sm" (click)="deleteSelectedCapture()" [disabled]="captureLoading">
+          <i class="fas fa-trash mr-1"></i> Eliminar captura
+        </button>
+      </div>
     </div>
   </div>
 </div>
