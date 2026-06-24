@@ -3,6 +3,7 @@ package com.ccadmin.app.video.controller;
 import com.ccadmin.app.shared.model.dto.ResponseWsDto;
 import com.ccadmin.app.subscriber.model.dto.VideoCaptureSuggestionDto;
 import com.ccadmin.app.video.model.dto.VideoRegisterDto;
+import com.ccadmin.app.video.model.dto.VideoWatchProgressDto;
 import com.ccadmin.app.video.service.ThumbnailStorageService;
 import com.ccadmin.app.video.service.VideoCreateService;
 import com.ccadmin.app.video.service.VideoCaptureService;
@@ -130,6 +131,15 @@ public class AdminVideoController {
     public ResponseEntity<ResponseWsDto> cleanUnlinkedCaptures(@RequestParam(defaultValue = "false") Boolean DryRun) {
         try {
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.cleanUnlinkedCaptures(DryRun)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("{videoCod}/watchProgress")
+    public ResponseEntity<ResponseWsDto> watchProgress(@PathVariable String videoCod, @RequestBody VideoWatchProgressDto dto, HttpServletRequest request) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(createService.registerWatchProgress(videoCod, dto, request)), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }

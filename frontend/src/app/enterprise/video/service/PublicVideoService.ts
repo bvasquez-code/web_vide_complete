@@ -46,4 +46,8 @@ export class PublicVideoService {
   async registerView(videoCod: string): Promise<ResponseWsDto> {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/public/videos/${videoCod}/view`, {});
   }
+
+  async registerWatchProgress(videoCod: string, dto: any): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/public/videos/${videoCod}/watchProgress`, dto);
+  }
 }

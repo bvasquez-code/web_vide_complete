@@ -73,7 +73,7 @@
     </div>
     <div class="admin-video-preview-body">
       <div class="embed-responsive embed-responsive-16by9" *ngIf="previewEmbedHtml" [innerHTML]="previewEmbedHtml"></div>
-      <video class="admin-video-preview-player" controls preload="metadata" [src]="previewSource" (error)="onPreviewError($event)" *ngIf="previewSource"></video>
+      <video class="admin-video-preview-player" controls preload="metadata" [src]="previewSource" (play)="onPreviewPlay($event)" (timeupdate)="onPreviewTimeUpdate($event)" (pause)="onPreviewPause($event)" (seeked)="onPreviewSeeked($event)" (ended)="onPreviewEnded($event)" (error)="onPreviewError($event)" *ngIf="previewSource"></video>
       <div class="alert alert-warning m-2 py-2" *ngIf="previewError">{{ previewError }}</div>
     </div>
   </aside>

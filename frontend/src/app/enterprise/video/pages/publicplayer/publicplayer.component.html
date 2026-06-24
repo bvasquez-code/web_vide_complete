@@ -11,7 +11,7 @@
 
   <section class="form-section p-3 mb-4" *ngIf="!errorMessage">
     <div class="embed-responsive embed-responsive-16by9 bg-dark mb-3" *ngIf="detail.Video.SourceType === 'EMBED' && embedHtml" [innerHTML]="embedHtml"></div>
-    <video #videoPlayer class="w-100 bg-dark mb-3" style="aspect-ratio: 16 / 9;" controls preload="metadata" [src]="videoSource()" (error)="onPlayerError($event)" *ngIf="canUseHtmlVideo() && detail.Video.SourceValue"></video>
+    <video #videoPlayer class="w-100 bg-dark mb-3" style="aspect-ratio: 16 / 9;" controls preload="metadata" [src]="videoSource()" (play)="onPlayerPlay($event)" (timeupdate)="onPlayerTimeUpdate($event)" (pause)="onPlayerPause($event)" (seeked)="onPlayerSeeked($event)" (ended)="onPlayerEnded($event)" (error)="onPlayerError($event)" *ngIf="canUseHtmlVideo() && detail.Video.SourceValue"></video>
     <div class="alert alert-warning" *ngIf="playerErrorMessage">{{ playerErrorMessage }}</div>
     <div class="alert alert-warning" *ngIf="!detail.Video.SourceValue">La referencia del video no es valida.</div>
 

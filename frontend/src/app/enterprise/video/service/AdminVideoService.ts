@@ -78,6 +78,10 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/generateCaptures?VideoCod=${encodeURIComponent(VideoCod)}`, {});
   }
 
+  async registerWatchProgress(VideoCod: string, dto: any): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/${encodeURIComponent(VideoCod)}/watchProgress`, dto);
+  }
+
   async findCategories(Query: string = '', Status: string = '', Page: number = 1, Limit: number = 20): Promise<ResponseWsDto> {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/categories/findAll`, { Query, Status, Page, Limit });
   }

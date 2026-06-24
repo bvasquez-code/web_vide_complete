@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AppSetting } from '../../../../config/AppSetting';
@@ -9,7 +9,7 @@ import { VideoEntity } from '../../../video/model/entity/VideoEntity';
   selector: 'app-listvideos',
   templateUrl: './listvideos.component.html'
 })
-export class ListvideosComponent implements OnInit {
+export class ListvideosComponent implements OnInit, OnDestroy {
   Query = '';
   Status = '';
   SourceType = '';
@@ -27,6 +27,10 @@ export class ListvideosComponent implements OnInit {
   private resizingPreview = false;
   private resizeStartX = 0;
   private resizeStartWidth = 420;
+  private previewViewLogId: number | null = null;
+  private previewPendingWatchSeconds = 0;
+  private previewLastWatchPosition: number | null = null;
+  private previewLastWatchFlushAt = 0;
 
   constructor(private adminVideoService: AdminVideoService, private sanitizer: DomSanitizer, private route: ActivatedRoute, private router: Router) {}
 
@@ -38,6 +42,10 @@ export class ListvideosComponent implements OnInit {
     this.Page = Number(params.get('Page') || '1');
     this.Limit = Number(params.get('Limit') || '20');
     await this.findAll(this.Page, false);
+  }
+
+  ngOnDestroy(): void {
+    this.flushPreviewWatchProgress();
   }
 
   async findAll(page: number = this.Page, syncUrl: boolean = true): Promise<void> {
@@ -117,10 +125,12 @@ export class ListvideosComponent implements OnInit {
   }
 
   openPreview(video: VideoEntity): void {
+    this.flushPreviewWatchProgress();
     this.previewVideo = video;
     this.previewSource = '';
     this.previewEmbedHtml = null;
     this.previewError = '';
+    this.resetPreviewWatchTracking();
 
     if (!video.SourceType || !video.SourceValue) {
       this.previewError = 'Este video no tiene una referencia valida para previsualizar.';
@@ -138,16 +148,49 @@ export class ListvideosComponent implements OnInit {
   }
 
   closePreview(): void {
+    this.flushPreviewWatchProgress();
     this.previewVideo = null;
     this.previewSource = '';
     this.previewEmbedHtml = null;
     this.previewError = '';
+    this.resetPreviewWatchTracking();
   }
 
   onPreviewError(event: Event): void {
     const video = event.target as HTMLVideoElement;
     const code = video.error?.code;
     this.previewError = `No se pudo cargar la previsualizacion. Codigo: ${code || 'desconocido'}.`;
+  }
+
+  onPreviewPlay(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.previewLastWatchPosition = video.currentTime;
+  }
+
+  onPreviewTimeUpdate(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.addPreviewWatchDelta(video);
+    if (this.previewPendingWatchSeconds >= 10 || Date.now() - this.previewLastWatchFlushAt >= 10000) {
+      this.flushPreviewWatchProgress();
+    }
+  }
+
+  onPreviewPause(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.addPreviewWatchDelta(video);
+    this.flushPreviewWatchProgress();
+  }
+
+  onPreviewSeeked(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.previewLastWatchPosition = video.currentTime;
+    this.flushPreviewWatchProgress();
+  }
+
+  onPreviewEnded(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.addPreviewWatchDelta(video);
+    this.flushPreviewWatchProgress(true);
   }
 
   startPreviewResize(event: MouseEvent): void {
@@ -170,5 +213,54 @@ export class ListvideosComponent implements OnInit {
   @HostListener('document:mouseup')
   stopPreviewResize(): void {
     this.resizingPreview = false;
+  }
+
+  @HostListener('window:beforeunload')
+  onBeforeUnload(): void {
+    this.flushPreviewWatchProgress();
+  }
+
+  private resetPreviewWatchTracking(): void {
+    this.previewViewLogId = null;
+    this.previewPendingWatchSeconds = 0;
+    this.previewLastWatchPosition = null;
+    this.previewLastWatchFlushAt = 0;
+  }
+
+  private addPreviewWatchDelta(video: HTMLVideoElement): void {
+    if (video.paused || video.seeking) {
+      this.previewLastWatchPosition = video.currentTime;
+      return;
+    }
+    if (this.previewLastWatchPosition !== null) {
+      const delta = video.currentTime - this.previewLastWatchPosition;
+      if (delta > 0 && delta <= 2.5) {
+        this.previewPendingWatchSeconds += delta;
+      }
+    }
+    this.previewLastWatchPosition = video.currentTime;
+  }
+
+  private async flushPreviewWatchProgress(completed: boolean = false): Promise<void> {
+    const videoCod = this.previewVideo?.VideoCod || '';
+    if (!videoCod || (!this.previewViewLogId && this.previewPendingWatchSeconds <= 0 && !completed)) {
+      return;
+    }
+    const viewLogId = this.previewViewLogId;
+    const playedSeconds = Number(this.previewPendingWatchSeconds.toFixed(3));
+    this.previewPendingWatchSeconds = 0;
+    this.previewLastWatchFlushAt = Date.now();
+    const rpt = await this.adminVideoService.registerWatchProgress(videoCod, {
+      ViewLogId: viewLogId,
+      VideoCod: videoCod,
+      PlayerContext: 'ADMIN_LIST_PREVIEW',
+      PlayedSeconds: playedSeconds,
+      CurrentSecond: this.previewLastWatchPosition !== null ? Number(this.previewLastWatchPosition.toFixed(3)) : null,
+      DurationSeconds: null,
+      Completed: completed
+    });
+    if (!rpt.ErrorStatus && this.previewVideo?.VideoCod === videoCod && this.previewViewLogId === viewLogId) {
+      this.previewViewLogId = rpt.Data?.ViewLogId || this.previewViewLogId;
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AppSetting } from '../../../../config/AppSetting';
@@ -13,7 +13,7 @@ import { VideoCaptureEntity } from '../../../video/model/entity/VideoCaptureEnti
   selector: 'app-createvideo',
   templateUrl: './createvideo.component.html'
 })
-export class CreatevideoComponent implements OnInit {
+export class CreatevideoComponent implements OnInit, OnDestroy {
   @ViewChild('previewVideo') previewVideo?: ElementRef<HTMLVideoElement>;
   @ViewChild('adminCaptureSlider') adminCaptureSlider?: ElementRef<HTMLDivElement>;
 
@@ -45,6 +45,10 @@ export class CreatevideoComponent implements OnInit {
   quickError = '';
   actorQuery = '';
   tagQuery = '';
+  private previewViewLogId: number | null = null;
+  private previewPendingWatchSeconds = 0;
+  private previewLastWatchPosition: number | null = null;
+  private previewLastWatchFlushAt = 0;
 
   constructor(private adminVideoService: AdminVideoService, private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer) {}
 
@@ -64,6 +68,15 @@ export class CreatevideoComponent implements OnInit {
       this.captures = this.sortCaptures(rpt.Data.Captures || []);
       this.loadPreview();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.flushPreviewWatchProgress();
+  }
+
+  @HostListener('window:beforeunload')
+  onBeforeUnload(): void {
+    this.flushPreviewWatchProgress();
   }
 
   isChecked(list: string[], value: string): boolean {
@@ -222,9 +235,11 @@ export class CreatevideoComponent implements OnInit {
   }
 
   loadPreview(): void {
+    this.flushPreviewWatchProgress();
     this.previewError = '';
     this.previewSource = '';
     this.previewEmbedHtml = null;
+    this.resetPreviewWatchTracking();
     if (!this.dto.Video.SourceType || !this.dto.Video.SourceValue) {
       this.previewError = 'Ingrese el origen y la referencia del video para previsualizar.';
       return;
@@ -247,9 +262,11 @@ export class CreatevideoComponent implements OnInit {
   }
 
   clearPreview(): void {
+    this.flushPreviewWatchProgress();
     this.previewError = '';
     this.previewSource = '';
     this.previewEmbedHtml = null;
+    this.resetPreviewWatchTracking();
     this.analyzeMessage = '';
     this.captureMessage = '';
   }
@@ -288,6 +305,37 @@ export class CreatevideoComponent implements OnInit {
     const video = event.target as HTMLVideoElement;
     const code = video.error?.code;
     this.previewError = `No se pudo cargar la previsualizacion del video. Codigo: ${code || 'desconocido'}.`;
+  }
+
+  onPreviewPlay(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.previewLastWatchPosition = video.currentTime;
+  }
+
+  onPreviewTimeUpdate(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.addPreviewWatchDelta(video);
+    if (this.previewPendingWatchSeconds >= 10 || Date.now() - this.previewLastWatchFlushAt >= 10000) {
+      this.flushPreviewWatchProgress();
+    }
+  }
+
+  onPreviewPause(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.addPreviewWatchDelta(video);
+    this.flushPreviewWatchProgress();
+  }
+
+  onPreviewSeeked(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.previewLastWatchPosition = video.currentTime;
+    this.flushPreviewWatchProgress();
+  }
+
+  onPreviewEnded(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.addPreviewWatchDelta(video);
+    this.flushPreviewWatchProgress(true);
   }
 
   async analyzeVideo(): Promise<void> {
@@ -532,6 +580,51 @@ export class CreatevideoComponent implements OnInit {
       if (secondA !== secondB) return secondA - secondB;
       return (a.DisplayOrder || 0) - (b.DisplayOrder || 0);
     });
+  }
+
+  private resetPreviewWatchTracking(): void {
+    this.previewViewLogId = null;
+    this.previewPendingWatchSeconds = 0;
+    this.previewLastWatchPosition = null;
+    this.previewLastWatchFlushAt = 0;
+  }
+
+  private addPreviewWatchDelta(video: HTMLVideoElement): void {
+    if (video.paused || video.seeking) {
+      this.previewLastWatchPosition = video.currentTime;
+      return;
+    }
+    if (this.previewLastWatchPosition !== null) {
+      const delta = video.currentTime - this.previewLastWatchPosition;
+      if (delta > 0 && delta <= 2.5) {
+        this.previewPendingWatchSeconds += delta;
+      }
+    }
+    this.previewLastWatchPosition = video.currentTime;
+  }
+
+  private async flushPreviewWatchProgress(completed: boolean = false): Promise<void> {
+    const videoCod = this.dto.Video.VideoCod;
+    if (!videoCod || (!this.previewViewLogId && this.previewPendingWatchSeconds <= 0 && !completed)) {
+      return;
+    }
+    const viewLogId = this.previewViewLogId;
+    const video = this.previewVideo?.nativeElement;
+    const playedSeconds = Number(this.previewPendingWatchSeconds.toFixed(3));
+    this.previewPendingWatchSeconds = 0;
+    this.previewLastWatchFlushAt = Date.now();
+    const rpt = await this.adminVideoService.registerWatchProgress(videoCod, {
+      ViewLogId: viewLogId,
+      VideoCod: videoCod,
+      PlayerContext: 'ADMIN_PREVIEW',
+      PlayedSeconds: playedSeconds,
+      CurrentSecond: video ? Number(video.currentTime.toFixed(3)) : null,
+      DurationSeconds: video && Number.isFinite(video.duration) ? Number(video.duration.toFixed(3)) : null,
+      Completed: completed
+    });
+    if (!rpt.ErrorStatus && this.dto.Video.VideoCod === videoCod && this.previewViewLogId === viewLogId) {
+      this.previewViewLogId = rpt.Data?.ViewLogId || this.previewViewLogId;
+    }
   }
 
   private formatDuration(totalSeconds: number): string {

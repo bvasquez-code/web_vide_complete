@@ -1,12 +1,15 @@
 package com.ccadmin.app.video.service;
 
 import com.ccadmin.app.shared.service.SessionService;
+import com.ccadmin.app.video.model.dto.VideoWatchProgressDto;
 import com.ccadmin.app.video.model.dto.VideoRegisterDto;
 import com.ccadmin.app.video.model.entity.*;
 import com.ccadmin.app.video.repository.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -67,7 +70,7 @@ public class VideoCreateService extends SessionService {
     }
 
     @Transactional
-    public void registerView(String videoCod, HttpServletRequest request) {
+    public VideoViewLogEntity registerView(String videoCod, HttpServletRequest request) {
         if (!videoRepository.existsById(videoCod)) {
             throw new IllegalArgumentException("Video no encontrado.");
         }
@@ -75,11 +78,86 @@ public class VideoCreateService extends SessionService {
         VideoViewLogEntity log = new VideoViewLogEntity();
         log.VideoCod = videoCod;
         String userCod = getUserCod();
-        log.ViewerUserCod = userCod != null && userCod.startsWith("SUB") ? userCod : null;
+        log.ViewerType = resolveViewerType(userCod);
+        log.ViewerUserCod = "PUBLIC".equals(log.ViewerType) ? null : userCod;
+        log.PlayerContext = resolvePlayerContext(null);
+        log.WatchSeconds = BigDecimal.ZERO.setScale(3, RoundingMode.HALF_UP);
+        log.Completed = "N";
         log.ViewerIp = request.getRemoteAddr();
         log.UserAgent = request.getHeader("User-Agent");
         log.addSessionCreate(log.ViewerUserCod == null ? "PUBLIC" : log.ViewerUserCod);
-        viewLogRepository.save(log);
+        return viewLogRepository.save(log);
+    }
+
+    @Transactional
+    public VideoViewLogEntity registerWatchProgress(String videoCod, VideoWatchProgressDto dto, HttpServletRequest request) {
+        if (!videoRepository.existsById(videoCod)) {
+            throw new IllegalArgumentException("Video no encontrado.");
+        }
+        VideoWatchProgressDto safeDto = dto == null ? new VideoWatchProgressDto() : dto;
+        VideoViewLogEntity log = resolveProgressLog(videoCod, safeDto, request);
+        double playedSeconds = safeNumber(safeDto.PlayedSeconds);
+        if (playedSeconds > 0) {
+            BigDecimal current = log.WatchSeconds == null ? BigDecimal.ZERO : log.WatchSeconds;
+            log.WatchSeconds = current.add(BigDecimal.valueOf(Math.min(playedSeconds, 300))).setScale(3, RoundingMode.HALF_UP);
+        }
+        if (safeDto.CurrentSecond != null && Double.isFinite(safeDto.CurrentSecond) && safeDto.CurrentSecond >= 0) {
+            log.LastPositionSecond = BigDecimal.valueOf(safeDto.CurrentSecond).setScale(3, RoundingMode.HALF_UP);
+        }
+        if (safeDto.DurationSeconds != null && Double.isFinite(safeDto.DurationSeconds) && safeDto.DurationSeconds > 0) {
+            log.DurationSeconds = BigDecimal.valueOf(safeDto.DurationSeconds).setScale(3, RoundingMode.HALF_UP);
+        }
+        if (Boolean.TRUE.equals(safeDto.Completed)) {
+            log.Completed = "Y";
+        }
+        log.addSessionModify(log.ViewerUserCod == null ? "PUBLIC" : log.ViewerUserCod);
+        return viewLogRepository.save(log);
+    }
+
+    private VideoViewLogEntity resolveProgressLog(String videoCod, VideoWatchProgressDto dto, HttpServletRequest request) {
+        if (dto.ViewLogId != null) {
+            VideoViewLogEntity existing = viewLogRepository.findById(dto.ViewLogId)
+                    .orElseThrow(() -> new IllegalArgumentException("Registro de vista no encontrado."));
+            if (!videoCod.equals(existing.VideoCod)) {
+                throw new IllegalArgumentException("El registro de vista no corresponde al video.");
+            }
+            return existing;
+        }
+        VideoViewLogEntity log = new VideoViewLogEntity();
+        log.VideoCod = videoCod;
+        String userCod = getUserCod();
+        log.ViewerType = resolveViewerType(userCod);
+        log.ViewerUserCod = "PUBLIC".equals(log.ViewerType) ? null : userCod;
+        log.PlayerContext = resolvePlayerContext(dto.PlayerContext);
+        log.WatchSeconds = BigDecimal.ZERO.setScale(3, RoundingMode.HALF_UP);
+        log.Completed = "N";
+        log.ViewerIp = request.getRemoteAddr();
+        log.UserAgent = request.getHeader("User-Agent");
+        log.addSessionCreate(log.ViewerUserCod == null ? "PUBLIC" : log.ViewerUserCod);
+        videoRepository.incrementView(videoCod);
+        return log;
+    }
+
+    private String resolveViewerType(String userCod) {
+        if (userCod == null || userCod.isBlank() || "anonymousUser".equals(userCod) || "SISTEMA".equals(userCod)) {
+            return "PUBLIC";
+        }
+        return userCod.startsWith("SUB") ? "VIEWER" : "ADMIN";
+    }
+
+    private String resolvePlayerContext(String playerContext) {
+        if (playerContext == null || playerContext.isBlank()) {
+            return "PUBLIC_PLAYER";
+        }
+        String safeContext = playerContext.trim().toUpperCase();
+        return safeContext.length() > 32 ? safeContext.substring(0, 32) : safeContext;
+    }
+
+    private double safeNumber(Double value) {
+        if (value == null || !Double.isFinite(value) || value < 0) {
+            return 0;
+        }
+        return value;
     }
 
     private void saveCategoryRels(String videoCod, List<String> categoryCods) {

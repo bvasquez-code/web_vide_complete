@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { AppSetting } from '../../../../config/AppSetting';
@@ -12,7 +12,7 @@ import { VideoCardDto } from '../../model/dto/VideoCardDto';
   selector: 'app-publicplayer',
   templateUrl: './publicplayer.component.html'
 })
-export class PublicplayerComponent implements OnInit {
+export class PublicplayerComponent implements OnInit, OnDestroy {
   @ViewChild('captureSlider') captureSlider?: ElementRef<HTMLDivElement>;
   @ViewChild('videoPlayer') videoPlayer?: ElementRef<HTMLVideoElement>;
 
@@ -29,6 +29,10 @@ export class PublicplayerComponent implements OnInit {
   interactionMessage = '';
   suggestionComment = '';
   suggestionMessage = '';
+  private viewLogId: number | null = null;
+  private pendingWatchSeconds = 0;
+  private lastWatchPosition: number | null = null;
+  private lastWatchFlushAt = 0;
 
   constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, private publicSubscriberService: PublicSubscriberService, public publicAuthService: PublicAuthService, private sanitizer: DomSanitizer) {}
 
@@ -38,10 +42,20 @@ export class PublicplayerComponent implements OnInit {
       if (!nextVideoCod) {
         return;
       }
+      await this.flushWatchProgress();
       this.videoCod = nextVideoCod;
       this.resetState();
       await this.load();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.flushWatchProgress();
+  }
+
+  @HostListener('window:beforeunload')
+  onBeforeUnload(): void {
+    this.flushWatchProgress();
   }
 
   async load(): Promise<void> {
@@ -68,6 +82,10 @@ export class PublicplayerComponent implements OnInit {
     this.errorMessage = '';
     this.playerErrorMessage = '';
     this.viewRegistered = false;
+    this.viewLogId = null;
+    this.pendingWatchSeconds = 0;
+    this.lastWatchPosition = null;
+    this.lastWatchFlushAt = 0;
     this.viewerState = {};
     this.interactionMessage = '';
     this.suggestionComment = '';
@@ -79,7 +97,10 @@ export class PublicplayerComponent implements OnInit {
       return;
     }
     this.viewRegistered = true;
-    await this.publicVideoService.registerView(this.videoCod);
+    const rpt = await this.publicVideoService.registerView(this.videoCod);
+    if (!rpt.ErrorStatus) {
+      this.viewLogId = rpt.Data?.ViewLogId || null;
+    }
   }
 
   canUseHtmlVideo(): boolean {
@@ -101,6 +122,37 @@ export class PublicplayerComponent implements OnInit {
       return;
     }
     this.playerErrorMessage = `No se pudo cargar el video desde el servidor. Codigo de error: ${code || 'desconocido'}.`;
+  }
+
+  onPlayerPlay(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.lastWatchPosition = video.currentTime;
+  }
+
+  onPlayerTimeUpdate(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.addWatchDelta(video);
+    if (this.pendingWatchSeconds >= 10 || Date.now() - this.lastWatchFlushAt >= 10000) {
+      this.flushWatchProgress();
+    }
+  }
+
+  onPlayerPause(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.addWatchDelta(video);
+    this.flushWatchProgress();
+  }
+
+  onPlayerSeeked(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.lastWatchPosition = video.currentTime;
+    this.flushWatchProgress();
+  }
+
+  onPlayerEnded(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    this.addWatchDelta(video);
+    this.flushWatchProgress(true);
   }
 
   thumb(video: VideoCardDto): string {
@@ -179,5 +231,43 @@ export class PublicplayerComponent implements OnInit {
     }
     this.viewerState = rpt.Data || {};
     this.interactionMessage = 'Preferencia guardada.';
+  }
+
+  private addWatchDelta(video: HTMLVideoElement): void {
+    if (video.paused || video.seeking) {
+      this.lastWatchPosition = video.currentTime;
+      return;
+    }
+    if (this.lastWatchPosition !== null) {
+      const delta = video.currentTime - this.lastWatchPosition;
+      if (delta > 0 && delta <= 2.5) {
+        this.pendingWatchSeconds += delta;
+      }
+    }
+    this.lastWatchPosition = video.currentTime;
+  }
+
+  private async flushWatchProgress(completed: boolean = false): Promise<void> {
+    if (!this.videoCod || (!this.viewLogId && this.pendingWatchSeconds <= 0 && !completed)) {
+      return;
+    }
+    const videoCod = this.videoCod;
+    const viewLogId = this.viewLogId;
+    const video = this.videoPlayer?.nativeElement;
+    const playedSeconds = Number(this.pendingWatchSeconds.toFixed(3));
+    this.pendingWatchSeconds = 0;
+    this.lastWatchFlushAt = Date.now();
+    const rpt = await this.publicVideoService.registerWatchProgress(videoCod, {
+      ViewLogId: viewLogId,
+      VideoCod: videoCod,
+      PlayerContext: 'PUBLIC_PLAYER',
+      PlayedSeconds: playedSeconds,
+      CurrentSecond: video ? Number(video.currentTime.toFixed(3)) : null,
+      DurationSeconds: video && Number.isFinite(video.duration) ? Number(video.duration.toFixed(3)) : null,
+      Completed: completed
+    });
+    if (!rpt.ErrorStatus && this.videoCod === videoCod && this.viewLogId === viewLogId) {
+      this.viewLogId = rpt.Data?.ViewLogId || this.viewLogId;
+    }
   }
 }

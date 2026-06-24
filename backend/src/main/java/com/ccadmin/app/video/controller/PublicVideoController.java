@@ -1,6 +1,7 @@
 package com.ccadmin.app.video.controller;
 
 import com.ccadmin.app.shared.model.dto.ResponseWsDto;
+import com.ccadmin.app.video.model.dto.VideoWatchProgressDto;
 import com.ccadmin.app.video.model.entity.VideoEntity;
 import com.ccadmin.app.video.service.ThumbnailStorageService;
 import com.ccadmin.app.video.service.VideoCaptureService;
@@ -249,8 +250,16 @@ public class PublicVideoController {
     @PostMapping("videos/{videoCod}/view")
     public ResponseEntity<ResponseWsDto> view(@PathVariable String videoCod, HttpServletRequest request) {
         try {
-            createService.registerView(videoCod, request);
-            return new ResponseEntity<>(new ResponseWsDto("Vista registrada."), HttpStatus.OK);
+            return new ResponseEntity<>(new ResponseWsDto(createService.registerView(videoCod, request)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("videos/{videoCod}/watchProgress")
+    public ResponseEntity<ResponseWsDto> watchProgress(@PathVariable String videoCod, @RequestBody VideoWatchProgressDto dto, HttpServletRequest request) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(createService.registerWatchProgress(videoCod, dto, request)), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }
