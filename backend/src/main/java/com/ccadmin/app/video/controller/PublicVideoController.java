@@ -64,15 +64,15 @@ public class PublicVideoController {
     }
 
     @GetMapping("categories/{categoryCod}/videos")
-    public ResponseEntity<ResponseWsDto> byCategory(@PathVariable String categoryCod, @RequestParam(defaultValue = "recent") String Sort, @RequestParam(defaultValue = "12") Integer Limit) {
-        ResponseWsDto response = new ResponseWsDto(searchService.findByCategory(categoryCod, Sort, Limit));
+    public ResponseEntity<ResponseWsDto> byCategory(@PathVariable String categoryCod, @RequestParam(defaultValue = "recent") String Sort, @RequestParam(defaultValue = "1") Integer Page, @RequestParam(defaultValue = "24") Integer Limit) {
+        ResponseWsDto response = new ResponseWsDto(searchService.findByCategory(categoryCod, Sort, Page, Limit));
         response.AddResponseAdditional("Category", searchService.findCategoryById(categoryCod));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("actors/{actorCod}/videos")
-    public ResponseEntity<ResponseWsDto> byActor(@PathVariable String actorCod, @RequestParam(defaultValue = "recent") String Sort, @RequestParam(defaultValue = "12") Integer Limit) {
-        ResponseWsDto response = new ResponseWsDto(searchService.findByActor(actorCod, Sort, Limit));
+    public ResponseEntity<ResponseWsDto> byActor(@PathVariable String actorCod, @RequestParam(defaultValue = "recent") String Sort, @RequestParam(defaultValue = "1") Integer Page, @RequestParam(defaultValue = "24") Integer Limit) {
+        ResponseWsDto response = new ResponseWsDto(searchService.findByActor(actorCod, Sort, Page, Limit));
         response.AddResponseAdditional("Actor", searchService.findActorById(actorCod));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

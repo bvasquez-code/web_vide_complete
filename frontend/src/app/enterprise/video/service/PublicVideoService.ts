@@ -27,12 +27,12 @@ export class PublicVideoService {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/search`, { Query, Sort, Page, Limit });
   }
 
-  async findByCategory(categoryCod: string, sort: string = 'recent'): Promise<ResponseWsDto> {
-    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/categories/${categoryCod}/videos`, { Sort: sort, Limit: 24 });
+  async findByCategory(categoryCod: string, sort: string = 'recent', Page: number = 1, Limit: number = 24): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/categories/${categoryCod}/videos`, { Sort: sort, Page, Limit });
   }
 
-  async findByActor(actorCod: string, sort: string = 'recent'): Promise<ResponseWsDto> {
-    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/actors/${actorCod}/videos`, { Sort: sort, Limit: 24 });
+  async findByActor(actorCod: string, sort: string = 'recent', Page: number = 1, Limit: number = 24): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/actors/${actorCod}/videos`, { Sort: sort, Page, Limit });
   }
 
   async findDetail(videoCod: string): Promise<ResponseWsDto> {

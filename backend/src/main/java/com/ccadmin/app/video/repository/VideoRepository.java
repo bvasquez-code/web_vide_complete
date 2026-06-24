@@ -19,18 +19,32 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String> {
             inner join video_category_rel r on r.VideoCod = v.VideoCod and r.Status = 'A'
             where v.Status = 'A' and r.CategoryCod = :categoryCod
             order by case when :sort = 'views' then v.ViewCount else 0 end desc, coalesce(v.PublishDate, v.CreationDate) desc
-            limit :limit
+            limit :init, :limit
             """, nativeQuery = true)
-    List<VideoEntity> findByCategory(@Param("categoryCod") String categoryCod, @Param("sort") String sort, @Param("limit") Integer limit);
+    List<VideoEntity> findByCategory(@Param("categoryCod") String categoryCod, @Param("sort") String sort, @Param("init") Integer init, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select count(distinct v.VideoCod) from video v
+            inner join video_category_rel r on r.VideoCod = v.VideoCod and r.Status = 'A'
+            where v.Status = 'A' and r.CategoryCod = :categoryCod
+            """, nativeQuery = true)
+    Long countByCategory(@Param("categoryCod") String categoryCod);
 
     @Query(value = """
             select distinct v.* from video v
             inner join video_actor_rel r on r.VideoCod = v.VideoCod and r.Status = 'A'
             where v.Status = 'A' and r.ActorCod = :actorCod
             order by case when :sort = 'views' then v.ViewCount else 0 end desc, coalesce(v.PublishDate, v.CreationDate) desc
-            limit :limit
+            limit :init, :limit
             """, nativeQuery = true)
-    List<VideoEntity> findByActor(@Param("actorCod") String actorCod, @Param("sort") String sort, @Param("limit") Integer limit);
+    List<VideoEntity> findByActor(@Param("actorCod") String actorCod, @Param("sort") String sort, @Param("init") Integer init, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select count(distinct v.VideoCod) from video v
+            inner join video_actor_rel r on r.VideoCod = v.VideoCod and r.Status = 'A'
+            where v.Status = 'A' and r.ActorCod = :actorCod
+            """, nativeQuery = true)
+    Long countByActor(@Param("actorCod") String actorCod);
 
     @Query(value = """
             select distinct v.* from video v

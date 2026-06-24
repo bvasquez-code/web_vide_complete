@@ -33,8 +33,6 @@ public class VideoSearchService {
 
     public List<VideoCardDto> findRecent(Integer limit) { return videoRepository.findRecent(safeLimit(limit)).stream().map(this::toCard).toList(); }
     public List<VideoCardDto> findMostViewed(Integer limit) { return videoRepository.findMostViewed(safeLimit(limit)).stream().map(this::toCard).toList(); }
-    public List<VideoCardDto> findByCategory(String categoryCod, String sort, Integer limit) { return videoRepository.findByCategory(categoryCod, sort == null ? "recent" : sort, safeLimit(limit)).stream().map(this::toCard).toList(); }
-    public List<VideoCardDto> findByActor(String actorCod, String sort, Integer limit) { return videoRepository.findByActor(actorCod, sort == null ? "recent" : sort, safeLimit(limit)).stream().map(this::toCard).toList(); }
     public List<VideoCardDto> findRelated(String videoCod, Integer limit) { return videoRepository.findRelated(videoCod, safeLimit(limit)).stream().map(this::toCard).toList(); }
 
     public ResponsePageSearchT<VideoCardDto> searchPublic(String query, String sort, Integer page, Integer limit) {
@@ -45,6 +43,30 @@ public class VideoSearchService {
         return new ResponsePageSearchT<>(
                 videoRepository.searchPublic(q, safeSort, (safePage - 1) * safeLimit, safeLimit).stream().map(this::toCard).toList(),
                 videoRepository.countSearchPublic(q),
+                safePage,
+                safeLimit
+        );
+    }
+
+    public ResponsePageSearchT<VideoCardDto> findByCategory(String categoryCod, String sort, Integer page, Integer limit) {
+        int safePage = page == null || page < 1 ? 1 : page;
+        int safeLimit = limit == null || limit < 1 ? 24 : Math.min(limit, 50);
+        String safeSort = "views".equals(sort) ? "views" : "recent";
+        return new ResponsePageSearchT<>(
+                videoRepository.findByCategory(categoryCod, safeSort, (safePage - 1) * safeLimit, safeLimit).stream().map(this::toCard).toList(),
+                videoRepository.countByCategory(categoryCod),
+                safePage,
+                safeLimit
+        );
+    }
+
+    public ResponsePageSearchT<VideoCardDto> findByActor(String actorCod, String sort, Integer page, Integer limit) {
+        int safePage = page == null || page < 1 ? 1 : page;
+        int safeLimit = limit == null || limit < 1 ? 24 : Math.min(limit, 50);
+        String safeSort = "views".equals(sort) ? "views" : "recent";
+        return new ResponsePageSearchT<>(
+                videoRepository.findByActor(actorCod, safeSort, (safePage - 1) * safeLimit, safeLimit).stream().map(this::toCard).toList(),
+                videoRepository.countByActor(actorCod),
                 safePage,
                 safeLimit
         );
