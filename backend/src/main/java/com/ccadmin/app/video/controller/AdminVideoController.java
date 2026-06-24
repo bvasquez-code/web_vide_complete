@@ -124,4 +124,13 @@ public class AdminVideoController {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }
     }
+
+    @PostMapping("cleanUnlinkedCaptures")
+    public ResponseEntity<ResponseWsDto> cleanUnlinkedCaptures(@RequestParam(defaultValue = "false") Boolean DryRun) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.cleanUnlinkedCaptures(DryRun)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
 }

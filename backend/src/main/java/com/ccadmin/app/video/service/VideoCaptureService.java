@@ -1,6 +1,7 @@
 package com.ccadmin.app.video.service;
 
 import com.ccadmin.app.shared.service.SessionService;
+import com.ccadmin.app.video.model.dto.VideoCaptureCleanupResultDto;
 import com.ccadmin.app.video.model.dto.VideoCaptureProcessResultDto;
 import com.ccadmin.app.video.model.entity.VideoCaptureEntity;
 import com.ccadmin.app.video.model.entity.VideoEntity;
@@ -24,13 +25,20 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 @Service
 public class VideoCaptureService extends SessionService {
+    private static final String CAPTURE_SOURCE_AUTO = "AUTO";
+    private static final String CAPTURE_SOURCE_MANUAL = "MANUAL";
+
     private final VideoRepository videoRepository;
     private final VideoCaptureRepository videoCaptureRepository;
     private final TransactionTemplate transactionTemplate;
@@ -70,8 +78,8 @@ public class VideoCaptureService extends SessionService {
                 throw new IllegalArgumentException("Nombre de carpeta de capturas invalido.");
             }
             Files.createDirectories(videoCapturePath);
-            deleteExistingCaptureFiles(video.VideoCod);
-            transactionTemplate.executeWithoutResult(status -> videoCaptureRepository.deleteByVideoCod(video.VideoCod));
+            deleteExistingCaptureFiles(video.VideoCod, CAPTURE_SOURCE_AUTO);
+            transactionTemplate.executeWithoutResult(status -> videoCaptureRepository.deleteByVideoCodAndCaptureSource(video.VideoCod, CAPTURE_SOURCE_AUTO));
             List<VideoCaptureEntity> captures = new ArrayList<>();
 
             for (int index = 1; index <= defaultCaptureCount; index++) {
@@ -88,6 +96,7 @@ public class VideoCaptureService extends SessionService {
                 VideoCaptureEntity capture = new VideoCaptureEntity();
                 capture.VideoCod = video.VideoCod;
                 capture.ImageUrl = baseUrl + "/api/v1/public/captures/" + videoCapturePath.getFileName() + "/" + fileName;
+                capture.CaptureSource = CAPTURE_SOURCE_AUTO;
                 capture.CaptureSecond = BigDecimal.valueOf(captureSecond);
                 capture.DisplayOrder = index;
                 capture.addSessionCreate(getUserCod());
@@ -122,6 +131,49 @@ public class VideoCaptureService extends SessionService {
         return target;
     }
 
+    public VideoCaptureCleanupResultDto cleanUnlinkedCaptures(Boolean dryRun) throws Exception {
+        VideoCaptureCleanupResultDto result = new VideoCaptureCleanupResultDto();
+        result.DryRun = Boolean.TRUE.equals(dryRun);
+        Files.createDirectories(capturePath);
+
+        Set<Path> linkedFiles = new HashSet<>();
+        for (String imageUrl : videoCaptureRepository.findAllImageUrls()) {
+            Path linkedPath = resolvePathFromCaptureUrl(imageUrl);
+            if (linkedPath != null) {
+                linkedFiles.add(linkedPath.toAbsolutePath().normalize());
+            }
+        }
+        result.LinkedFileCount = linkedFiles.size();
+
+        try (Stream<Path> paths = Files.walk(capturePath)) {
+            for (Path file : paths.filter(Files::isRegularFile).toList()) {
+                result.ScannedFileCount++;
+                Path normalizedFile = file.toAbsolutePath().normalize();
+                if (linkedFiles.contains(normalizedFile)) {
+                    continue;
+                }
+
+                String relativeFile = capturePath.toAbsolutePath().normalize().relativize(normalizedFile).toString();
+                if (!result.DryRun) {
+                    try {
+                        Files.deleteIfExists(normalizedFile);
+                    } catch (Exception ex) {
+                        result.ErrorCount++;
+                        result.Errors.add(relativeFile + ": " + ex.getMessage());
+                        continue;
+                    }
+                }
+                result.DeletedFileCount++;
+                result.DeletedFiles.add(relativeFile);
+            }
+        }
+
+        if (!result.DryRun) {
+            deleteEmptyCaptureDirectories();
+        }
+        return result;
+    }
+
     @Transactional
     public VideoCaptureEntity saveCaptureAtSecond(String videoCod, Double captureSecond, String baseUrl) throws Exception {
         if (videoCod == null || videoCod.isBlank()) {
@@ -149,7 +201,7 @@ public class VideoCaptureService extends SessionService {
 
         double safeSecond = normalizeCaptureSecond(captureSecond, totalSeconds);
         BigDecimal storedSecond = BigDecimal.valueOf(safeSecond).setScale(3, RoundingMode.HALF_UP);
-        for (VideoCaptureEntity capture : videoCaptureRepository.findActiveByVideoCod(video.VideoCod)) {
+        for (VideoCaptureEntity capture : videoCaptureRepository.findActiveByVideoCodAndCaptureSource(video.VideoCod, CAPTURE_SOURCE_MANUAL)) {
             if (capture.CaptureSecond != null && capture.CaptureSecond.setScale(3, RoundingMode.HALF_UP).compareTo(storedSecond) == 0) {
                 return capture;
             }
@@ -171,6 +223,7 @@ public class VideoCaptureService extends SessionService {
         VideoCaptureEntity capture = new VideoCaptureEntity();
         capture.VideoCod = video.VideoCod;
         capture.ImageUrl = baseUrl + "/api/v1/public/captures/" + videoCapturePath.getFileName() + "/" + fileName;
+        capture.CaptureSource = CAPTURE_SOURCE_MANUAL;
         capture.CaptureSecond = storedSecond;
         capture.DisplayOrder = nextOrder;
         capture.addSessionCreate(getUserCod());
@@ -211,14 +264,15 @@ public class VideoCaptureService extends SessionService {
         VideoCaptureEntity capture = new VideoCaptureEntity();
         capture.VideoCod = video.VideoCod;
         capture.ImageUrl = baseUrl + "/api/v1/public/captures/" + videoCapturePath.getFileName() + "/" + fileName;
+        capture.CaptureSource = CAPTURE_SOURCE_MANUAL;
         capture.CaptureSecond = BigDecimal.ZERO;
         capture.DisplayOrder = nextOrder;
         capture.addSessionCreate(getUserCod());
         return videoCaptureRepository.save(capture);
     }
 
-    private void deleteExistingCaptureFiles(String videoCod) {
-        for (VideoCaptureEntity capture : videoCaptureRepository.findActiveByVideoCod(videoCod)) {
+    private void deleteExistingCaptureFiles(String videoCod, String captureSource) {
+        for (VideoCaptureEntity capture : videoCaptureRepository.findActiveByVideoCodAndCaptureSource(videoCod, captureSource)) {
             if (capture.ImageUrl == null || capture.ImageUrl.isBlank()) {
                 continue;
             }
@@ -228,6 +282,26 @@ public class VideoCaptureService extends SessionService {
                     Files.deleteIfExists(target);
                 }
             } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private void deleteEmptyCaptureDirectories() throws Exception {
+        if (!Files.exists(capturePath)) {
+            return;
+        }
+        try (Stream<Path> paths = Files.walk(capturePath)) {
+            List<Path> directories = paths
+                    .filter(Files::isDirectory)
+                    .filter(path -> !path.normalize().equals(capturePath.normalize()))
+                    .sorted(Comparator.reverseOrder())
+                    .toList();
+            for (Path directory : directories) {
+                try (Stream<Path> children = Files.list(directory)) {
+                    if (children.findAny().isEmpty()) {
+                        Files.deleteIfExists(directory);
+                    }
+                }
             }
         }
     }

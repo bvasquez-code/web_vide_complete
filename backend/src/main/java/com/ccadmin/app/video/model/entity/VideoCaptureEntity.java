@@ -16,6 +16,7 @@ public class VideoCaptureEntity extends AuditTableEntity {
     public Long CaptureId;
     public String VideoCod;
     public String ImageUrl;
+    public String CaptureSource;
     public BigDecimal CaptureSecond;
     public Integer DisplayOrder;
 }

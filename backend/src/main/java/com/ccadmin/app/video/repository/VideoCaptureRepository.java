@@ -11,10 +11,16 @@ public interface VideoCaptureRepository extends JpaRepository<VideoCaptureEntity
     @Query(value = "select * from video_capture where VideoCod = :VideoCod and Status = 'A' order by CaptureSecond, DisplayOrder", nativeQuery = true)
     List<VideoCaptureEntity> findActiveByVideoCod(@Param("VideoCod") String VideoCod);
 
+    @Query(value = "select * from video_capture where VideoCod = :VideoCod and CaptureSource = :CaptureSource and Status = 'A' order by CaptureSecond, DisplayOrder", nativeQuery = true)
+    List<VideoCaptureEntity> findActiveByVideoCodAndCaptureSource(@Param("VideoCod") String VideoCod, @Param("CaptureSource") String CaptureSource);
+
+    @Query(value = "select ImageUrl from video_capture where ImageUrl is not null and ImageUrl <> ''", nativeQuery = true)
+    List<String> findAllImageUrls();
+
     @Query(value = "select coalesce(max(DisplayOrder), 0) from video_capture where VideoCod = :VideoCod", nativeQuery = true)
     Integer findMaxDisplayOrder(@Param("VideoCod") String VideoCod);
 
     @Modifying
-    @Query(value = "delete from video_capture where VideoCod = :VideoCod", nativeQuery = true)
-    void deleteByVideoCod(@Param("VideoCod") String VideoCod);
+    @Query(value = "delete from video_capture where VideoCod = :VideoCod and CaptureSource = :CaptureSource", nativeQuery = true)
+    void deleteByVideoCodAndCaptureSource(@Param("VideoCod") String VideoCod, @Param("CaptureSource") String CaptureSource);
 }
