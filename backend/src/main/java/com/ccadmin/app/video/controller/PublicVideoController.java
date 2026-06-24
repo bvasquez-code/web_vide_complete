@@ -98,7 +98,7 @@ public class PublicVideoController {
     }
 
     @GetMapping("videos/{videoCod}/related")
-    public ResponseEntity<ResponseWsDto> related(@PathVariable String videoCod, @RequestParam(defaultValue = "8") Integer Limit) {
+    public ResponseEntity<ResponseWsDto> related(@PathVariable String videoCod, @RequestParam(defaultValue = "4") Integer Limit) {
         return new ResponseEntity<>(new ResponseWsDto(searchService.findRelated(videoCod, Limit)), HttpStatus.OK);
     }
 

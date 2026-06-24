@@ -7,7 +7,9 @@ import com.ccadmin.app.video.model.dto.VideoLabelDto;
 import com.ccadmin.app.video.model.entity.*;
 import com.ccadmin.app.video.repository.*;
 import org.springframework.stereotype.Service;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class VideoSearchService {
@@ -33,7 +35,15 @@ public class VideoSearchService {
 
     public List<VideoCardDto> findRecent(Integer limit) { return videoRepository.findRecent(safeLimit(limit)).stream().map(this::toCard).toList(); }
     public List<VideoCardDto> findMostViewed(Integer limit) { return videoRepository.findMostViewed(safeLimit(limit)).stream().map(this::toCard).toList(); }
-    public List<VideoCardDto> findRelated(String videoCod, Integer limit) { return videoRepository.findRelated(videoCod, safeLimit(limit)).stream().map(this::toCard).toList(); }
+    public List<VideoCardDto> findRelated(String videoCod, Integer limit) {
+        int blockLimit = limit == null || limit < 1 ? 4 : Math.min(limit, 12);
+        Map<String, VideoEntity> selected = new LinkedHashMap<>();
+        addRelatedBlock(selected, videoCod, blockLimit, videoRepository::findRelatedByActor, videoRepository::findRelatedByActorCoworker, videoRepository::findRelatedByAllCategories, videoRepository::findRelatedByMostCategories, videoRepository::findRandomRelated);
+        addRelatedBlock(selected, videoCod, blockLimit, videoRepository::findRelatedByAllCategories, videoRepository::findRelatedByMostCategories, videoRepository::findRandomRelated);
+        addRelatedBlock(selected, videoCod, blockLimit, videoRepository::findRelatedByAllTags, videoRepository::findRelatedByMostTags, videoRepository::findRandomRelated);
+        addRelatedBlock(selected, videoCod, blockLimit, videoRepository::findRandomRelated);
+        return selected.values().stream().map(this::toCard).toList();
+    }
 
     public ResponsePageSearchT<VideoCardDto> searchPublic(String query, String sort, Integer page, Integer limit) {
         int safePage = page == null || page < 1 ? 1 : page;
@@ -110,6 +120,27 @@ public class VideoSearchService {
 
     private Integer safeLimit(Integer limit) { return limit == null || limit < 1 ? 12 : Math.min(limit, 50); }
 
+    @SafeVarargs
+    private void addRelatedBlock(Map<String, VideoEntity> selected, String videoCod, int blockLimit, RelatedFinder... finders) {
+        int initialSize = selected.size();
+        for (RelatedFinder finder : finders) {
+            if (selected.size() - initialSize >= blockLimit) {
+                return;
+            }
+            int queryLimit = Math.max(blockLimit * 5, 20);
+            List<VideoEntity> candidates = finder.find(videoCod, queryLimit);
+            for (VideoEntity candidate : candidates) {
+                if (candidate == null || candidate.VideoCod == null || candidate.VideoCod.equals(videoCod) || selected.containsKey(candidate.VideoCod)) {
+                    continue;
+                }
+                selected.put(candidate.VideoCod, candidate);
+                if (selected.size() - initialSize >= blockLimit) {
+                    return;
+                }
+            }
+        }
+    }
+
     public VideoCardDto toCard(VideoEntity video) {
         VideoCardDto dto = new VideoCardDto();
         dto.VideoCod = video.VideoCod;
@@ -134,4 +165,9 @@ public class VideoSearchService {
     }
 
     public record FormData(List<VideoCategoryEntity> Categories, List<ActorEntity> Actors, List<TagEntity> Tags, List<String> SourceTypes) {}
+
+    @FunctionalInterface
+    private interface RelatedFinder {
+        List<VideoEntity> find(String videoCod, Integer limit);
+    }
 }

@@ -48,14 +48,98 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String> {
 
     @Query(value = """
             select distinct v.* from video v
-            inner join video_category_rel r on r.VideoCod = v.VideoCod and r.Status = 'A'
+            inner join video_actor_rel ar on ar.VideoCod = v.VideoCod and ar.Status = 'A'
             where v.Status = 'A'
               and v.VideoCod <> :videoCod
-              and r.CategoryCod in (select CategoryCod from video_category_rel where VideoCod = :videoCod and Status = 'A')
-            order by coalesce(v.PublishDate, v.CreationDate) desc
+              and ar.ActorCod in (select ActorCod from video_actor_rel where VideoCod = :videoCod and Status = 'A')
+            order by v.CreationDate desc
             limit :limit
             """, nativeQuery = true)
-    List<VideoEntity> findRelated(@Param("videoCod") String videoCod, @Param("limit") Integer limit);
+    List<VideoEntity> findRelatedByActor(@Param("videoCod") String videoCod, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select distinct v.* from video v
+            inner join video_actor_rel targetActor on targetActor.VideoCod = v.VideoCod and targetActor.Status = 'A'
+            where v.Status = 'A'
+              and v.VideoCod <> :videoCod
+              and targetActor.ActorCod in (
+                  select distinct coworker.ActorCod
+                  from video_actor_rel sourceActor
+                  inner join video_actor_rel sharedVideo on sharedVideo.ActorCod = sourceActor.ActorCod and sharedVideo.Status = 'A'
+                  inner join video_actor_rel coworker on coworker.VideoCod = sharedVideo.VideoCod and coworker.Status = 'A' and coworker.ActorCod <> sourceActor.ActorCod
+                  where sourceActor.VideoCod = :videoCod and sourceActor.Status = 'A'
+              )
+            order by v.CreationDate desc
+            limit :limit
+            """, nativeQuery = true)
+    List<VideoEntity> findRelatedByActorCoworker(@Param("videoCod") String videoCod, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select v.* from video v
+            inner join video_category_rel cr on cr.VideoCod = v.VideoCod and cr.Status = 'A'
+            where v.Status = 'A'
+              and v.VideoCod <> :videoCod
+              and cr.CategoryCod in (select CategoryCod from video_category_rel where VideoCod = :videoCod and Status = 'A')
+            group by v.VideoCod
+            having count(distinct cr.CategoryCod) = (
+                select count(distinct sourceCategory.CategoryCod)
+                from video_category_rel sourceCategory
+                where sourceCategory.VideoCod = :videoCod and sourceCategory.Status = 'A'
+            )
+            order by v.CreationDate desc
+            limit :limit
+            """, nativeQuery = true)
+    List<VideoEntity> findRelatedByAllCategories(@Param("videoCod") String videoCod, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select v.* from video v
+            inner join video_category_rel cr on cr.VideoCod = v.VideoCod and cr.Status = 'A'
+            where v.Status = 'A'
+              and v.VideoCod <> :videoCod
+              and cr.CategoryCod in (select CategoryCod from video_category_rel where VideoCod = :videoCod and Status = 'A')
+            group by v.VideoCod
+            order by count(distinct cr.CategoryCod) desc, v.CreationDate desc
+            limit :limit
+            """, nativeQuery = true)
+    List<VideoEntity> findRelatedByMostCategories(@Param("videoCod") String videoCod, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select v.* from video v
+            inner join video_tag_rel tr on tr.VideoCod = v.VideoCod and tr.Status = 'A'
+            where v.Status = 'A'
+              and v.VideoCod <> :videoCod
+              and tr.TagCod in (select TagCod from video_tag_rel where VideoCod = :videoCod and Status = 'A')
+            group by v.VideoCod
+            having count(distinct tr.TagCod) = (
+                select count(distinct sourceTag.TagCod)
+                from video_tag_rel sourceTag
+                where sourceTag.VideoCod = :videoCod and sourceTag.Status = 'A'
+            )
+            order by v.CreationDate desc
+            limit :limit
+            """, nativeQuery = true)
+    List<VideoEntity> findRelatedByAllTags(@Param("videoCod") String videoCod, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select v.* from video v
+            inner join video_tag_rel tr on tr.VideoCod = v.VideoCod and tr.Status = 'A'
+            where v.Status = 'A'
+              and v.VideoCod <> :videoCod
+              and tr.TagCod in (select TagCod from video_tag_rel where VideoCod = :videoCod and Status = 'A')
+            group by v.VideoCod
+            order by count(distinct tr.TagCod) desc, v.CreationDate desc
+            limit :limit
+            """, nativeQuery = true)
+    List<VideoEntity> findRelatedByMostTags(@Param("videoCod") String videoCod, @Param("limit") Integer limit);
+
+    @Query(value = """
+            select * from video
+            where Status = 'A'
+              and VideoCod <> :videoCod
+            order by rand()
+            limit :limit
+            """, nativeQuery = true)
+    List<VideoEntity> findRandomRelated(@Param("videoCod") String videoCod, @Param("limit") Integer limit);
 
     @Query(value = """
             select distinct v.* from video v

@@ -44,7 +44,7 @@ export class PublicVideoService {
   }
 
   async findRelated(videoCod: string): Promise<ResponseWsDto> {
-    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/${videoCod}/related`, { Limit: 8 });
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/${videoCod}/related`, { Limit: 4 });
   }
 
   async registerView(videoCod: string): Promise<ResponseWsDto> {
