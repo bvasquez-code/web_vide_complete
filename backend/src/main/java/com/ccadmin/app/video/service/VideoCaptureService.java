@@ -7,7 +7,9 @@ import com.ccadmin.app.video.model.entity.VideoEntity;
 import com.ccadmin.app.video.repository.VideoCaptureRepository;
 import com.ccadmin.app.video.repository.VideoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -24,20 +26,23 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class VideoCaptureService extends SessionService {
     private final VideoRepository videoRepository;
     private final VideoCaptureRepository videoCaptureRepository;
+    private final TransactionTemplate transactionTemplate;
     private final Path capturePath = Path.of("uploads", "captures");
     private final Integer defaultCaptureCount = 20;
 
-    public VideoCaptureService(VideoRepository videoRepository, VideoCaptureRepository videoCaptureRepository) {
+    public VideoCaptureService(VideoRepository videoRepository, VideoCaptureRepository videoCaptureRepository, PlatformTransactionManager transactionManager) {
         this.videoRepository = videoRepository;
         this.videoCaptureRepository = videoCaptureRepository;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    @Transactional
     public VideoCaptureProcessResultDto generate(String videoCod, String baseUrl) {
         if (videoCod == null || videoCod.isBlank()) {
             throw new IllegalArgumentException("Codigo de video obligatorio.");
@@ -66,14 +71,19 @@ public class VideoCaptureService extends SessionService {
             }
             Files.createDirectories(videoCapturePath);
             deleteExistingCaptureFiles(video.VideoCod);
-            videoCaptureRepository.deleteByVideoCod(video.VideoCod);
+            transactionTemplate.executeWithoutResult(status -> videoCaptureRepository.deleteByVideoCod(video.VideoCod));
             List<VideoCaptureEntity> captures = new ArrayList<>();
 
             for (int index = 1; index <= defaultCaptureCount; index++) {
                 double captureSecond = resolveCaptureSecond(totalSeconds, index, defaultCaptureCount);
                 String fileName = video.VideoCod + "-capture-" + String.format("%02d", index) + "-" + System.currentTimeMillis() + ".jpg";
                 Path target = videoCapturePath.resolve(fileName).normalize();
-                captureImage(source, target, captureSecond);
+                try {
+                    captureImage(source, target, captureSecond);
+                } catch (Exception ex) {
+                    Files.deleteIfExists(target);
+                    continue;
+                }
 
                 VideoCaptureEntity capture = new VideoCaptureEntity();
                 capture.VideoCod = video.VideoCod;
@@ -81,12 +91,15 @@ public class VideoCaptureService extends SessionService {
                 capture.CaptureSecond = BigDecimal.valueOf(captureSecond);
                 capture.DisplayOrder = index;
                 capture.addSessionCreate(getUserCod());
-                captures.add(videoCaptureRepository.save(capture));
+                VideoCaptureEntity savedCapture = transactionTemplate.execute(status -> videoCaptureRepository.save(capture));
+                if (savedCapture != null) {
+                    captures.add(savedCapture);
+                }
             }
 
             video.Duration = formatDuration(totalSeconds);
             video.addSessionModify(getUserCod());
-            videoRepository.save(video);
+            transactionTemplate.executeWithoutResult(status -> videoRepository.save(video));
 
             VideoCaptureProcessResultDto result = new VideoCaptureProcessResultDto();
             result.VideoCod = video.VideoCod;
@@ -281,40 +294,77 @@ public class VideoCaptureService extends SessionService {
     }
 
     private void captureImage(Path source, Path target, double second) throws Exception {
-        CommandResult result = runCommand(List.of(
-                "ffmpeg",
-                "-y",
-                "-ss", String.format(Locale.US, "%.3f", second),
-                "-i", source.toString(),
-                "-frames:v", "1",
-                "-q:v", "2",
-                target.toString()
-        ));
-        if (result.ExitCode() != 0) {
-            throw new IllegalStateException("ffmpeg fallo: " + result.Output());
+        List<List<String>> commands = List.of(
+                List.of(
+                        "ffmpeg",
+                        "-y",
+                        "-ss", String.format(Locale.US, "%.3f", second),
+                        "-i", source.toString(),
+                        "-frames:v", "1",
+                        "-q:v", "2",
+                        target.toString()
+                ),
+                List.of(
+                        "ffmpeg",
+                        "-y",
+                        "-ss", String.format(Locale.US, "%.3f", second),
+                        "-i", source.toString(),
+                        "-frames:v", "1",
+                        "-vf", "format=yuvj420p",
+                        "-q:v", "3",
+                        "-update", "1",
+                        target.toString()
+                )
+        );
+
+        List<String> errors = new ArrayList<>();
+        for (List<String> command : commands) {
+            Files.deleteIfExists(target);
+            CommandResult result = runCommand(command, 5, TimeUnit.SECONDS);
+            if (result.ExitCode() == 0 && Files.exists(target) && Files.size(target) > 0) {
+                return;
+            }
+            errors.add(result.Output());
         }
-        if (!Files.exists(target) || Files.size(target) == 0) {
-            throw new IllegalStateException("ffmpeg no genero la captura.");
-        }
+        throw new IllegalStateException("ffmpeg no genero la captura despues de 2 intentos: " + String.join(System.lineSeparator(), errors));
     }
 
     private CommandResult runCommand(List<String> command) throws Exception {
+        return runCommand(command, 5, TimeUnit.MINUTES);
+    }
+
+    private CommandResult runCommand(List<String> command, long timeout, TimeUnit timeUnit) throws Exception {
         ProcessBuilder builder = new ProcessBuilder(command);
         builder.redirectErrorStream(true);
         Process process = builder.start();
-        List<String> lines = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lines.add(line);
+        CompletableFuture<String> outputFuture = CompletableFuture.supplyAsync(() -> {
+            List<String> lines = new ArrayList<>();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+            } catch (Exception ex) {
+                lines.add(ex.getMessage());
             }
-        }
-        boolean finished = process.waitFor(5, java.util.concurrent.TimeUnit.MINUTES);
+            return String.join(System.lineSeparator(), lines);
+        });
+
+        boolean finished = process.waitFor(timeout, timeUnit);
         if (!finished) {
             process.destroyForcibly();
-            throw new IllegalStateException("Tiempo maximo excedido ejecutando " + command.get(0) + ".");
+            String output = readCommandOutput(outputFuture);
+            return new CommandResult(-1, "Tiempo maximo excedido ejecutando " + command.get(0) + "." + System.lineSeparator() + output);
         }
-        return new CommandResult(process.exitValue(), String.join(System.lineSeparator(), lines));
+        return new CommandResult(process.exitValue(), readCommandOutput(outputFuture));
+    }
+
+    private String readCommandOutput(CompletableFuture<String> outputFuture) {
+        try {
+            return outputFuture.get(1, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            return ex.getMessage();
+        }
     }
 
     private String formatDuration(double totalSeconds) {
