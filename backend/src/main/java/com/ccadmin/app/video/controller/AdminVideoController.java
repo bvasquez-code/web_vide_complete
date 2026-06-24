@@ -2,6 +2,7 @@ package com.ccadmin.app.video.controller;
 
 import com.ccadmin.app.shared.model.dto.ResponseWsDto;
 import com.ccadmin.app.subscriber.model.dto.VideoCaptureSuggestionDto;
+import com.ccadmin.app.video.model.dto.VideoRenameFileDto;
 import com.ccadmin.app.video.model.dto.VideoRegisterDto;
 import com.ccadmin.app.video.model.dto.VideoWatchProgressDto;
 import com.ccadmin.app.video.service.ThumbnailStorageService;
@@ -76,6 +77,16 @@ public class AdminVideoController {
     public ResponseEntity<ResponseWsDto> disable(@RequestBody VideoRegisterDto dto) {
         try {
             return new ResponseEntity<>(new ResponseWsDto(createService.disable(dto.Video.VideoCod)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("{videoCod}/renameFile")
+    public ResponseEntity<ResponseWsDto> renameFile(@PathVariable String videoCod, @RequestBody VideoRenameFileDto dto) {
+        try {
+            String newFileName = dto == null ? "" : dto.NewFileName;
+            return new ResponseEntity<>(new ResponseWsDto(createService.renamePathFile(videoCod, newFileName)), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }

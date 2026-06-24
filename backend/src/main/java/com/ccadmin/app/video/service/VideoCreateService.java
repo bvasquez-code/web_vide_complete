@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 @Service
@@ -66,6 +68,59 @@ public class VideoCreateService extends SessionService {
     public VideoEntity disable(String cod) {
         VideoEntity video = videoRepository.findById(cod).orElseThrow(() -> new IllegalArgumentException("Video no encontrado."));
         video.inactive(getUserCod());
+        return videoRepository.save(video);
+    }
+
+    @Transactional
+    public VideoEntity renamePathFile(String videoCod, String newFileName) throws Exception {
+        if (videoCod == null || videoCod.isBlank()) {
+            throw new IllegalArgumentException("Codigo de video obligatorio.");
+        }
+        if (newFileName == null || newFileName.isBlank()) {
+            throw new IllegalArgumentException("Nombre de archivo obligatorio.");
+        }
+        VideoEntity video = videoRepository.findById(videoCod)
+                .orElseThrow(() -> new IllegalArgumentException("Video no encontrado."));
+        if (!"PATH".equals(video.SourceType)) {
+            throw new IllegalArgumentException("Solo se puede renombrar el archivo de videos con origen PATH.");
+        }
+        if (video.SourceValue == null || video.SourceValue.isBlank()) {
+            throw new IllegalArgumentException("El video no tiene ruta de archivo registrada.");
+        }
+
+        Path source = Path.of(video.SourceValue).normalize();
+        if (!Files.exists(source) || !Files.isRegularFile(source) || !Files.isReadable(source)) {
+            throw new IllegalArgumentException("El archivo actual no existe o no tiene permiso de lectura.");
+        }
+        Path parent = source.getParent();
+        if (parent == null) {
+            throw new IllegalArgumentException("La ruta actual del archivo no tiene carpeta padre valida.");
+        }
+
+        String safeFileName = normalizeNewFileName(newFileName, source);
+        Path target = parent.resolve(safeFileName).normalize();
+        if (!target.startsWith(parent.normalize())) {
+            throw new IllegalArgumentException("Nombre de archivo invalido.");
+        }
+        if (source.equals(target)) {
+            video.SourceValue = target.toString();
+            video.addSessionModify(getUserCod());
+            return videoRepository.save(video);
+        }
+        if (Files.exists(target)) {
+            throw new IllegalArgumentException("Ya existe un archivo con ese nombre.");
+        }
+
+        Files.move(source, target);
+        if (!Files.exists(target) || !Files.isRegularFile(target)) {
+            throw new IllegalStateException("No se pudo validar el archivo con el nuevo nombre.");
+        }
+        if (Files.exists(source)) {
+            throw new IllegalStateException("El archivo anterior todavia existe. No se actualizo la base de datos.");
+        }
+
+        video.SourceValue = target.toString();
+        video.addSessionModify(getUserCod());
         return videoRepository.save(video);
     }
 
@@ -191,5 +246,31 @@ public class VideoCreateService extends SessionService {
             rel.addSessionCreate(getUserCod());
             tagRelRepository.save(rel);
         }
+    }
+
+    private String normalizeNewFileName(String newFileName, Path source) {
+        String trimmed = newFileName.trim();
+        if (trimmed.contains("/") || trimmed.contains("\\") || trimmed.contains(":")) {
+            throw new IllegalArgumentException("Ingrese solo el nombre del archivo, no una ruta.");
+        }
+        if (trimmed.matches(".*[<>\"|?*].*")) {
+            throw new IllegalArgumentException("El nombre contiene caracteres invalidos.");
+        }
+        if (trimmed.isBlank() || ".".equals(trimmed) || "..".equals(trimmed) || trimmed.endsWith(".")) {
+            throw new IllegalArgumentException("Nombre de archivo invalido.");
+        }
+        String extension = resolveExtension(source.getFileName().toString());
+        if (!extension.isBlank() && !trimmed.toLowerCase().endsWith(extension.toLowerCase())) {
+            trimmed = trimmed + extension;
+        }
+        return trimmed;
+    }
+
+    private String resolveExtension(String fileName) {
+        int index = fileName.lastIndexOf(".");
+        if (index < 0 || index == fileName.length() - 1) {
+            return "";
+        }
+        return fileName.substring(index);
     }
 }

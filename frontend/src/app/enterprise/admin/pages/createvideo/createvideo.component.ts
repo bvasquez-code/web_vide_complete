@@ -39,6 +39,9 @@ export class CreatevideoComponent implements OnInit, OnDestroy {
   showThumbnailModal = false;
   showCaptureModal = false;
   selectedCaptureIndex = 0;
+  renameFileName = '';
+  renameMessage = '';
+  renameLoading = false;
   quickModalType: 'category' | 'actor' | 'tag' | '' = '';
   quickName = '';
   quickDescription = '';
@@ -66,6 +69,7 @@ export class CreatevideoComponent implements OnInit, OnDestroy {
       this.dto.ActorCodList = (rpt.Data.Actors || []).map((x: any) => x.ActorCod);
       this.dto.TagCodList = (rpt.Data.Tags || []).map((x: any) => x.TagCod);
       this.captures = this.sortCaptures(rpt.Data.Captures || []);
+      this.renameFileName = this.fileNameFromPath(this.dto.Video.SourceValue);
       this.loadPreview();
     }
   }
@@ -269,6 +273,45 @@ export class CreatevideoComponent implements OnInit, OnDestroy {
     this.resetPreviewWatchTracking();
     this.analyzeMessage = '';
     this.captureMessage = '';
+  }
+
+  canRenamePathFile(): boolean {
+    return !!this.dto.Video.VideoCod && this.dto.Video.SourceType === 'PATH' && !!this.dto.Video.SourceValue;
+  }
+
+  async confirmRenameFile(): Promise<void> {
+    if (!this.canRenamePathFile()) {
+      this.renameMessage = 'Primero guarde un video con origen PATH.';
+      return;
+    }
+    const newName = this.renameFileName.trim();
+    if (!newName) {
+      this.renameMessage = 'Ingrese el nuevo nombre del archivo.';
+      return;
+    }
+    const currentName = this.fileNameFromPath(this.dto.Video.SourceValue);
+    const ok = window.confirm(`Confirme que desea renombrar el archivo:\n\n${currentName}\n\na:\n\n${newName}`);
+    if (!ok) {
+      return;
+    }
+    this.renameLoading = true;
+    this.renameMessage = '';
+    try {
+      const rpt = await this.adminVideoService.renameVideoFile(this.dto.Video.VideoCod, newName);
+      if (rpt.ErrorStatus) {
+        this.renameMessage = rpt.Message || 'No se pudo renombrar el archivo.';
+        return;
+      }
+      this.dto.Video = rpt.Data;
+      this.renameFileName = this.fileNameFromPath(this.dto.Video.SourceValue);
+      this.clearPreview();
+      this.renameMessage = 'Archivo renombrado correctamente.';
+      this.showSaveMessage('Archivo renombrado correctamente.', 'success');
+    } catch {
+      this.renameMessage = 'No se pudo renombrar el archivo.';
+    } finally {
+      this.renameLoading = false;
+    }
   }
 
   async generateVideoCaptures(): Promise<void> {
@@ -637,6 +680,14 @@ export class CreatevideoComponent implements OnInit, OnDestroy {
     this.previewPendingWatchSeconds = 0;
     this.previewLastWatchPosition = null;
     this.previewLastWatchFlushAt = 0;
+  }
+
+  private fileNameFromPath(path: string): string {
+    if (!path) {
+      return '';
+    }
+    const normalized = path.replace(/\\/g, '/');
+    return normalized.substring(normalized.lastIndexOf('/') + 1);
   }
 
   private addPreviewWatchDelta(video: HTMLVideoElement): void {

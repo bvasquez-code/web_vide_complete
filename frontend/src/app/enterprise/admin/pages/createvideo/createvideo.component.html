@@ -37,6 +37,21 @@
         </div>
       </div>
       <textarea class="form-control" rows="4" [(ngModel)]="dto.Video.SourceValue" name="SourceValue" (ngModelChange)="clearPreview()"></textarea>
+      <div class="border rounded p-3 mt-2" *ngIf="canRenamePathFile()">
+        <div class="form-row align-items-end">
+          <div class="form-group col-md-9 mb-md-0">
+            <label>Nuevo nombre del archivo</label>
+            <input class="form-control" [(ngModel)]="renameFileName" name="renameFileName" [disabled]="renameLoading" (keyup.enter)="confirmRenameFile()">
+          </div>
+          <div class="form-group col-md-3 mb-md-0">
+            <button type="button" class="btn btn-outline-primary btn-block" (click)="confirmRenameFile()" [disabled]="renameLoading">
+              <i class="fas fa-i-cursor mr-1"></i> {{ renameLoading ? 'Renombrando...' : 'Renombrar archivo' }}
+            </button>
+          </div>
+        </div>
+        <small class="text-muted d-block mt-2">Se conserva la carpeta actual. Si omite la extension, se usara la extension original.</small>
+        <div class="alert alert-warning mt-2 mb-0" *ngIf="renameMessage">{{ renameMessage }}</div>
+      </div>
     </div>
     <div class="alert alert-info" *ngIf="analyzeLoading">Analizando video...</div>
     <div class="alert alert-warning" *ngIf="analyzeMessage">{{ analyzeMessage }}</div>

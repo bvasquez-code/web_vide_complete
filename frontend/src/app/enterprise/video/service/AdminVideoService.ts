@@ -55,6 +55,10 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/disable`, dto);
   }
 
+  async renameVideoFile(VideoCod: string, NewFileName: string): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/${encodeURIComponent(VideoCod)}/renameFile`, { NewFileName });
+  }
+
   async uploadThumbnail(VideoCod: string, file: Blob): Promise<ResponseWsDto> {
     const formData = new FormData();
     formData.append('VideoCod', VideoCod);
