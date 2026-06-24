@@ -10,8 +10,8 @@
   <section class="form-section actor-profile p-3 mb-3">
     <img class="actor-profile-image" [src]="actorImage()" [alt]="actor.Name || 'Actor'" (error)="onActorImageError($event)">
     <div class="actor-profile-content">
-      <h1 class="h3 mb-1">{{ actor.Name || 'Actor' }}</h1>
-      <p class="text-muted mb-0">{{ actorDescription() }}</p>
+      <h1 class="h3 mb-1">{{ publicPreferenceService.showThumbnails() ? (actor.Name || 'Actor') : actor.ActorCod }}</h1>
+      <p class="text-muted mb-0" *ngIf="publicPreferenceService.showThumbnails()">{{ actorDescription() }}</p>
     </div>
     <div class="btn-group btn-group-sm mt-2">
       <button class="btn" [class.btn-primary]="sortMode === 'recent'" [class.btn-outline-primary]="sortMode !== 'recent'" (click)="loadVideos('recent', 1)">Recientes</button>

@@ -5,6 +5,7 @@ import { AppSetting } from '../../../../config/AppSetting';
 import { PublicAuthService } from '../../service/PublicAuthService';
 import { PublicSubscriberService } from '../../service/PublicSubscriberService';
 import { PublicVideoService } from '../../service/PublicVideoService';
+import { PublicPreferenceService } from '../../service/PublicPreferenceService';
 import { VideoDetailDto } from '../../model/dto/VideoDetailDto';
 import { VideoCardDto } from '../../model/dto/VideoCardDto';
 
@@ -37,7 +38,7 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
   private capturesGenerationRunning = false;
   private captureRefreshTimer: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, private publicSubscriberService: PublicSubscriberService, public publicAuthService: PublicAuthService, private sanitizer: DomSanitizer) {}
+  constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, private publicSubscriberService: PublicSubscriberService, public publicAuthService: PublicAuthService, public publicPreferenceService: PublicPreferenceService, private sanitizer: DomSanitizer) {}
 
   async ngOnInit(): Promise<void> {
     this.route.paramMap.subscribe(async params => {

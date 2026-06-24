@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ActorEntity } from '../../model/entity/ActorEntity';
 import { VideoCardDto } from '../../model/dto/VideoCardDto';
 import { PublicVideoService } from '../../service/PublicVideoService';
+import { PublicPreferenceService } from '../../service/PublicPreferenceService';
 
 @Component({
   selector: 'app-publicactor',
@@ -18,7 +19,7 @@ export class PublicactorComponent implements OnInit {
   limit = 24;
   totalRows = 0;
 
-  constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService) {}
+  constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, public publicPreferenceService: PublicPreferenceService) {}
 
   async ngOnInit(): Promise<void> {
     this.route.paramMap.subscribe(async params => {

@@ -9,8 +9,8 @@
   <app-backbutton></app-backbutton>
   <div class="d-flex flex-wrap justify-content-between align-items-start mb-3">
     <div>
-      <h1 class="h3 mb-1">{{ category.Name }}</h1>
-      <p class="text-muted mb-0">{{ category.Description }}</p>
+      <h1 class="h3 mb-1">{{ publicPreferenceService.showThumbnails() ? category.Name : category.CategoryCod }}</h1>
+      <p class="text-muted mb-0" *ngIf="publicPreferenceService.showThumbnails()">{{ category.Description }}</p>
     </div>
     <div class="btn-group btn-group-sm mt-2">
       <button class="btn" [class.btn-primary]="sortMode === 'recent'" [class.btn-outline-primary]="sortMode !== 'recent'" (click)="loadVideos('recent', 1)">Recientes</button>

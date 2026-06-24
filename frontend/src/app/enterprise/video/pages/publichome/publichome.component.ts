@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { PublicVideoService } from '../../service/PublicVideoService';
+import { PublicPreferenceService } from '../../service/PublicPreferenceService';
 import { VideoCategoryEntity } from '../../model/entity/VideoCategoryEntity';
 import { VideoCardDto } from '../../model/dto/VideoCardDto';
 
@@ -23,7 +24,7 @@ export class PublichomeComponent implements OnInit {
   listTitle = 'Videos';
   private initialized = false;
 
-  constructor(private publicVideoService: PublicVideoService, private route: ActivatedRoute) {}
+  constructor(private publicVideoService: PublicVideoService, private route: ActivatedRoute, public publicPreferenceService: PublicPreferenceService) {}
 
   async ngOnInit(): Promise<void> {
     await this.load();

@@ -2,14 +2,14 @@
   <img class="video-thumb" [src]="thumb()" [alt]="video.Title" *ngIf="publicPreferenceService.showThumbnails()">
   <div class="p-3">
     <div class="mb-2">
-      <a class="badge badge-soft mr-1" *ngFor="let category of video.Categories" [routerLink]="['/category', category.Cod]">{{ category.Name }}</a>
+      <a class="badge badge-soft mr-1" *ngFor="let category of video.Categories" [routerLink]="['/category', category.Cod]">{{ publicPreferenceService.showThumbnails() ? category.Name : category.Cod }}</a>
       <span class="badge badge-soft" *ngIf="!video.Categories || video.Categories.length === 0">Sin categoria</span>
     </div>
-    <h3 [class]="titleClass">{{ video.Title }}</h3>
-    <p class="text-muted small" *ngIf="video.ShortDescription">{{ video.ShortDescription }}</p>
+    <h3 [class]="titleClass">{{ publicPreferenceService.showThumbnails() ? video.Title : video.VideoCod }}</h3>
+    <p class="text-muted small" *ngIf="publicPreferenceService.showThumbnails() && video.ShortDescription">{{ video.ShortDescription }}</p>
     <div class="mb-2">
-      <a class="badge badge-secondary mr-1" *ngFor="let actor of video.Actors" [routerLink]="['/actor', actor.Cod]">{{ actor.Name }}</a>
-      <a class="badge badge-light border mr-1" *ngFor="let tag of video.Tags" [routerLink]="['/']" [queryParams]="{ q: tag.Name }">#{{ tag.Name }}</a>
+      <a class="badge badge-secondary mr-1" *ngFor="let actor of video.Actors" [routerLink]="['/actor', actor.Cod]">{{ publicPreferenceService.showThumbnails() ? actor.Name : actor.Cod }}</a>
+      <a class="badge badge-light border mr-1" *ngFor="let tag of video.Tags" [routerLink]="['/']" [queryParams]="{ q: publicPreferenceService.showThumbnails() ? tag.Name : tag.Cod }">#{{ publicPreferenceService.showThumbnails() ? tag.Name : tag.Cod }}</a>
     </div>
     <div class="d-flex justify-content-between align-items-center">
       <small>{{ video.ViewCount || 0 }} vistas</small>
