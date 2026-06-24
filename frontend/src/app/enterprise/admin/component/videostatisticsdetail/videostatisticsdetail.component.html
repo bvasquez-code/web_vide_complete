@@ -1,0 +1,44 @@
+<section class="form-section p-3 video-statistics-detail" *ngIf="videoCod">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="h5 mb-1">Estadisticas del video</h2>
+      <div class="text-muted small" *ngIf="summary">{{ summary.Title }}</div>
+    </div>
+    <a class="btn btn-outline-primary btn-sm" [routerLink]="['/admin/statistics/videos', videoCod]" *ngIf="embedded">
+      <i class="fas fa-chart-line mr-1"></i> Abrir detalle
+    </a>
+  </div>
+
+  <div class="alert alert-info" *ngIf="loading">Cargando estadisticas...</div>
+  <div class="alert alert-warning" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <ng-container *ngIf="summary && !loading">
+    <div class="stat-grid mb-3">
+      <div class="stat-tile"><span>Reproducciones</span><strong>{{ formatNumber(summary.ViewLogCount) }}</strong></div>
+      <div class="stat-tile"><span>Usuarios unicos</span><strong>{{ formatNumber(summary.UniqueViewers) }}</strong></div>
+      <div class="stat-tile"><span>Tiempo visto</span><strong>{{ formatDuration(summary.TotalWatchSeconds) }}</strong></div>
+      <div class="stat-tile"><span>Promedio visto</span><strong>{{ formatDuration(summary.AvgWatchSeconds) }}</strong></div>
+      <div class="stat-tile"><span>Completados</span><strong>{{ formatNumber(summary.CompletedCount) }}</strong></div>
+      <div class="stat-tile"><span>Finalizacion</span><strong>{{ formatDecimal(summary.CompletionRate) }}%</strong></div>
+      <div class="stat-tile"><span>Promedio consumido</span><strong>{{ formatDecimal(summary.AvgCompletionPercent) }}%</strong></div>
+      <div class="stat-tile"><span>Rating</span><strong>{{ formatDecimal(summary.AverageRating) }}</strong></div>
+      <div class="stat-tile"><span>Reacciones</span><strong>{{ formatNumber(summary.ReactionCount) }}</strong></div>
+      <div class="stat-tile"><span>Likes</span><strong>{{ formatNumber(summary.LikeCount) }}</strong></div>
+      <div class="stat-tile"><span>Dislikes</span><strong>{{ formatNumber(summary.DislikeCount) }}</strong></div>
+      <div class="stat-tile"><span>Ver despues</span><strong>{{ formatNumber(summary.WatchLaterCount) }}</strong></div>
+    </div>
+
+    <div class="table-responsive" *ngIf="dailyViews.length > 0">
+      <table class="table table-sm table-hover mb-0">
+        <thead><tr><th>Dia</th><th>Vistas</th><th>Tiempo visto</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let row of dailyViews">
+            <td>{{ row.Day }}</td>
+            <td>{{ formatNumber(row.ViewLogCount) }}</td>
+            <td>{{ formatDuration(row.TotalWatchSeconds) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</section>

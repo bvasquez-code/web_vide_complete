@@ -117,6 +117,7 @@
       </div>
     </div>
   </div>
+  <app-videostatisticsdetail class="d-block mt-3" [videoCod]="dto.Video.VideoCod" [embedded]="true" *ngIf="dto.Video.VideoCod"></app-videostatisticsdetail>
 </main>
 
 <div class="modal d-block" tabindex="-1" role="dialog" *ngIf="showThumbnailModal" style="background: rgba(0,0,0,.55);">

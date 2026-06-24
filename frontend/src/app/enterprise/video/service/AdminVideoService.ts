@@ -82,6 +82,26 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/${encodeURIComponent(VideoCod)}/watchProgress`, dto);
   }
 
+  async findVideoStatistics(Sort: string = 'views', Page: number = 1, Limit: number = 20): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/videos/statistics/videos`, { Sort, Page, Limit });
+  }
+
+  async findVideoGlobalStatistics(): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/videos/statistics/videos/global`);
+  }
+
+  async findVideoStatisticsDetail(VideoCod: string): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/videos/statistics/videos/${encodeURIComponent(VideoCod)}`);
+  }
+
+  async findActorStatistics(Sort: string = 'views', Page: number = 1, Limit: number = 20): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/videos/statistics/actors`, { Sort, Page, Limit });
+  }
+
+  async findActorStatisticsDetail(ActorCod: string): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/videos/statistics/actors/${encodeURIComponent(ActorCod)}`);
+  }
+
   async findCategories(Query: string = '', Status: string = '', Page: number = 1, Limit: number = 20): Promise<ResponseWsDto> {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/admin/categories/findAll`, { Query, Status, Page, Limit });
   }

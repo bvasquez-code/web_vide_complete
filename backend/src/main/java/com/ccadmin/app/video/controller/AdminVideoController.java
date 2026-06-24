@@ -9,6 +9,7 @@ import com.ccadmin.app.video.service.VideoCreateService;
 import com.ccadmin.app.video.service.VideoCaptureService;
 import com.ccadmin.app.video.service.VideoMetadataProcessService;
 import com.ccadmin.app.video.service.VideoSearchService;
+import com.ccadmin.app.video.service.VideoStatisticsService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +24,15 @@ public class AdminVideoController {
     private final ThumbnailStorageService thumbnailStorageService;
     private final VideoMetadataProcessService metadataProcessService;
     private final VideoCaptureService videoCaptureService;
+    private final VideoStatisticsService statisticsService;
 
-    public AdminVideoController(VideoSearchService searchService, VideoCreateService createService, ThumbnailStorageService thumbnailStorageService, VideoMetadataProcessService metadataProcessService, VideoCaptureService videoCaptureService) {
+    public AdminVideoController(VideoSearchService searchService, VideoCreateService createService, ThumbnailStorageService thumbnailStorageService, VideoMetadataProcessService metadataProcessService, VideoCaptureService videoCaptureService, VideoStatisticsService statisticsService) {
         this.searchService = searchService;
         this.createService = createService;
         this.thumbnailStorageService = thumbnailStorageService;
         this.metadataProcessService = metadataProcessService;
         this.videoCaptureService = videoCaptureService;
+        this.statisticsService = statisticsService;
     }
 
     @GetMapping("findAll")
@@ -149,6 +152,51 @@ public class AdminVideoController {
     public ResponseEntity<ResponseWsDto> captureSuggestions() {
         try {
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.findPendingSuggestions()), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("statistics/videos")
+    public ResponseEntity<ResponseWsDto> videoStatistics(@RequestParam(defaultValue = "views") String Sort, @RequestParam(defaultValue = "1") Integer Page, @RequestParam(defaultValue = "20") Integer Limit) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(statisticsService.findVideoRanking(Sort, Page, Limit)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("statistics/videos/global")
+    public ResponseEntity<ResponseWsDto> videoGlobalStatistics() {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(statisticsService.findVideoGlobal()), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("statistics/videos/{videoCod}")
+    public ResponseEntity<ResponseWsDto> videoStatisticsDetail(@PathVariable String videoCod) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(statisticsService.findVideoDetail(videoCod)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("statistics/actors")
+    public ResponseEntity<ResponseWsDto> actorStatistics(@RequestParam(defaultValue = "views") String Sort, @RequestParam(defaultValue = "1") Integer Page, @RequestParam(defaultValue = "20") Integer Limit) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(statisticsService.findActorRanking(Sort, Page, Limit)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("statistics/actors/{actorCod}")
+    public ResponseEntity<ResponseWsDto> actorStatisticsDetail(@PathVariable String actorCod) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(statisticsService.findActorDetail(actorCod)), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }

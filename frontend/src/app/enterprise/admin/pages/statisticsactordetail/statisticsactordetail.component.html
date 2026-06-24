@@ -1,0 +1,12 @@
+<header class="app-header">
+  <div class="container py-3 d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
+      <app-backbutton fallbackUrl="/admin/statistics/actors" cssClass="btn btn-outline-secondary btn-sm mr-2"></app-backbutton>
+      <a routerLink="/admin/statistics/actors" class="h4 mb-0 text-dark">Detalle de estadisticas</a>
+    </div>
+    <a routerLink="/admin/actors" class="btn btn-outline-primary btn-sm"><i class="fas fa-users mr-1"></i> Administrar actores</a>
+  </div>
+</header>
+<main class="container py-4">
+  <app-actorstatisticsdetail [actorCod]="actorCod"></app-actorstatisticsdetail>
+</main>

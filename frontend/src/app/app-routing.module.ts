@@ -14,6 +14,10 @@ import { PublicplayerComponent } from './enterprise/video/pages/publicplayer/pub
 import { PublicloginComponent } from './enterprise/video/pages/publiclogin/publiclogin.component';
 import { PublicprofileComponent } from './enterprise/video/pages/publicprofile/publicprofile.component';
 import { CapturesuggestionsComponent } from './enterprise/admin/pages/capturesuggestions/capturesuggestions.component';
+import { StatisticsvideosComponent } from './enterprise/admin/pages/statisticsvideos/statisticsvideos.component';
+import { StatisticsactorsComponent } from './enterprise/admin/pages/statisticsactors/statisticsactors.component';
+import { StatisticsvideodetailComponent } from './enterprise/admin/pages/statisticsvideodetail/statisticsvideodetail.component';
+import { StatisticsactordetailComponent } from './enterprise/admin/pages/statisticsactordetail/statisticsactordetail.component';
 
 const routes: Routes = [
   { path: '', component: PublichomeComponent },
@@ -32,6 +36,10 @@ const routes: Routes = [
   { path: 'admin/actors', component: ListcatalogComponent, canActivate: [AdminAuthGuard] },
   { path: 'admin/tags', component: ListcatalogComponent, canActivate: [AdminAuthGuard] },
   { path: 'admin/capture-suggestions', component: CapturesuggestionsComponent, canActivate: [AdminAuthGuard] },
+  { path: 'admin/statistics/videos', component: StatisticsvideosComponent, canActivate: [AdminAuthGuard] },
+  { path: 'admin/statistics/videos/:videoCod', component: StatisticsvideodetailComponent, canActivate: [AdminAuthGuard] },
+  { path: 'admin/statistics/actors', component: StatisticsactorsComponent, canActivate: [AdminAuthGuard] },
+  { path: 'admin/statistics/actors/:actorCod', component: StatisticsactordetailComponent, canActivate: [AdminAuthGuard] },
   { path: '**', redirectTo: '' }
 ];
 

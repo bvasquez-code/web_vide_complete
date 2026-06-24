@@ -44,6 +44,7 @@
               <td>{{ row.Status }}</td>
               <td class="text-right">
                 <button class="btn btn-sm btn-outline-primary mr-1" (click)="edit(row)"><i class="fas fa-edit"></i></button>
+                <a class="btn btn-sm btn-outline-info mr-1" [routerLink]="['/admin/statistics/actors', row.ActorCod]" *ngIf="type === 'actors'" title="Estadisticas"><i class="fas fa-chart-line"></i></a>
                 <button class="btn btn-sm btn-outline-success mr-1" (click)="enable(row)" *ngIf="row.Status !== 'A'"><i class="fas fa-check"></i></button>
                 <button class="btn btn-sm btn-outline-warning" (click)="disable(row)" *ngIf="row.Status === 'A'"><i class="fas fa-ban"></i></button>
               </td>
@@ -69,6 +70,7 @@
       </div>
     </div>
   </div>
+  <app-actorstatisticsdetail class="d-block mt-3" [actorCod]="entity.ActorCod" [embedded]="true" *ngIf="type === 'actors' && entity.ActorCod"></app-actorstatisticsdetail>
 </main>
 
 <div class="modal d-block" tabindex="-1" role="dialog" *ngIf="saveMessage" style="background: rgba(0,0,0,.35);">

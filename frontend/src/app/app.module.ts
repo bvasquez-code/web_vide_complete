@@ -22,6 +22,12 @@ import { ListvideosComponent } from './enterprise/admin/pages/listvideos/listvid
 import { CreatevideoComponent } from './enterprise/admin/pages/createvideo/createvideo.component';
 import { ListcatalogComponent } from './enterprise/admin/pages/listcatalog/listcatalog.component';
 import { CapturesuggestionsComponent } from './enterprise/admin/pages/capturesuggestions/capturesuggestions.component';
+import { VideostatisticsdetailComponent } from './enterprise/admin/component/videostatisticsdetail/videostatisticsdetail.component';
+import { ActorstatisticsdetailComponent } from './enterprise/admin/component/actorstatisticsdetail/actorstatisticsdetail.component';
+import { StatisticsvideosComponent } from './enterprise/admin/pages/statisticsvideos/statisticsvideos.component';
+import { StatisticsactorsComponent } from './enterprise/admin/pages/statisticsactors/statisticsactors.component';
+import { StatisticsvideodetailComponent } from './enterprise/admin/pages/statisticsvideodetail/statisticsvideodetail.component';
+import { StatisticsactordetailComponent } from './enterprise/admin/pages/statisticsactordetail/statisticsactordetail.component';
 
 @NgModule({
   declarations: [
@@ -41,7 +47,13 @@ import { CapturesuggestionsComponent } from './enterprise/admin/pages/capturesug
     ListvideosComponent,
     CreatevideoComponent,
     ListcatalogComponent,
-    CapturesuggestionsComponent
+    CapturesuggestionsComponent,
+    VideostatisticsdetailComponent,
+    ActorstatisticsdetailComponent,
+    StatisticsvideosComponent,
+    StatisticsactorsComponent,
+    StatisticsvideodetailComponent,
+    StatisticsactordetailComponent
   ],
   imports: [
     BrowserModule,

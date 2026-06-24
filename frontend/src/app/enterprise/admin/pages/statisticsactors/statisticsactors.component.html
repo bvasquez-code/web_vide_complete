@@ -1,0 +1,64 @@
+<header class="app-header">
+  <div class="container py-3 d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
+      <app-backbutton fallbackUrl="/admin" cssClass="btn btn-outline-secondary btn-sm mr-2"></app-backbutton>
+      <a routerLink="/admin" class="h4 mb-0 text-dark">Estadisticas por actores</a>
+    </div>
+    <a routerLink="/admin/statistics/videos" class="btn btn-outline-primary btn-sm"><i class="fas fa-video mr-1"></i> Videos</a>
+  </div>
+</header>
+<main class="container py-4">
+  <div class="form-section p-3 mb-3">
+    <div class="form-row align-items-end">
+      <div class="col-md-4 mb-2">
+        <label>Ordenar por</label>
+        <select class="form-control" [(ngModel)]="Sort" name="Sort" (ngModelChange)="changeSort()">
+          <option value="views">Mas vistos</option>
+          <option value="watchTime">Mayor tiempo visto</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-info" *ngIf="loading">Cargando estadisticas...</div>
+  <div class="alert alert-warning" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="table-responsive form-section">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Actor</th><th>Videos</th><th>Vistas</th><th>Tiempo visto</th><th>Usuarios</th><th>Rating</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let row of rows">
+          <td>
+            <div class="d-flex align-items-center">
+              <img [src]="row.ImageUrl" class="statistics-thumb mr-2" alt="" *ngIf="row.ImageUrl">
+              <span>{{ row.Name }}</span>
+            </div>
+          </td>
+          <td>{{ formatNumber(row.VideoCount) }}</td>
+          <td>{{ formatNumber(row.ViewLogCount) }}</td>
+          <td>{{ formatDuration(row.TotalWatchSeconds) }}</td>
+          <td>{{ formatNumber(row.UniqueViewers) }}</td>
+          <td>{{ row.AverageRating || 0 }}</td>
+          <td class="text-right"><a class="btn btn-sm btn-outline-primary" [routerLink]="['/admin/statistics/actors', row.ActorCod]"><i class="fas fa-chart-line"></i></a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination-toolbar form-section p-3 mt-2" *ngIf="TotalRows > Limit">
+    <div class="btn-group btn-group-sm">
+      <button class="btn btn-outline-primary" [disabled]="!canPreviousPage()" (click)="findAll(1)">Pagina inicio</button>
+      <button class="btn btn-outline-primary" [disabled]="!canPreviousPage()" (click)="findAll(Page - 1)"><i class="fas fa-chevron-left mr-1"></i> Anterior</button>
+    </div>
+    <div class="pagination-jump">
+      <span class="text-muted">Pagina</span>
+      <input type="number" class="form-control form-control-sm pagination-input" min="1" [max]="totalPages()" [(ngModel)]="pageInput" name="statisticsActorPageInput" (keyup.enter)="goToPageInput()">
+      <button type="button" class="btn btn-outline-primary btn-sm" (click)="goToPageInput()">Ir</button>
+      <span class="text-muted">de {{ totalPages() }} - {{ TotalRows }} actores</span>
+    </div>
+    <div class="btn-group btn-group-sm">
+      <button class="btn btn-outline-primary" [disabled]="!canNextPage()" (click)="findAll(Page + 1)">Siguiente <i class="fas fa-chevron-right ml-1"></i></button>
+      <button class="btn btn-outline-primary" [disabled]="!canNextPage()" (click)="findAll(totalPages())">Pagina fin</button>
+    </div>
+  </div>
+</main>
