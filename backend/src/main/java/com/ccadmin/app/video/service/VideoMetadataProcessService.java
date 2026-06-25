@@ -21,6 +21,7 @@ import java.util.Locale;
 
 @Service
 public class VideoMetadataProcessService extends SessionService {
+    private static final String PUBLIC_THUMBNAIL_PATH = "/api/v1/public/thumbnails/";
     private final VideoRepository videoRepository;
     private final TransactionTemplate transactionTemplate;
     private final Path thumbnailPath = Path.of("uploads", "thumbnails");
@@ -94,7 +95,7 @@ public class VideoMetadataProcessService extends SessionService {
             captureThumbnail(source, target, captureSecond);
 
             video.Duration = formatDuration(totalSeconds);
-            video.ThumbnailUrl = baseUrl + "/api/v1/public/thumbnails/" + fileName;
+            video.ThumbnailUrl = PUBLIC_THUMBNAIL_PATH + fileName;
             video.addSessionModify(getUserCod());
             videoRepository.save(video);
 

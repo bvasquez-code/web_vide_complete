@@ -14,6 +14,7 @@ import java.nio.file.StandardCopyOption;
 
 @Service
 public class ThumbnailStorageService extends SessionService {
+    private static final String PUBLIC_THUMBNAIL_PATH = "/api/v1/public/thumbnails/";
     private final VideoRepository videoRepository;
     private final Path thumbnailPath = Path.of("uploads", "thumbnails");
 
@@ -37,8 +38,7 @@ public class ThumbnailStorageService extends SessionService {
         Path target = thumbnailPath.resolve(fileName).normalize();
         Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
 
-        String url = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-                + "/api/v1/public/thumbnails/" + fileName;
+        String url = PUBLIC_THUMBNAIL_PATH + fileName;
         video.ThumbnailUrl = url;
         video.addSessionModify(getUserCod());
         videoRepository.save(video);

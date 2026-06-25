@@ -2,17 +2,18 @@ import { Injectable } from '@angular/core';
 import { AppSetting } from '../../../config/AppSetting';
 import { ApiService } from '../../shared/service/ApiService';
 import { ResponseWsDto } from '../../shared/model/dto/ResponseWsDto';
+import { AuthStorageService } from '../../shared/service/AuthStorageService';
 
 @Injectable({ providedIn: 'root' })
 export class PublicAuthService {
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private authStorageService: AuthStorageService) {}
 
   isLogged(): boolean {
-    return !!sessionStorage.getItem('ViewerToken');
+    return !!this.authStorageService.getItem('ViewerToken');
   }
 
   viewerName(): string {
-    return sessionStorage.getItem('ViewerName') || sessionStorage.getItem('ViewerUserName') || 'Usuario';
+    return this.authStorageService.getItem('ViewerName') || this.authStorageService.getItem('ViewerUserName') || 'Usuario';
   }
 
   async login(UserName: string, Password: string): Promise<ResponseWsDto> {
@@ -24,16 +25,13 @@ export class PublicAuthService {
   }
 
   saveSession(data: any): void {
-    sessionStorage.setItem('ViewerToken', data.Token);
-    sessionStorage.setItem('ViewerUserCod', data.UserCod);
-    sessionStorage.setItem('ViewerUserName', data.UserName);
-    sessionStorage.setItem('ViewerName', data.Names || data.UserName);
+    this.authStorageService.setItem('ViewerToken', data.Token);
+    this.authStorageService.setItem('ViewerUserCod', data.UserCod);
+    this.authStorageService.setItem('ViewerUserName', data.UserName);
+    this.authStorageService.setItem('ViewerName', data.Names || data.UserName);
   }
 
   logout(): void {
-    sessionStorage.removeItem('ViewerToken');
-    sessionStorage.removeItem('ViewerUserCod');
-    sessionStorage.removeItem('ViewerUserName');
-    sessionStorage.removeItem('ViewerName');
+    this.authStorageService.removeItems(['ViewerToken', 'ViewerUserCod', 'ViewerUserName', 'ViewerName']);
   }
 }

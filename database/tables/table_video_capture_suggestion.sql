@@ -37,6 +37,13 @@ BEGIN
 
         SELECT 'Tabla video_capture_suggestion creada desde cero.' AS Mensaje;
     ELSE
+        UPDATE `video_capture_suggestion`
+        SET `ImageUrl` = SUBSTRING(`ImageUrl`, LOCATE('/api/v1/public/captures/', `ImageUrl`))
+        WHERE `ImageUrl` IS NOT NULL
+          AND `ImageUrl` <> ''
+          AND LOCATE('/api/v1/public/captures/', `ImageUrl`) > 0
+          AND `ImageUrl` NOT LIKE '/api/v1/public/captures/%';
+
         SELECT 'Tabla video_capture_suggestion ya existe. No se realizaron cambios estructurales.' AS Mensaje;
     END IF;
 END $$

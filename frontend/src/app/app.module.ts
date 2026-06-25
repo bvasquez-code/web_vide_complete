@@ -16,6 +16,7 @@ import { PublicprofileComponent } from './enterprise/video/pages/publicprofile/p
 import { VideocardComponent } from './enterprise/video/component/videocard/videocard.component';
 import { PublictoolbarComponent } from './enterprise/video/component/publictoolbar/publictoolbar.component';
 import { BackbuttonComponent } from './enterprise/shared/component/backbutton/backbutton.component';
+import { MediaUrlPipe } from './enterprise/shared/pipe/media-url.pipe';
 import { LoginComponent } from './enterprise/admin/pages/login/login.component';
 import { DashboardComponent } from './enterprise/admin/pages/dashboard/dashboard.component';
 import { ListvideosComponent } from './enterprise/admin/pages/listvideos/listvideos.component';
@@ -42,6 +43,7 @@ import { StatisticsactordetailComponent } from './enterprise/admin/pages/statist
     VideocardComponent,
     PublictoolbarComponent,
     BackbuttonComponent,
+    MediaUrlPipe,
     LoginComponent,
     DashboardComponent,
     ListvideosComponent,

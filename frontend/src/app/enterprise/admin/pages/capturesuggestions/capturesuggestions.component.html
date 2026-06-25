@@ -14,7 +14,7 @@
   <div class="row">
     <div class="col-md-6 col-xl-4 mb-4" *ngFor="let item of suggestions">
       <div class="video-card">
-        <img class="video-thumb" [src]="item.ImageUrl" alt="Sugerencia">
+        <img class="video-thumb" [src]="item.ImageUrl | mediaUrl" alt="Sugerencia">
         <div class="p-3">
           <div class="small text-muted mb-2">Video {{ item.VideoCod }} · Segundo {{ item.CaptureSecond }}</div>
           <p class="mb-3">{{ item.Comment || 'Sin comentario' }}</p>

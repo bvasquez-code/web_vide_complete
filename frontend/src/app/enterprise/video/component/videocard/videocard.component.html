@@ -1,5 +1,5 @@
 <article class="video-card">
-  <img class="video-thumb" [src]="thumb()" [alt]="video.Title" *ngIf="publicPreferenceService.showThumbnails()">
+  <img class="video-thumb" [src]="thumb() | mediaUrl" [alt]="video.Title" *ngIf="publicPreferenceService.showThumbnails()">
   <div class="p-3">
     <div class="mb-2">
       <a class="badge badge-soft mr-1" *ngFor="let category of video.Categories" [routerLink]="['/category', category.Cod]">{{ publicPreferenceService.showThumbnails() ? category.Name : category.Cod }}</a>

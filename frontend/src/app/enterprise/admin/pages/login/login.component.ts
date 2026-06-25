@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AdminVideoService } from '../../../video/service/AdminVideoService';
+import { AuthStorageService } from '../../../shared/service/AuthStorageService';
 
 @Component({
   selector: 'app-login',
@@ -11,7 +12,11 @@ export class LoginComponent {
   Password = 'admin123';
   errorMessage = '';
 
-  constructor(private adminVideoService: AdminVideoService, private router: Router) {}
+  constructor(
+    private adminVideoService: AdminVideoService,
+    private router: Router,
+    private authStorageService: AuthStorageService
+  ) {}
 
   async Login(): Promise<void> {
     this.errorMessage = '';
@@ -20,9 +25,9 @@ export class LoginComponent {
       this.errorMessage = rpt.Message;
       return;
     }
-    sessionStorage.setItem('AdminToken', rpt.Data.Token);
-    sessionStorage.setItem('AdminUserCod', rpt.Data.UserCod);
-    sessionStorage.setItem('AdminUserName', rpt.Data.UserName);
+    this.authStorageService.setItem('AdminToken', rpt.Data.Token);
+    this.authStorageService.setItem('AdminUserCod', rpt.Data.UserCod);
+    this.authStorageService.setItem('AdminUserName', rpt.Data.UserName);
     await this.router.navigate(['/admin']);
   }
 }

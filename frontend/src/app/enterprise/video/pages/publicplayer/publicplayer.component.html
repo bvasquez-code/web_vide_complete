@@ -79,7 +79,7 @@
     </div>
     <div #captureSlider class="capture-slider">
       <button type="button" class="capture-slider-item" *ngFor="let capture of detail.Captures; let i = index" [title]="'Segundo ' + capture.CaptureSecond" (click)="openCaptureModal(i)">
-        <img [src]="capture.ImageUrl" [alt]="'Captura ' + capture.DisplayOrder">
+        <img [src]="capture.ImageUrl | mediaUrl" [alt]="'Captura ' + capture.DisplayOrder">
       </button>
     </div>
   </section>
@@ -93,7 +93,7 @@
         </div>
         <div class="modal-body capture-modal-body">
           <button type="button" class="btn btn-light capture-modal-nav capture-modal-prev" (click)="previousCapture()"><i class="fas fa-chevron-left"></i></button>
-          <img [src]="selectedCapture()?.ImageUrl" class="capture-modal-image" alt="Captura">
+          <img [src]="selectedCapture()?.ImageUrl | mediaUrl" class="capture-modal-image" alt="Captura">
           <button type="button" class="btn btn-light capture-modal-nav capture-modal-next" (click)="nextCapture()"><i class="fas fa-chevron-right"></i></button>
         </div>
       </div>

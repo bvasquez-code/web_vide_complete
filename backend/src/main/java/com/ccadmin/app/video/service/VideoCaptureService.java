@@ -43,6 +43,7 @@ public class VideoCaptureService extends SessionService {
     private static final String CAPTURE_SOURCE_AUTO = "AUTO";
     private static final String CAPTURE_SOURCE_MANUAL = "MANUAL";
     private static final String CAPTURE_SOURCE_SUGGESTION = "SUGGESTION";
+    private static final String PUBLIC_CAPTURE_PATH = "/api/v1/public/captures/";
 
     private final VideoRepository videoRepository;
     private final VideoCaptureRepository videoCaptureRepository;
@@ -103,7 +104,7 @@ public class VideoCaptureService extends SessionService {
 
                 VideoCaptureEntity capture = new VideoCaptureEntity();
                 capture.VideoCod = video.VideoCod;
-                capture.ImageUrl = baseUrl + "/api/v1/public/captures/" + videoCapturePath.getFileName() + "/" + fileName;
+                capture.ImageUrl = publicCaptureUrl(videoCapturePath, fileName);
                 capture.CaptureSource = CAPTURE_SOURCE_AUTO;
                 capture.CaptureSecond = BigDecimal.valueOf(captureSecond);
                 capture.DisplayOrder = index;
@@ -310,7 +311,7 @@ public class VideoCaptureService extends SessionService {
         Integer nextOrder = videoCaptureRepository.findMaxDisplayOrder(video.VideoCod) + 1;
         VideoCaptureEntity capture = new VideoCaptureEntity();
         capture.VideoCod = video.VideoCod;
-        capture.ImageUrl = baseUrl + "/api/v1/public/captures/" + videoCapturePath.getFileName() + "/" + fileName;
+        capture.ImageUrl = publicCaptureUrl(videoCapturePath, fileName);
         capture.CaptureSource = CAPTURE_SOURCE_MANUAL;
         capture.CaptureSecond = storedSecond;
         capture.DisplayOrder = nextOrder;
@@ -351,7 +352,7 @@ public class VideoCaptureService extends SessionService {
 
         VideoCaptureEntity capture = new VideoCaptureEntity();
         capture.VideoCod = video.VideoCod;
-        capture.ImageUrl = baseUrl + "/api/v1/public/captures/" + videoCapturePath.getFileName() + "/" + fileName;
+        capture.ImageUrl = publicCaptureUrl(videoCapturePath, fileName);
         capture.CaptureSource = CAPTURE_SOURCE_MANUAL;
         capture.CaptureSecond = BigDecimal.ZERO;
         capture.DisplayOrder = nextOrder;
@@ -473,8 +474,12 @@ public class VideoCaptureService extends SessionService {
         String fileName = video.VideoCod + "-capture-" + filePrefix + "-" + captureMillis + "ms-" + System.currentTimeMillis() + ".jpg";
         Path target = videoCapturePath.resolve(fileName).normalize();
         captureImage(source, target, safeSecond);
-        String imageUrl = baseUrl + "/api/v1/public/captures/" + videoCapturePath.getFileName() + "/" + fileName;
+        String imageUrl = publicCaptureUrl(videoCapturePath, fileName);
         return new CaptureFileResult(imageUrl, storedSecond);
+    }
+
+    private String publicCaptureUrl(Path videoCapturePath, String fileName) {
+        return PUBLIC_CAPTURE_PATH + videoCapturePath.getFileName() + "/" + fileName;
     }
 
     private void deleteEmptyCaptureDirectories() throws Exception {

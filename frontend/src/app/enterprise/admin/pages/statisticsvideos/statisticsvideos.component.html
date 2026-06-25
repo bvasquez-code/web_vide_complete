@@ -55,7 +55,7 @@
         <tr *ngFor="let row of rows">
           <td>
             <div class="d-flex align-items-center">
-              <img [src]="row.ThumbnailUrl" class="statistics-thumb mr-2" alt="" *ngIf="row.ThumbnailUrl">
+              <img [src]="row.ThumbnailUrl | mediaUrl" class="statistics-thumb mr-2" alt="" *ngIf="row.ThumbnailUrl">
               <span>{{ row.Title }}</span>
             </div>
           </td>

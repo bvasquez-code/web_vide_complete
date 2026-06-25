@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ResponseWsDto } from '../model/dto/ResponseWsDto';
+import { AuthStorageService } from './AuthStorageService';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authStorageService: AuthStorageService) {}
 
   async ExecuteGetService(url: string, params: any = {}): Promise<ResponseWsDto> {
     let httpParams = new HttpParams();
@@ -45,8 +46,8 @@ export class ApiService {
 
   private tokenForUrl(url: string): string | null {
     if (url.includes('/api/v1/admin')) {
-      return sessionStorage.getItem('AdminToken');
+      return this.authStorageService.getItem('AdminToken');
     }
-    return sessionStorage.getItem('ViewerToken') || sessionStorage.getItem('AdminToken');
+    return this.authStorageService.getItem('ViewerToken') || this.authStorageService.getItem('AdminToken');
   }
 }

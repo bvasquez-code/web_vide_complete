@@ -37,6 +37,13 @@ BEGIN
 
         SELECT 'Tabla video creada desde cero.' AS Mensaje;
     ELSE
+        UPDATE `video`
+        SET `ThumbnailUrl` = SUBSTRING(`ThumbnailUrl`, LOCATE('/api/v1/public/thumbnails/', `ThumbnailUrl`))
+        WHERE `ThumbnailUrl` IS NOT NULL
+          AND `ThumbnailUrl` <> ''
+          AND LOCATE('/api/v1/public/thumbnails/', `ThumbnailUrl`) > 0
+          AND `ThumbnailUrl` NOT LIKE '/api/v1/public/thumbnails/%';
+
         SELECT 'Tabla video ya existe. No se realizaron cambios estructurales.' AS Mensaje;
     END IF;
 END $$

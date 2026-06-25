@@ -1,17 +1,16 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthStorageService } from '../../../shared/service/AuthStorageService';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent {
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authStorageService: AuthStorageService) {}
 
   logout(): void {
-    sessionStorage.removeItem('AdminToken');
-    sessionStorage.removeItem('AdminUserCod');
-    sessionStorage.removeItem('AdminUserName');
+    this.authStorageService.removeItems(['AdminToken', 'AdminUserCod', 'AdminUserName']);
     this.router.navigate(['/admin/login']);
   }
 }

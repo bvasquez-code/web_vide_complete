@@ -30,7 +30,7 @@
         <tr *ngFor="let row of rows">
           <td>
             <div class="d-flex align-items-center">
-              <img [src]="row.ImageUrl" class="statistics-thumb mr-2" alt="" *ngIf="row.ImageUrl">
+              <img [src]="row.ImageUrl | mediaUrl" class="statistics-thumb mr-2" alt="" *ngIf="row.ImageUrl">
               <span>{{ row.Name }}</span>
             </div>
           </td>

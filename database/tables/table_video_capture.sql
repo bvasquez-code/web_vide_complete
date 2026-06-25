@@ -33,6 +33,13 @@ BEGIN
 
         SELECT 'Tabla video_capture creada desde cero.' AS Mensaje;
     ELSE
+        UPDATE `video_capture`
+        SET `ImageUrl` = SUBSTRING(`ImageUrl`, LOCATE('/api/v1/public/captures/', `ImageUrl`))
+        WHERE `ImageUrl` IS NOT NULL
+          AND `ImageUrl` <> ''
+          AND LOCATE('/api/v1/public/captures/', `ImageUrl`) > 0
+          AND `ImageUrl` NOT LIKE '/api/v1/public/captures/%';
+
         IF NOT EXISTS (
             SELECT 1
             FROM information_schema.columns
