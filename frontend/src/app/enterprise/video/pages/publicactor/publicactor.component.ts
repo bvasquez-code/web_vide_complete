@@ -4,6 +4,7 @@ import { ActorEntity } from '../../model/entity/ActorEntity';
 import { VideoCardDto } from '../../model/dto/VideoCardDto';
 import { PublicVideoService } from '../../service/PublicVideoService';
 import { PublicPreferenceService } from '../../service/PublicPreferenceService';
+import { PaginationDto } from '../../../shared/model/dto/PaginationDto';
 
 @Component({
   selector: 'app-publicactor',
@@ -15,9 +16,9 @@ export class PublicactorComponent implements OnInit {
   actor: ActorEntity = new ActorEntity();
   videos: VideoCardDto[] = [];
   page = 1;
-  pageInput = 1;
   limit = 24;
   totalRows = 0;
+  pagination = new PaginationDto({ Limit: this.limit, ItemLabel: 'videos' });
 
   constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, public publicPreferenceService: PublicPreferenceService) {}
 
@@ -40,42 +41,8 @@ export class PublicactorComponent implements OnInit {
     this.totalRows = rpt.Data?.TotalRows || 0;
     this.page = rpt.Data?.Page || this.page;
     this.limit = rpt.Data?.Limit || this.limit;
-    this.pageInput = this.page;
+    this.pagination = new PaginationDto({ Page: this.page, Limit: this.limit, TotalRows: this.totalRows, ItemLabel: 'videos' });
     this.actor = rpt.DataAdditional?.Actor || new ActorEntity();
-  }
-
-  totalPages(): number {
-    return Math.max(1, Math.ceil(this.totalRows / this.limit));
-  }
-
-  canPreviousPage(): boolean {
-    return this.page > 1;
-  }
-
-  canNextPage(): boolean {
-    return this.page < this.totalPages();
-  }
-
-  async goToFirstPage(): Promise<void> {
-    await this.loadVideos(this.sortMode, 1);
-  }
-
-  async goToLastPage(): Promise<void> {
-    await this.loadVideos(this.sortMode, this.totalPages());
-  }
-
-  async goToPageInput(): Promise<void> {
-    const requestedPage = Number(this.pageInput);
-    if (!Number.isFinite(requestedPage)) {
-      this.pageInput = this.page;
-      return;
-    }
-    const targetPage = Math.trunc(requestedPage);
-    if (targetPage < 1 || targetPage > this.totalPages()) {
-      this.pageInput = this.page;
-      return;
-    }
-    await this.loadVideos(this.sortMode, targetPage);
   }
 
   actorImage(): string {

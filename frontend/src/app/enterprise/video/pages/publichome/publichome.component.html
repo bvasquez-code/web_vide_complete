@@ -56,21 +56,6 @@
         <app-videocard [video]="video"></app-videocard>
       </div>
     </div>
-    <div class="pagination-toolbar form-section p-3 mt-2" *ngIf="searchTotalRows > searchLimit">
-      <div class="btn-group btn-group-sm">
-        <button class="btn btn-outline-primary" [disabled]="!canPreviousSearchPage()" (click)="goToFirstSearchPage()">Pagina inicio</button>
-        <button class="btn btn-outline-primary" [disabled]="!canPreviousSearchPage()" (click)="search(searchPage - 1)"><i class="fas fa-chevron-left mr-1"></i> Anterior</button>
-      </div>
-      <div class="pagination-jump">
-        <span class="text-muted">Pagina</span>
-        <input type="number" class="form-control form-control-sm pagination-input" min="1" [max]="totalSearchPages()" [(ngModel)]="searchPageInput" name="publicSearchPageInput" (keyup.enter)="goToSearchPageInput()">
-        <button type="button" class="btn btn-outline-primary btn-sm" (click)="goToSearchPageInput()">Ir</button>
-        <span class="text-muted">de {{ totalSearchPages() }}</span>
-      </div>
-      <div class="btn-group btn-group-sm">
-        <button class="btn btn-outline-primary" [disabled]="!canNextSearchPage()" (click)="search(searchPage + 1)">Siguiente <i class="fas fa-chevron-right ml-1"></i></button>
-        <button class="btn btn-outline-primary" [disabled]="!canNextSearchPage()" (click)="goToLastSearchPage()">Pagina fin</button>
-      </div>
-    </div>
+    <app-pagination [pagination]="pagination" (pageChange)="search($event)"></app-pagination>
   </section>
 </main>

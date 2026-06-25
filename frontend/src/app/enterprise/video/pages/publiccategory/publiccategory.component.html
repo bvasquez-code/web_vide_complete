@@ -23,20 +23,5 @@
       <app-videocard [video]="video"></app-videocard>
     </div>
   </div>
-  <div class="pagination-toolbar form-section p-3 mt-2" *ngIf="totalRows > limit">
-    <div class="btn-group btn-group-sm">
-      <button class="btn btn-outline-primary" [disabled]="!canPreviousPage()" (click)="goToFirstPage()">Pagina inicio</button>
-      <button class="btn btn-outline-primary" [disabled]="!canPreviousPage()" (click)="loadVideos(sortMode, page - 1)"><i class="fas fa-chevron-left mr-1"></i> Anterior</button>
-    </div>
-    <div class="pagination-jump">
-      <span class="text-muted">Pagina</span>
-      <input type="number" class="form-control form-control-sm pagination-input" min="1" [max]="totalPages()" [(ngModel)]="pageInput" name="publicCategoryPageInput" (keyup.enter)="goToPageInput()">
-      <button type="button" class="btn btn-outline-primary btn-sm" (click)="goToPageInput()">Ir</button>
-      <span class="text-muted">de {{ totalPages() }}</span>
-    </div>
-    <div class="btn-group btn-group-sm">
-      <button class="btn btn-outline-primary" [disabled]="!canNextPage()" (click)="loadVideos(sortMode, page + 1)">Siguiente <i class="fas fa-chevron-right ml-1"></i></button>
-      <button class="btn btn-outline-primary" [disabled]="!canNextPage()" (click)="goToLastPage()">Pagina fin</button>
-    </div>
-  </div>
+  <app-pagination [pagination]="pagination" (pageChange)="loadVideos(sortMode, $event)"></app-pagination>
 </main>

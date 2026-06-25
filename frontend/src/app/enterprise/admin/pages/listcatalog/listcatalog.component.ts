@@ -4,6 +4,7 @@ import { AdminVideoService } from '../../../video/service/AdminVideoService';
 import { ActorEntity } from '../../../video/model/entity/ActorEntity';
 import { TagEntity } from '../../../video/model/entity/TagEntity';
 import { VideoCategoryEntity } from '../../../video/model/entity/VideoCategoryEntity';
+import { PaginationDto } from '../../../shared/model/dto/PaginationDto';
 
 @Component({
   selector: 'app-listcatalog',
@@ -19,9 +20,9 @@ export class ListcatalogComponent implements OnInit {
   saveMessage = '';
   saveMessageType: 'success' | 'error' = 'success';
   Page = 1;
-  pageInput = 1;
   Limit = 20;
   TotalRows = 0;
+  pagination = new PaginationDto({ Limit: this.Limit, ItemLabel: 'registros' });
 
   constructor(private route: ActivatedRoute, private router: Router, private adminVideoService: AdminVideoService) {}
 
@@ -67,7 +68,7 @@ export class ListcatalogComponent implements OnInit {
     this.TotalRows = rpt.Data?.TotalRows || 0;
     this.Page = rpt.Data?.Page || this.Page;
     this.Limit = rpt.Data?.Limit || this.Limit;
-    this.pageInput = this.Page;
+    this.pagination = new PaginationDto({ Page: this.Page, Limit: this.Limit, TotalRows: this.TotalRows, ItemLabel: 'registros' });
     if (syncUrl) {
       await this.syncQueryParams();
     }
@@ -89,40 +90,6 @@ export class ListcatalogComponent implements OnInit {
       },
       queryParamsHandling: 'merge'
     });
-  }
-
-  totalPages(): number {
-    return Math.max(1, Math.ceil(this.TotalRows / this.Limit));
-  }
-
-  canPreviousPage(): boolean {
-    return this.Page > 1;
-  }
-
-  canNextPage(): boolean {
-    return this.Page < this.totalPages();
-  }
-
-  async goToFirstPage(): Promise<void> {
-    await this.findAll(1);
-  }
-
-  async goToLastPage(): Promise<void> {
-    await this.findAll(this.totalPages());
-  }
-
-  async goToPageInput(): Promise<void> {
-    const requestedPage = Number(this.pageInput);
-    if (!Number.isFinite(requestedPage)) {
-      this.pageInput = this.Page;
-      return;
-    }
-    const targetPage = Math.trunc(requestedPage);
-    if (targetPage < 1 || targetPage > this.totalPages()) {
-      this.pageInput = this.Page;
-      return;
-    }
-    await this.findAll(targetPage);
   }
 
   async save(): Promise<void> {

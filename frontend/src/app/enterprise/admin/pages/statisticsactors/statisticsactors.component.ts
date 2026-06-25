@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminVideoService } from '../../../video/service/AdminVideoService';
+import { PaginationDto } from '../../../shared/model/dto/PaginationDto';
 
 @Component({
   selector: 'app-statisticsactors',
@@ -10,9 +11,9 @@ export class StatisticsactorsComponent implements OnInit {
   Sort = 'views';
   rows: any[] = [];
   Page = 1;
-  pageInput = 1;
   Limit = 20;
   TotalRows = 0;
+  pagination = new PaginationDto({ Limit: this.Limit, ItemLabel: 'actores' });
   loading = false;
   errorMessage = '';
 
@@ -40,7 +41,7 @@ export class StatisticsactorsComponent implements OnInit {
       this.TotalRows = rpt.Data?.TotalRows || 0;
       this.Page = rpt.Data?.Page || this.Page;
       this.Limit = rpt.Data?.Limit || this.Limit;
-      this.pageInput = this.Page;
+      this.pagination = new PaginationDto({ Page: this.Page, Limit: this.Limit, TotalRows: this.TotalRows, ItemLabel: 'actores' });
       if (syncUrl) await this.syncQueryParams();
     } finally {
       this.loading = false;
@@ -57,27 +58,6 @@ export class StatisticsactorsComponent implements OnInit {
       replaceUrl: true,
       queryParams: { Sort: this.Sort, Page: this.Page, Limit: this.Limit }
     });
-  }
-
-  totalPages(): number {
-    return Math.max(1, Math.ceil(this.TotalRows / this.Limit));
-  }
-
-  canPreviousPage(): boolean {
-    return this.Page > 1;
-  }
-
-  canNextPage(): boolean {
-    return this.Page < this.totalPages();
-  }
-
-  async goToPageInput(): Promise<void> {
-    const targetPage = Math.trunc(Number(this.pageInput));
-    if (!Number.isFinite(targetPage) || targetPage < 1 || targetPage > this.totalPages()) {
-      this.pageInput = this.Page;
-      return;
-    }
-    await this.findAll(targetPage);
   }
 
   formatNumber(value: any): string {

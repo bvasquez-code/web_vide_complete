@@ -4,6 +4,7 @@ import { PublicVideoService } from '../../service/PublicVideoService';
 import { PublicPreferenceService } from '../../service/PublicPreferenceService';
 import { VideoCategoryEntity } from '../../model/entity/VideoCategoryEntity';
 import { VideoCardDto } from '../../model/dto/VideoCardDto';
+import { PaginationDto } from '../../../shared/model/dto/PaginationDto';
 
 @Component({
   selector: 'app-publichome',
@@ -18,9 +19,9 @@ export class PublichomeComponent implements OnInit {
   searchQuery = '';
   searchMode = false;
   searchPage = 1;
-  searchPageInput = 1;
   searchLimit = 30;
   searchTotalRows = 0;
+  pagination = new PaginationDto({ Limit: this.searchLimit, ItemLabel: 'videos' });
   listTitle = 'Videos';
   private initialized = false;
 
@@ -79,7 +80,7 @@ export class PublichomeComponent implements OnInit {
     this.searchTotalRows = rpt.Data?.TotalRows || 0;
     this.searchPage = rpt.Data?.Page || this.searchPage;
     this.searchLimit = rpt.Data?.Limit || this.searchLimit;
-    this.searchPageInput = this.searchPage;
+    this.pagination = new PaginationDto({ Page: this.searchPage, Limit: this.searchLimit, TotalRows: this.searchTotalRows, ItemLabel: 'videos' });
   }
 
   async clearSearch(): Promise<void> {
@@ -88,40 +89,6 @@ export class PublichomeComponent implements OnInit {
     this.searchPage = 1;
     this.searchTotalRows = 0;
     await this.search(1);
-  }
-
-  totalSearchPages(): number {
-    return Math.max(1, Math.ceil(this.searchTotalRows / this.searchLimit));
-  }
-
-  canPreviousSearchPage(): boolean {
-    return this.searchPage > 1;
-  }
-
-  canNextSearchPage(): boolean {
-    return this.searchPage < this.totalSearchPages();
-  }
-
-  async goToFirstSearchPage(): Promise<void> {
-    await this.search(1);
-  }
-
-  async goToLastSearchPage(): Promise<void> {
-    await this.search(this.totalSearchPages());
-  }
-
-  async goToSearchPageInput(): Promise<void> {
-    const requestedPage = Number(this.searchPageInput);
-    if (!Number.isFinite(requestedPage)) {
-      this.searchPageInput = this.searchPage;
-      return;
-    }
-    const targetPage = Math.trunc(requestedPage);
-    if (targetPage < 1 || targetPage > this.totalSearchPages()) {
-      this.searchPageInput = this.searchPage;
-      return;
-    }
-    await this.search(targetPage);
   }
 
   thumb(video: VideoCardDto): string {

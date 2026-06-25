@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AppSetting } from '../../../../config/AppSetting';
 import { AdminVideoService } from '../../../video/service/AdminVideoService';
 import { VideoEntity } from '../../../video/model/entity/VideoEntity';
+import { PaginationDto } from '../../../shared/model/dto/PaginationDto';
 
 @Component({
   selector: 'app-listvideos',
@@ -16,9 +17,9 @@ export class ListvideosComponent implements OnInit, OnDestroy {
   videos: VideoEntity[] = [];
   message = '';
   Page = 1;
-  pageInput = 1;
   Limit = 20;
   TotalRows = 0;
+  pagination = new PaginationDto({ Limit: this.Limit, ItemLabel: 'videos' });
   previewVideo: VideoEntity | null = null;
   previewSource = '';
   previewEmbedHtml: SafeHtml | null = null;
@@ -55,7 +56,7 @@ export class ListvideosComponent implements OnInit, OnDestroy {
     this.TotalRows = rpt.Data?.TotalRows || 0;
     this.Page = rpt.Data?.Page || this.Page;
     this.Limit = rpt.Data?.Limit || this.Limit;
-    this.pageInput = this.Page;
+    this.pagination = new PaginationDto({ Page: this.Page, Limit: this.Limit, TotalRows: this.TotalRows, ItemLabel: 'videos' });
     if (syncUrl) {
       await this.syncQueryParams();
     }
@@ -78,40 +79,6 @@ export class ListvideosComponent implements OnInit, OnDestroy {
       },
       queryParamsHandling: 'merge'
     });
-  }
-
-  totalPages(): number {
-    return Math.max(1, Math.ceil(this.TotalRows / this.Limit));
-  }
-
-  canPreviousPage(): boolean {
-    return this.Page > 1;
-  }
-
-  canNextPage(): boolean {
-    return this.Page < this.totalPages();
-  }
-
-  async goToFirstPage(): Promise<void> {
-    await this.findAll(1);
-  }
-
-  async goToLastPage(): Promise<void> {
-    await this.findAll(this.totalPages());
-  }
-
-  async goToPageInput(): Promise<void> {
-    const requestedPage = Number(this.pageInput);
-    if (!Number.isFinite(requestedPage)) {
-      this.pageInput = this.Page;
-      return;
-    }
-    const targetPage = Math.trunc(requestedPage);
-    if (targetPage < 1 || targetPage > this.totalPages()) {
-      this.pageInput = this.Page;
-      return;
-    }
-    await this.findAll(targetPage);
   }
 
   async enable(video: VideoEntity): Promise<void> {
