@@ -23,13 +23,15 @@ import java.util.Locale;
 public class VideoMetadataProcessService extends SessionService {
     private static final String PUBLIC_THUMBNAIL_PATH = "/api/v1/public/thumbnails/";
     private final VideoRepository videoRepository;
+    private final VideoPathService videoPathService;
     private final TransactionTemplate transactionTemplate;
     private final Path thumbnailPath = Path.of("uploads", "thumbnails");
     private final Integer commitBatchSize = 20;
     private final Integer fileMetadataCommitBatchSize = 50;
 
-    public VideoMetadataProcessService(VideoRepository videoRepository, PlatformTransactionManager transactionManager) {
+    public VideoMetadataProcessService(VideoRepository videoRepository, VideoPathService videoPathService, PlatformTransactionManager transactionManager) {
         this.videoRepository = videoRepository;
+        this.videoPathService = videoPathService;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
@@ -98,7 +100,7 @@ public class VideoMetadataProcessService extends SessionService {
             if (!"PATH".equals(video.SourceType) || !hasText(video.SourceValue)) {
                 return;
             }
-            Path source = Path.of(video.SourceValue).normalize();
+            Path source = videoPathService.resolveSourcePath(video.SourceValue);
             if (!Files.exists(source) || !Files.isRegularFile(source) || !Files.isReadable(source)) {
                 return;
             }
@@ -122,7 +124,7 @@ public class VideoMetadataProcessService extends SessionService {
                 return skipped(item, "El video ya tiene miniatura.");
             }
 
-            Path source = Path.of(video.SourceValue).normalize();
+            Path source = videoPathService.resolveSourcePath(video.SourceValue);
             if (!Files.exists(source) || !Files.isRegularFile(source) || !Files.isReadable(source)) {
                 return error(item, "Archivo de video no encontrado o sin permiso de lectura.");
             }
@@ -164,7 +166,7 @@ public class VideoMetadataProcessService extends SessionService {
             if (!"PATH".equals(video.SourceType)) {
                 return skipped(item, "Solo se procesan videos con SourceType PATH.");
             }
-            Path source = Path.of(video.SourceValue).normalize();
+            Path source = videoPathService.resolveSourcePath(video.SourceValue);
             if (!Files.exists(source) || !Files.isRegularFile(source) || !Files.isReadable(source)) {
                 return error(item, "Archivo de video no encontrado o sin permiso de lectura.");
             }

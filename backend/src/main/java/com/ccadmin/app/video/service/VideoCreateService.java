@@ -23,8 +23,9 @@ public class VideoCreateService extends SessionService {
     private final VideoViewLogRepository viewLogRepository;
     private final CodGeneratorService codGeneratorService;
     private final VideoMetadataProcessService metadataProcessService;
+    private final VideoPathService videoPathService;
 
-    public VideoCreateService(VideoRepository videoRepository, VideoCategoryRelRepository categoryRelRepository, VideoActorRelRepository actorRelRepository, VideoTagRelRepository tagRelRepository, VideoViewLogRepository viewLogRepository, CodGeneratorService codGeneratorService, VideoMetadataProcessService metadataProcessService) {
+    public VideoCreateService(VideoRepository videoRepository, VideoCategoryRelRepository categoryRelRepository, VideoActorRelRepository actorRelRepository, VideoTagRelRepository tagRelRepository, VideoViewLogRepository viewLogRepository, CodGeneratorService codGeneratorService, VideoMetadataProcessService metadataProcessService, VideoPathService videoPathService) {
         this.videoRepository = videoRepository;
         this.categoryRelRepository = categoryRelRepository;
         this.actorRelRepository = actorRelRepository;
@@ -32,6 +33,7 @@ public class VideoCreateService extends SessionService {
         this.viewLogRepository = viewLogRepository;
         this.codGeneratorService = codGeneratorService;
         this.metadataProcessService = metadataProcessService;
+        this.videoPathService = videoPathService;
     }
 
     @Transactional
@@ -91,7 +93,7 @@ public class VideoCreateService extends SessionService {
             throw new IllegalArgumentException("El video no tiene ruta de archivo registrada.");
         }
 
-        Path source = Path.of(video.SourceValue).normalize();
+        Path source = videoPathService.resolveSourcePath(video.SourceValue);
         if (!Files.exists(source) || !Files.isRegularFile(source) || !Files.isReadable(source)) {
             throw new IllegalArgumentException("El archivo actual no existe o no tiene permiso de lectura.");
         }
@@ -106,7 +108,7 @@ public class VideoCreateService extends SessionService {
             throw new IllegalArgumentException("Nombre de archivo invalido.");
         }
         if (source.equals(target)) {
-            video.SourceValue = target.toString();
+            video.SourceValue = videoPathService.renamedSourceValue(video.SourceValue, target);
             video.addSessionModify(getUserCod());
             return videoRepository.save(video);
         }
@@ -122,7 +124,7 @@ public class VideoCreateService extends SessionService {
             throw new IllegalStateException("El archivo anterior todavia existe. No se actualizo la base de datos.");
         }
 
-        video.SourceValue = target.toString();
+        video.SourceValue = videoPathService.renamedSourceValue(video.SourceValue, target);
         video.addSessionModify(getUserCod());
         return videoRepository.save(video);
     }

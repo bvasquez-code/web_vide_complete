@@ -48,15 +48,17 @@ public class VideoCaptureService extends SessionService {
     private final VideoRepository videoRepository;
     private final VideoCaptureRepository videoCaptureRepository;
     private final VideoCaptureSuggestionRepository videoCaptureSuggestionRepository;
+    private final VideoPathService videoPathService;
     private final TransactionTemplate transactionTemplate;
     private final Path capturePath = Path.of("uploads", "captures");
     private final Integer defaultCaptureCount = 30;
     private final Set<String> runningAutomaticGeneration = ConcurrentHashMap.newKeySet();
 
-    public VideoCaptureService(VideoRepository videoRepository, VideoCaptureRepository videoCaptureRepository, VideoCaptureSuggestionRepository videoCaptureSuggestionRepository, PlatformTransactionManager transactionManager) {
+    public VideoCaptureService(VideoRepository videoRepository, VideoCaptureRepository videoCaptureRepository, VideoCaptureSuggestionRepository videoCaptureSuggestionRepository, VideoPathService videoPathService, PlatformTransactionManager transactionManager) {
         this.videoRepository = videoRepository;
         this.videoCaptureRepository = videoCaptureRepository;
         this.videoCaptureSuggestionRepository = videoCaptureSuggestionRepository;
+        this.videoPathService = videoPathService;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
@@ -71,7 +73,7 @@ public class VideoCaptureService extends SessionService {
         }
 
         try {
-            Path source = Path.of(video.SourceValue).normalize();
+            Path source = videoPathService.resolveSourcePath(video.SourceValue);
             if (!Files.exists(source) || !Files.isRegularFile(source) || !Files.isReadable(source)) {
                 throw new IllegalArgumentException("Archivo de video no encontrado o sin permiso de lectura.");
             }
@@ -278,7 +280,7 @@ public class VideoCaptureService extends SessionService {
             throw new IllegalArgumentException("La captura por segundo solo esta disponible para videos con SourceType PATH.");
         }
 
-        Path source = Path.of(video.SourceValue).normalize();
+        Path source = videoPathService.resolveSourcePath(video.SourceValue);
         if (!Files.exists(source) || !Files.isRegularFile(source) || !Files.isReadable(source)) {
             throw new IllegalArgumentException("Archivo de video no encontrado o sin permiso de lectura.");
         }
@@ -480,7 +482,7 @@ public class VideoCaptureService extends SessionService {
             throw new IllegalArgumentException("La captura por segundo solo esta disponible para videos con SourceType PATH.");
         }
 
-        Path source = Path.of(video.SourceValue).normalize();
+        Path source = videoPathService.resolveSourcePath(video.SourceValue);
         if (!Files.exists(source) || !Files.isRegularFile(source) || !Files.isReadable(source)) {
             throw new IllegalArgumentException("Archivo de video no encontrado o sin permiso de lectura.");
         }

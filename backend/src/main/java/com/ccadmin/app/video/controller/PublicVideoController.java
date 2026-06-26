@@ -7,6 +7,7 @@ import com.ccadmin.app.video.service.ThumbnailStorageService;
 import com.ccadmin.app.video.service.VideoCaptureService;
 import com.ccadmin.app.video.service.VideoCatalogService;
 import com.ccadmin.app.video.service.VideoCreateService;
+import com.ccadmin.app.video.service.VideoPathService;
 import com.ccadmin.app.video.service.VideoSearchService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,13 +31,15 @@ public class PublicVideoController {
     private final VideoCreateService createService;
     private final ThumbnailStorageService thumbnailStorageService;
     private final VideoCaptureService videoCaptureService;
+    private final VideoPathService videoPathService;
 
-    public PublicVideoController(VideoCatalogService catalogService, VideoSearchService searchService, VideoCreateService createService, ThumbnailStorageService thumbnailStorageService, VideoCaptureService videoCaptureService) {
+    public PublicVideoController(VideoCatalogService catalogService, VideoSearchService searchService, VideoCreateService createService, ThumbnailStorageService thumbnailStorageService, VideoCaptureService videoCaptureService, VideoPathService videoPathService) {
         this.catalogService = catalogService;
         this.searchService = searchService;
         this.createService = createService;
         this.thumbnailStorageService = thumbnailStorageService;
         this.videoCaptureService = videoCaptureService;
+        this.videoPathService = videoPathService;
     }
 
     @GetMapping("categories")
@@ -130,7 +133,7 @@ public class PublicVideoController {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "El video no es de tipo PATH.");
                 return;
             }
-            Path path = Path.of(video.SourceValue).normalize();
+            Path path = videoPathService.resolveSourcePath(video.SourceValue);
             if (!Files.exists(path) || !Files.isRegularFile(path) || !Files.isReadable(path)) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Archivo no encontrado o sin permiso de lectura.");
                 return;
