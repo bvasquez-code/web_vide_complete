@@ -22,14 +22,16 @@ public class VideoCreateService extends SessionService {
     private final VideoTagRelRepository tagRelRepository;
     private final VideoViewLogRepository viewLogRepository;
     private final CodGeneratorService codGeneratorService;
+    private final VideoMetadataProcessService metadataProcessService;
 
-    public VideoCreateService(VideoRepository videoRepository, VideoCategoryRelRepository categoryRelRepository, VideoActorRelRepository actorRelRepository, VideoTagRelRepository tagRelRepository, VideoViewLogRepository viewLogRepository, CodGeneratorService codGeneratorService) {
+    public VideoCreateService(VideoRepository videoRepository, VideoCategoryRelRepository categoryRelRepository, VideoActorRelRepository actorRelRepository, VideoTagRelRepository tagRelRepository, VideoViewLogRepository viewLogRepository, CodGeneratorService codGeneratorService, VideoMetadataProcessService metadataProcessService) {
         this.videoRepository = videoRepository;
         this.categoryRelRepository = categoryRelRepository;
         this.actorRelRepository = actorRelRepository;
         this.tagRelRepository = tagRelRepository;
         this.viewLogRepository = viewLogRepository;
         this.codGeneratorService = codGeneratorService;
+        this.metadataProcessService = metadataProcessService;
     }
 
     @Transactional
@@ -50,6 +52,7 @@ public class VideoCreateService extends SessionService {
             actorRelRepository.deleteByVideoCod(video.VideoCod);
             tagRelRepository.deleteByVideoCod(video.VideoCod);
         }
+        metadataProcessService.applyFileMetadataIfAvailable(video);
         VideoEntity saved = videoRepository.save(video);
         saveCategoryRels(saved.VideoCod, dto.CategoryCodList);
         saveActorRels(saved.VideoCod, dto.ActorCodList);

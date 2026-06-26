@@ -21,6 +21,9 @@ BEGIN
           `SourceType` varchar(16) NOT NULL,
           `SourceValue` text NOT NULL,
           `Duration` varchar(32) DEFAULT NULL,
+          `FileSizeBytes` bigint DEFAULT NULL,
+          `ResolutionWidth` int DEFAULT NULL,
+          `ResolutionHeight` int DEFAULT NULL,
           `ViewCount` bigint NOT NULL DEFAULT 0,
           `PublishDate` datetime DEFAULT NULL,
           `CreationUser` varchar(16) NOT NULL,
@@ -37,6 +40,39 @@ BEGIN
 
         SELECT 'Tabla video creada desde cero.' AS Mensaje;
     ELSE
+        IF NOT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'video'
+              AND column_name = 'FileSizeBytes'
+        ) THEN
+            ALTER TABLE `video`
+              ADD COLUMN `FileSizeBytes` bigint DEFAULT NULL AFTER `Duration`;
+        END IF;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'video'
+              AND column_name = 'ResolutionWidth'
+        ) THEN
+            ALTER TABLE `video`
+              ADD COLUMN `ResolutionWidth` int DEFAULT NULL AFTER `FileSizeBytes`;
+        END IF;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'video'
+              AND column_name = 'ResolutionHeight'
+        ) THEN
+            ALTER TABLE `video`
+              ADD COLUMN `ResolutionHeight` int DEFAULT NULL AFTER `ResolutionWidth`;
+        END IF;
+
         UPDATE `video`
         SET `ThumbnailUrl` = SUBSTRING(`ThumbnailUrl`, LOCATE('/api/v1/public/thumbnails/', `ThumbnailUrl`))
         WHERE `ThumbnailUrl` IS NOT NULL

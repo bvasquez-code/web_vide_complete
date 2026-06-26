@@ -1,7 +1,12 @@
 <header class="app-header">
   <div class="container py-3 d-flex justify-content-between align-items-center">
     <a routerLink="/admin" class="h4 mb-0 text-dark">Sugerencias de capturas</a>
-    <a routerLink="/admin" class="btn btn-outline-secondary btn-sm">Volver</a>
+    <div class="btn-group btn-group-sm">
+      <button type="button" class="btn btn-success" (click)="approveAll()" [disabled]="batchLoading || !suggestions.length">
+        <i class="fas fa-check-double mr-1"></i> Aprobar todo
+      </button>
+      <a routerLink="/admin" class="btn btn-outline-secondary">Volver</a>
+    </div>
   </div>
 </header>
 
@@ -11,20 +16,32 @@
 
   <div class="form-section p-3 text-muted" *ngIf="!suggestions.length">No hay sugerencias pendientes.</div>
 
-  <div class="row">
-    <div class="col-md-6 col-xl-4 mb-4" *ngFor="let item of suggestions">
-      <div class="video-card">
-        <img class="video-thumb" [src]="item.ImageUrl | mediaUrl" alt="Sugerencia">
-        <div class="p-3">
-          <div class="small text-muted mb-2">Video {{ item.VideoCod }} · Segundo {{ item.CaptureSecond }}</div>
-          <p class="mb-3">{{ item.Comment || 'Sin comentario' }}</p>
-          <textarea class="form-control form-control-sm mb-3" rows="2" [(ngModel)]="item.ReviewComment" name="ReviewComment{{ item.SuggestionId }}" placeholder="Comentario de revision"></textarea>
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-success" (click)="approve(item)"><i class="fas fa-check mr-1"></i> Aprobar</button>
-            <button class="btn btn-outline-danger" (click)="reject(item)"><i class="fas fa-times mr-1"></i> Rechazar</button>
+  <section class="form-section p-3 mb-4" *ngFor="let group of groups">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h2 class="h5 mb-1">Video {{ group.VideoCod }}</h2>
+        <small class="text-muted">{{ group.Suggestions.length }} sugerencias pendientes</small>
+      </div>
+      <button type="button" class="btn btn-success btn-sm" (click)="approveGroup(group)" [disabled]="batchLoading">
+        <i class="fas fa-check-double mr-1"></i> Aprobar todas del video
+      </button>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 col-xl-4 mb-4" *ngFor="let item of group.Suggestions">
+        <div class="video-card">
+          <img class="video-thumb" [src]="item.ImageUrl | mediaUrl" alt="Sugerencia">
+          <div class="p-3">
+            <div class="small text-muted mb-2">Segundo {{ item.CaptureSecond }}</div>
+            <p class="mb-3">{{ item.Comment || 'Sin comentario' }}</p>
+            <textarea class="form-control form-control-sm mb-3" rows="2" [(ngModel)]="item.ReviewComment" name="ReviewComment{{ item.SuggestionId }}" placeholder="Comentario de revision"></textarea>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-success" (click)="approve(item)" [disabled]="batchLoading"><i class="fas fa-check mr-1"></i> Aprobar</button>
+              <button class="btn btn-outline-danger" (click)="reject(item)" [disabled]="batchLoading"><i class="fas fa-times mr-1"></i> Rechazar</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </main>

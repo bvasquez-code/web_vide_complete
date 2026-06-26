@@ -382,12 +382,41 @@ public class VideoCaptureService extends SessionService {
     }
 
     @Transactional
+    public Map<String, Object> approvePendingSuggestions(String reviewComment) {
+        List<VideoCaptureSuggestionEntity> suggestions = videoCaptureSuggestionRepository.findPending();
+        int approvedCount = 0;
+        for (VideoCaptureSuggestionEntity suggestion : suggestions) {
+            approvePendingSuggestion(suggestion, reviewComment);
+            approvedCount++;
+        }
+        return Map.of("ApprovedCount", approvedCount);
+    }
+
+    @Transactional
+    public Map<String, Object> approvePendingSuggestionsByVideo(String videoCod, String reviewComment) {
+        if (videoCod == null || videoCod.isBlank()) {
+            throw new IllegalArgumentException("Codigo de video obligatorio.");
+        }
+        List<VideoCaptureSuggestionEntity> suggestions = videoCaptureSuggestionRepository.findPendingByVideoCod(videoCod);
+        int approvedCount = 0;
+        for (VideoCaptureSuggestionEntity suggestion : suggestions) {
+            approvePendingSuggestion(suggestion, reviewComment);
+            approvedCount++;
+        }
+        return Map.of("VideoCod", videoCod, "ApprovedCount", approvedCount);
+    }
+
+    @Transactional
     public VideoCaptureSuggestionEntity approveSuggestion(Long suggestionId, String reviewComment) {
         VideoCaptureSuggestionEntity suggestion = videoCaptureSuggestionRepository.findById(suggestionId)
                 .orElseThrow(() -> new IllegalArgumentException("Sugerencia no encontrada."));
         if (!"P".equals(suggestion.Status)) {
             throw new IllegalArgumentException("La sugerencia ya fue revisada.");
         }
+        return approvePendingSuggestion(suggestion, reviewComment);
+    }
+
+    private VideoCaptureSuggestionEntity approvePendingSuggestion(VideoCaptureSuggestionEntity suggestion, String reviewComment) {
         Integer nextOrder = videoCaptureRepository.findMaxDisplayOrder(suggestion.VideoCod) + 1;
         VideoCaptureEntity capture = new VideoCaptureEntity();
         capture.VideoCod = suggestion.VideoCod;

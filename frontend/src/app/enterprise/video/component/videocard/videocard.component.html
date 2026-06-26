@@ -1,5 +1,8 @@
 <article class="video-card">
-  <img class="video-thumb" [src]="thumb() | mediaUrl" [alt]="video.Title" *ngIf="publicPreferenceService.showThumbnails()">
+  <div class="video-thumb-wrap" *ngIf="publicPreferenceService.showThumbnails()">
+    <img class="video-thumb" [src]="thumb() | mediaUrl" [alt]="video.Title">
+    <span class="video-resolution-badge" *ngIf="resolutionLabel()">{{ resolutionLabel() }}</span>
+  </div>
   <div class="p-3">
     <div class="mb-2">
       <a class="badge badge-soft mr-1" *ngFor="let category of video.Categories" [routerLink]="['/category', category.Cod]">{{ publicPreferenceService.showThumbnails() ? category.Name : category.Cod }}</a>
@@ -14,7 +17,8 @@
     <div class="d-flex justify-content-between align-items-center">
       <small>
         {{ video.ViewCount || 0 }} vistas
-        <span *ngIf="video.Duration"> · {{ video.Duration }}</span>
+        <span *ngIf="video.Duration"> - {{ video.Duration }}</span>
+        <span *ngIf="video.FileSizeLabel"> - {{ video.FileSizeLabel }}</span>
       </small>
       <a [routerLink]="['/video', video.VideoCod]" class="btn btn-primary btn-sm">Ver video</a>
     </div>

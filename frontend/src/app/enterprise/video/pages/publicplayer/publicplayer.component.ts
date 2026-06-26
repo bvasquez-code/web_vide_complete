@@ -129,6 +129,40 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
     return this.detail.Video.SourceValue;
   }
 
+  resolutionLabel(): string {
+    const width = this.detail.Video.ResolutionWidth;
+    const height = this.detail.Video.ResolutionHeight;
+    return width && height ? `${width}x${height}` : '';
+  }
+
+  qualityLabel(): string {
+    const width = this.detail.Video.ResolutionWidth;
+    const height = this.detail.Video.ResolutionHeight;
+    if (!width || !height) {
+      return '';
+    }
+    if (width >= 3840 || height >= 2160) return '4K';
+    if (width >= 2560 || height >= 1440) return '2K';
+    if (width >= 1920 || height >= 1080) return 'Full HD';
+    if (width >= 1280 || height >= 720) return 'HD';
+    return 'SD';
+  }
+
+  fileSizeLabel(): string {
+    const bytes = this.detail.Video.FileSizeBytes;
+    if (!bytes || bytes <= 0) {
+      return '';
+    }
+    let value = bytes;
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let unitIndex = 0;
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value = value / 1024;
+      unitIndex++;
+    }
+    return `${value >= 10 ? value.toFixed(0) : value.toFixed(1)} ${units[unitIndex]}`;
+  }
+
   onPlayerError(event: Event): void {
     const video = event.target as HTMLVideoElement;
     const code = video.error?.code;

@@ -1,0 +1,7 @@
+<div class="public-search">
+  <input class="form-control form-control-sm" placeholder="Buscar por titulo, actor o tag" [(ngModel)]="searchQuery" name="publicSearchQuery" (keyup.enter)="search()">
+  <div class="btn-group btn-group-sm">
+    <button type="button" class="btn btn-primary" (click)="search()"><i class="fas fa-search"></i></button>
+    <button type="button" class="btn btn-outline-secondary" (click)="clear()" *ngIf="searchQuery.trim()"><i class="fas fa-times"></i></button>
+  </div>
+</div>

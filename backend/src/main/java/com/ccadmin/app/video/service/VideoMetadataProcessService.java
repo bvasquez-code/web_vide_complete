@@ -26,6 +26,7 @@ public class VideoMetadataProcessService extends SessionService {
     private final TransactionTemplate transactionTemplate;
     private final Path thumbnailPath = Path.of("uploads", "thumbnails");
     private final Integer commitBatchSize = 20;
+    private final Integer fileMetadataCommitBatchSize = 50;
 
     public VideoMetadataProcessService(VideoRepository videoRepository, PlatformTransactionManager transactionManager) {
         this.videoRepository = videoRepository;
@@ -62,6 +63,50 @@ public class VideoMetadataProcessService extends SessionService {
         return result;
     }
 
+    public VideoMetadataProcessResultDto processFileMetadata(String videoCod, Boolean overwrite) {
+        boolean overwriteExisting = Boolean.TRUE.equals(overwrite);
+        List<VideoEntity> videos = resolveVideos(videoCod).stream()
+                .filter(video -> "PATH".equals(video.SourceType))
+                .filter(video -> overwriteExisting || missingFileMetadata(video))
+                .toList();
+
+        VideoMetadataProcessResultDto result = new VideoMetadataProcessResultDto();
+        result.TotalVideos = videos.size();
+
+        for (int index = 0; index < videos.size(); index += fileMetadataCommitBatchSize) {
+            final int startIndex = index;
+            final int endIndex = Math.min(index + fileMetadataCommitBatchSize, videos.size());
+            List<VideoMetadataProcessItemDto> batchItems = transactionTemplate.execute(status -> {
+                List<VideoMetadataProcessItemDto> items = new ArrayList<>();
+                for (VideoEntity video : videos.subList(startIndex, endIndex)) {
+                    items.add(processFileMetadataVideo(video));
+                }
+                return items;
+            });
+            if (batchItems == null) {
+                continue;
+            }
+            for (VideoMetadataProcessItemDto item : batchItems) {
+                addResultItem(result, item);
+            }
+        }
+        return result;
+    }
+
+    public void applyFileMetadataIfAvailable(VideoEntity video) {
+        try {
+            if (!"PATH".equals(video.SourceType) || !hasText(video.SourceValue)) {
+                return;
+            }
+            Path source = Path.of(video.SourceValue).normalize();
+            if (!Files.exists(source) || !Files.isRegularFile(source) || !Files.isReadable(source)) {
+                return;
+            }
+            applyFileMetadata(video, source);
+        } catch (Exception ignored) {
+        }
+    }
+
     private VideoMetadataProcessItemDto processVideo(VideoEntity video, double percentage, String processMode, String baseUrl) {
         VideoMetadataProcessItemDto item = new VideoMetadataProcessItemDto();
         item.VideoCod = video.VideoCod;
@@ -96,6 +141,7 @@ public class VideoMetadataProcessService extends SessionService {
 
             video.Duration = formatDuration(totalSeconds);
             video.ThumbnailUrl = PUBLIC_THUMBNAIL_PATH + fileName;
+            applyFileMetadata(video, source);
             video.addSessionModify(getUserCod());
             videoRepository.save(video);
 
@@ -103,10 +149,44 @@ public class VideoMetadataProcessService extends SessionService {
             item.Message = "Metadata actualizada.";
             item.Duration = video.Duration;
             item.ThumbnailUrl = video.ThumbnailUrl;
+            fillFileMetadataItem(item, video);
             return item;
         } catch (Exception ex) {
             return error(item, ex.getMessage());
         }
+    }
+
+    private VideoMetadataProcessItemDto processFileMetadataVideo(VideoEntity video) {
+        VideoMetadataProcessItemDto item = new VideoMetadataProcessItemDto();
+        item.VideoCod = video.VideoCod;
+        item.Title = video.Title;
+        try {
+            if (!"PATH".equals(video.SourceType)) {
+                return skipped(item, "Solo se procesan videos con SourceType PATH.");
+            }
+            Path source = Path.of(video.SourceValue).normalize();
+            if (!Files.exists(source) || !Files.isRegularFile(source) || !Files.isReadable(source)) {
+                return error(item, "Archivo de video no encontrado o sin permiso de lectura.");
+            }
+            applyFileMetadata(video, source);
+            video.addSessionModify(getUserCod());
+            videoRepository.save(video);
+            item.Status = "OK";
+            item.Message = "Peso y resolucion actualizados.";
+            item.Duration = video.Duration;
+            item.ThumbnailUrl = video.ThumbnailUrl;
+            fillFileMetadataItem(item, video);
+            return item;
+        } catch (Exception ex) {
+            return error(item, ex.getMessage());
+        }
+    }
+
+    private void applyFileMetadata(VideoEntity video, Path source) throws Exception {
+        video.FileSizeBytes = Files.size(source);
+        ResolutionValue resolution = readResolution(source);
+        video.ResolutionWidth = resolution.Width();
+        video.ResolutionHeight = resolution.Height();
     }
 
     private void addResultItem(VideoMetadataProcessResultDto result, VideoMetadataProcessItemDto item) {
@@ -141,6 +221,26 @@ public class VideoMetadataProcessService extends SessionService {
             throw new IllegalStateException("ffprobe fallo: " + result.Output());
         }
         return Double.parseDouble(result.Output().trim());
+    }
+
+    private ResolutionValue readResolution(Path source) throws Exception {
+        CommandResult result = runCommand(List.of(
+                "ffprobe",
+                "-v", "error",
+                "-select_streams", "v:0",
+                "-show_entries", "stream=width,height",
+                "-of", "csv=s=x:p=0",
+                source.toString()
+        ));
+        if (result.ExitCode() != 0) {
+            throw new IllegalStateException("ffprobe fallo obteniendo resolucion: " + result.Output());
+        }
+        String output = result.Output().trim();
+        String[] parts = output.split("x", 2);
+        if (parts.length != 2) {
+            throw new IllegalStateException("ffprobe no devolvio una resolucion valida: " + output);
+        }
+        return new ResolutionValue(Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim()));
     }
 
     private void captureThumbnail(Path source, Path target, double second) throws Exception {
@@ -213,6 +313,39 @@ public class VideoMetadataProcessService extends SessionService {
         return String.format("%02d:%02d", minutes, seconds);
     }
 
+    private boolean missingFileMetadata(VideoEntity video) {
+        return video.FileSizeBytes == null || video.FileSizeBytes <= 0 || video.ResolutionWidth == null || video.ResolutionHeight == null;
+    }
+
+    private void fillFileMetadataItem(VideoMetadataProcessItemDto item, VideoEntity video) {
+        item.FileSizeBytes = video.FileSizeBytes;
+        item.FileSizeLabel = formatFileSize(video.FileSizeBytes);
+        item.ResolutionWidth = video.ResolutionWidth;
+        item.ResolutionHeight = video.ResolutionHeight;
+        item.ResolutionLabel = formatResolution(video.ResolutionWidth, video.ResolutionHeight);
+    }
+
+    private String formatFileSize(Long bytes) {
+        if (bytes == null || bytes <= 0) {
+            return "";
+        }
+        double value = bytes;
+        String[] units = {"B", "KB", "MB", "GB", "TB"};
+        int unitIndex = 0;
+        while (value >= 1024 && unitIndex < units.length - 1) {
+            value = value / 1024;
+            unitIndex++;
+        }
+        return String.format(Locale.US, value >= 10 ? "%.0f %s" : "%.1f %s", value, units[unitIndex]);
+    }
+
+    private String formatResolution(Integer width, Integer height) {
+        if (width == null || height == null || width <= 0 || height <= 0) {
+            return "";
+        }
+        return width + "x" + height;
+    }
+
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
     }
@@ -230,4 +363,5 @@ public class VideoMetadataProcessService extends SessionService {
     }
 
     private record CommandResult(Integer ExitCode, String Output) {}
+    private record ResolutionValue(Integer Width, Integer Height) {}
 }

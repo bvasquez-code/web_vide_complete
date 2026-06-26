@@ -9,12 +9,14 @@ import { AppComponent } from './app.component';
 import { PublichomeComponent } from './enterprise/video/pages/publichome/publichome.component';
 import { PubliccategoryComponent } from './enterprise/video/pages/publiccategory/publiccategory.component';
 import { PublicactorComponent } from './enterprise/video/pages/publicactor/publicactor.component';
+import { PublicactorphotosComponent } from './enterprise/video/pages/publicactorphotos/publicactorphotos.component';
 import { PubliccategoriesComponent } from './enterprise/video/pages/publiccategories/publiccategories.component';
 import { PublicplayerComponent } from './enterprise/video/pages/publicplayer/publicplayer.component';
 import { PublicloginComponent } from './enterprise/video/pages/publiclogin/publiclogin.component';
 import { PublicprofileComponent } from './enterprise/video/pages/publicprofile/publicprofile.component';
 import { VideocardComponent } from './enterprise/video/component/videocard/videocard.component';
 import { PublictoolbarComponent } from './enterprise/video/component/publictoolbar/publictoolbar.component';
+import { PublicsearchComponent } from './enterprise/video/component/publicsearch/publicsearch.component';
 import { BackbuttonComponent } from './enterprise/shared/component/backbutton/backbutton.component';
 import { PaginationComponent } from './enterprise/shared/component/pagination/pagination.component';
 import { MediaUrlPipe } from './enterprise/shared/pipe/media-url.pipe';
@@ -38,11 +40,13 @@ import { StatisticsactordetailComponent } from './enterprise/admin/pages/statist
     PubliccategoriesComponent,
     PubliccategoryComponent,
     PublicactorComponent,
+    PublicactorphotosComponent,
     PublicplayerComponent,
     PublicloginComponent,
     PublicprofileComponent,
     VideocardComponent,
     PublictoolbarComponent,
+    PublicsearchComponent,
     BackbuttonComponent,
     PaginationComponent,
     MediaUrlPipe,

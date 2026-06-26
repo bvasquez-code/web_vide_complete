@@ -1,4 +1,5 @@
 <div class="public-toolbar">
+  <app-publicsearch></app-publicsearch>
   <button type="button" class="btn btn-outline-secondary btn-sm" (click)="publicPreferenceService.toggleThumbnails()">
     <i class="fas mr-1" [class.fa-eye]="publicPreferenceService.showThumbnails()" [class.fa-eye-slash]="!publicPreferenceService.showThumbnails()"></i>
     {{ publicPreferenceService.showThumbnails() ? 'Ocultar reproductor, miniaturas y capturas' : 'Mostrar reproductor, miniaturas y capturas' }}

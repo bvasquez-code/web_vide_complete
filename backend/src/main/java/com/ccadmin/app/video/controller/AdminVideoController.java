@@ -131,6 +131,15 @@ public class AdminVideoController {
         }
     }
 
+    @PostMapping("processFileMetadata")
+    public ResponseEntity<ResponseWsDto> processFileMetadata(@RequestParam(defaultValue = "") String VideoCod, @RequestParam(defaultValue = "false") Boolean Overwrite) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(metadataProcessService.processFileMetadata(VideoCod, Overwrite)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PostMapping("generateCaptures")
     public ResponseEntity<ResponseWsDto> generateCaptures(@RequestParam String VideoCod, HttpServletRequest request) {
         try {
@@ -236,6 +245,26 @@ public class AdminVideoController {
         try {
             String comment = dto == null ? "" : dto.ReviewComment;
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.approveSuggestion(suggestionId, comment)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("captureSuggestions/approveAll")
+    public ResponseEntity<ResponseWsDto> approveAllCaptureSuggestions(@RequestBody(required = false) VideoCaptureSuggestionDto dto) {
+        try {
+            String comment = dto == null ? "" : dto.ReviewComment;
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.approvePendingSuggestions(comment)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("captureSuggestions/videos/{videoCod}/approveAll")
+    public ResponseEntity<ResponseWsDto> approveVideoCaptureSuggestions(@PathVariable String videoCod, @RequestBody(required = false) VideoCaptureSuggestionDto dto) {
+        try {
+            String comment = dto == null ? "" : dto.ReviewComment;
+            return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.approvePendingSuggestionsByVideo(videoCod, comment)), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
         }

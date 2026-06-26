@@ -10,6 +10,7 @@ import com.ccadmin.app.video.repository.*;
 import org.springframework.stereotype.Service;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Service
@@ -169,6 +170,11 @@ public class VideoSearchService {
         dto.ThumbnailUrl = video.ThumbnailUrl;
         dto.SourceType = video.SourceType;
         dto.Duration = video.Duration;
+        dto.FileSizeBytes = video.FileSizeBytes;
+        dto.FileSizeLabel = formatFileSize(video.FileSizeBytes);
+        dto.ResolutionWidth = video.ResolutionWidth;
+        dto.ResolutionHeight = video.ResolutionHeight;
+        dto.ResolutionLabel = formatResolution(video.ResolutionWidth, video.ResolutionHeight);
         dto.ViewCount = video.ViewCount;
         dto.PublishDate = video.PublishDate;
         dto.CreationDate = video.CreationDate;
@@ -186,6 +192,27 @@ public class VideoSearchService {
     }
 
     public record FormData(List<VideoCategoryEntity> Categories, List<ActorEntity> Actors, List<TagEntity> Tags, List<String> SourceTypes) {}
+
+    private String formatFileSize(Long bytes) {
+        if (bytes == null || bytes <= 0) {
+            return "";
+        }
+        double value = bytes;
+        String[] units = {"B", "KB", "MB", "GB", "TB"};
+        int unitIndex = 0;
+        while (value >= 1024 && unitIndex < units.length - 1) {
+            value = value / 1024;
+            unitIndex++;
+        }
+        return String.format(Locale.US, value >= 10 ? "%.0f %s" : "%.1f %s", value, units[unitIndex]);
+    }
+
+    private String formatResolution(Integer width, Integer height) {
+        if (width == null || height == null || width <= 0 || height <= 0) {
+            return "";
+        }
+        return width + "x" + height;
+    }
 
     @FunctionalInterface
     private interface RelatedFinder {

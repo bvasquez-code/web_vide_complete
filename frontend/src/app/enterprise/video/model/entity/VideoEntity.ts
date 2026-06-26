@@ -7,6 +7,9 @@ export class VideoEntity {
   SourceType: string = 'URL';
   SourceValue: string = '';
   Duration: string = '';
+  FileSizeBytes: number = 0;
+  ResolutionWidth: number = 0;
+  ResolutionHeight: number = 0;
   ViewCount: number = 0;
   PublishDate: string = '';
   Status: string = 'A';

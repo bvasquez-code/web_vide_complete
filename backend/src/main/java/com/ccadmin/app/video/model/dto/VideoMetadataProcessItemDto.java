@@ -7,4 +7,9 @@ public class VideoMetadataProcessItemDto {
     public String Message;
     public String Duration;
     public String ThumbnailUrl;
+    public Long FileSizeBytes;
+    public String FileSizeLabel;
+    public Integer ResolutionWidth;
+    public Integer ResolutionHeight;
+    public String ResolutionLabel;
 }

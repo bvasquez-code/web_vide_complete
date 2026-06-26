@@ -46,7 +46,9 @@
       <a class="badge badge-light border mr-1" *ngFor="let tag of detail.Tags" [routerLink]="['/']" [queryParams]="{ q: publicPreferenceService.showThumbnails() ? tag.Name : tag.TagCod }">#{{ publicPreferenceService.showThumbnails() ? tag.Name : tag.TagCod }}</a>
     </div>
     <small class="text-muted">
-      {{ detail.Video.ViewCount || 0 }} vistas · Origen {{ detail.Video.SourceType }} · Duracion {{ detail.Video.Duration || 'No registrada' }}
+      {{ detail.Video.ViewCount || 0 }} vistas - Origen {{ detail.Video.SourceType }} - Duracion {{ detail.Video.Duration || 'No registrada' }}
+      <span *ngIf="resolutionLabel()"> - Resolucion <span class="badge badge-info align-middle" *ngIf="qualityLabel()">{{ qualityLabel() }}</span> {{ resolutionLabel() }}</span>
+      <span *ngIf="fileSizeLabel()"> - Peso {{ fileSizeLabel() }}</span>
     </small>
   </section>
 

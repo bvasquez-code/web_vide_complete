@@ -19,6 +19,9 @@ public class VideoEntity extends AuditTableEntity {
     public String SourceType;
     public String SourceValue;
     public String Duration;
+    public Long FileSizeBytes;
+    public Integer ResolutionWidth;
+    public Integer ResolutionHeight;
     public Long ViewCount;
     public LocalDateTime PublishDate;
 

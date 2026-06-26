@@ -5,12 +5,6 @@ import { VideoCardDto } from '../../model/dto/VideoCardDto';
 import { PublicVideoService } from '../../service/PublicVideoService';
 import { PublicPreferenceService } from '../../service/PublicPreferenceService';
 import { PaginationDto } from '../../../shared/model/dto/PaginationDto';
-import { VideoCaptureEntity } from '../../model/entity/VideoCaptureEntity';
-
-interface ActorCaptureGallery {
-  Video: VideoCardDto;
-  Captures: VideoCaptureEntity[];
-}
 
 @Component({
   selector: 'app-publicactor',
@@ -25,10 +19,6 @@ export class PublicactorComponent implements OnInit {
   limit = 24;
   totalRows = 0;
   pagination = new PaginationDto({ Limit: this.limit, ItemLabel: 'videos' });
-  captureGalleries: ActorCaptureGallery[] = [];
-  captureGalleryVisible = false;
-  captureGalleryLoading = false;
-  captureGalleryMessage = '';
 
   constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, public publicPreferenceService: PublicPreferenceService) {}
 
@@ -39,9 +29,6 @@ export class PublicactorComponent implements OnInit {
         return;
       }
       this.actorCod = nextActorCod;
-      this.captureGalleries = [];
-      this.captureGalleryVisible = false;
-      this.captureGalleryMessage = '';
       await this.loadVideos('recent', 1);
     });
   }
@@ -73,31 +60,5 @@ export class PublicactorComponent implements OnInit {
 
   thumb(video: VideoCardDto): string {
     return video.ThumbnailUrl || 'assets/default-video.svg';
-  }
-
-  async showCaptureGalleries(): Promise<void> {
-    this.captureGalleryVisible = true;
-    if (this.captureGalleries.length > 0) {
-      setTimeout(() => document.getElementById('actorCaptureGallery')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
-      return;
-    }
-    this.captureGalleryLoading = true;
-    this.captureGalleryMessage = '';
-    try {
-      const rpt = await this.publicVideoService.findActorCaptureGalleries(this.actorCod);
-      if (rpt.ErrorStatus) {
-        this.captureGalleryMessage = rpt.Message;
-        return;
-      }
-      this.captureGalleries = rpt.Data || [];
-      if (this.captureGalleries.length === 0) {
-        this.captureGalleryMessage = 'No hay capturas disponibles para los videos de este actor.';
-      }
-      setTimeout(() => document.getElementById('actorCaptureGallery')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
-    } catch {
-      this.captureGalleryMessage = 'No se pudieron cargar las capturas del actor.';
-    } finally {
-      this.captureGalleryLoading = false;
-    }
   }
 }

@@ -23,6 +23,14 @@ export class AdminVideoService {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/captureSuggestions/${suggestionId}/approve`, { ReviewComment: reviewComment });
   }
 
+  async approveAllCaptureSuggestions(reviewComment: string = ''): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/captureSuggestions/approveAll`, { ReviewComment: reviewComment });
+  }
+
+  async approveVideoCaptureSuggestions(videoCod: string, reviewComment: string = ''): Promise<ResponseWsDto> {
+    return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/captureSuggestions/videos/${encodeURIComponent(videoCod)}/approveAll`, { ReviewComment: reviewComment });
+  }
+
   async rejectCaptureSuggestion(suggestionId: number, reviewComment: string = ''): Promise<ResponseWsDto> {
     return await this.apiService.ExecutePostService(`${AppSetting.API}/api/v1/admin/videos/captureSuggestions/${suggestionId}/reject`, { ReviewComment: reviewComment });
   }

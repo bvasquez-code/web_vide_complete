@@ -7,22 +7,6 @@
 
 <main class="container py-4">
   <section class="mb-4">
-    <div class="form-section p-3">
-      <div class="form-row align-items-center">
-        <div class="col-md-9 mb-2 mb-md-0">
-          <input class="form-control" placeholder="Buscar por titulo, actor o tag" [(ngModel)]="searchQuery" name="searchQuery" (keyup.enter)="search(1)">
-        </div>
-        <div class="col-md-3">
-          <div class="btn-group w-100">
-            <button type="button" class="btn btn-primary" (click)="search(1)"><i class="fas fa-search mr-1"></i> Buscar</button>
-            <button type="button" class="btn btn-outline-secondary" (click)="clearSearch()" *ngIf="searchMode"><i class="fas fa-times"></i></button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1 class="h3 mb-0">Categorias</h1>
       <a routerLink="/categories" class="btn btn-outline-primary btn-sm">Ver todas las categorias</a>

@@ -11,6 +11,11 @@ public class VideoCardDto {
     public String ThumbnailUrl;
     public String SourceType;
     public String Duration;
+    public Long FileSizeBytes;
+    public String FileSizeLabel;
+    public Integer ResolutionWidth;
+    public Integer ResolutionHeight;
+    public String ResolutionLabel;
     public Long ViewCount;
     public LocalDateTime PublishDate;
     public LocalDateTime CreationDate;

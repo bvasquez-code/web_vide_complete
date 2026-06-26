@@ -45,11 +45,26 @@ th {
   background: #fff;
   overflow: hidden;
 }
+.video-thumb-wrap {
+  position: relative;
+  background: #d9e2ec;
+}
 .video-thumb {
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
   background: #d9e2ec;
+}
+.video-resolution-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #ffffff;
+  background: rgba(17, 24, 39, 0.82);
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 .video-card .p-3 {
   display: flex;
@@ -77,6 +92,20 @@ th {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+  min-width: 0;
+}
+app-publictoolbar {
+  flex: 1 1 auto;
+  min-width: 280px;
+}
+.public-search {
+  display: flex;
+  flex: 1 1 520px;
+  min-width: 360px;
+  max-width: 760px;
+  gap: 6px;
+}
+.public-search .form-control {
   min-width: 0;
 }
 .public-toolbar .btn {
@@ -339,6 +368,12 @@ th {
   }
   .public-toolbar {
     justify-content: flex-start;
+    width: 100%;
+  }
+  .public-search {
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: none;
     width: 100%;
   }
   .public-toolbar .btn,
