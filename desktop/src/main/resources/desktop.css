@@ -1,0 +1,142 @@
+.app-root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-background-color: #f4f6f8;
+}
+
+.login-wrapper {
+    -fx-background-color: linear-gradient(to bottom right, #111827, #243447);
+    -fx-padding: 40;
+}
+
+.login-panel {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-padding: 34;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, .25), 24, 0, 0, 10);
+}
+
+.login-title {
+    -fx-font-size: 28;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111827;
+}
+
+.top-bar {
+    -fx-background-color: white;
+    -fx-padding: 14 20;
+    -fx-border-color: transparent transparent #dfe3ea transparent;
+}
+
+.top-title {
+    -fx-font-size: 20;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111827;
+}
+
+.user-pill {
+    -fx-background-color: #eef6ff;
+    -fx-background-radius: 999;
+    -fx-padding: 7 12;
+    -fx-text-fill: #17527c;
+}
+
+.sidebar {
+    -fx-background-color: #172033;
+    -fx-padding: 18;
+    -fx-pref-width: 220;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #dce6f2;
+    -fx-alignment: center-left;
+    -fx-padding: 11 12;
+    -fx-background-radius: 6;
+    -fx-font-size: 14;
+}
+
+.nav-button:hover {
+    -fx-background-color: #24324b;
+}
+
+.page {
+    -fx-padding: 22;
+    -fx-background-color: #f4f6f8;
+}
+
+.page-title {
+    -fx-font-size: 24;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111827;
+}
+
+.muted {
+    -fx-text-fill: #6b7280;
+}
+
+.error-text {
+    -fx-text-fill: #b91c1c;
+}
+
+.primary-button {
+    -fx-background-color: #2563eb;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+    -fx-padding: 9 14;
+    -fx-font-weight: 600;
+}
+
+.ghost-button {
+    -fx-background-color: #eef2f7;
+    -fx-text-fill: #111827;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+}
+
+.data-table {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+}
+
+.data-table .table-row-cell {
+    -fx-cell-size: 78;
+}
+
+.player-panel {
+    -fx-background-color: #111827;
+    -fx-background-radius: 8;
+    -fx-padding: 14;
+}
+
+.player-video-box {
+    -fx-background-color: black;
+    -fx-min-width: 640;
+    -fx-min-height: 360;
+    -fx-max-width: 640;
+    -fx-max-height: 360;
+}
+
+.fullscreen-player {
+    -fx-background-color: black;
+}
+
+.empty-state {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-padding: 32;
+    -fx-text-fill: #6b7280;
+}
+
+.form-grid {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-padding: 18;
+}
+
+TextField, PasswordField, TextArea, ComboBox {
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #d1d5db;
+    -fx-background-color: white;
+    -fx-padding: 8;
+}
