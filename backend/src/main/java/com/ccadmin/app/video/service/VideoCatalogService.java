@@ -8,12 +8,16 @@ import com.ccadmin.app.video.model.entity.VideoCategoryEntity;
 import com.ccadmin.app.video.repository.ActorRepository;
 import com.ccadmin.app.video.repository.TagRepository;
 import com.ccadmin.app.video.repository.VideoCategoryRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
 public class VideoCatalogService extends SessionService {
+    private static final Logger log = LogManager.getLogger(VideoCatalogService.class);
+
     private final VideoCategoryRepository categoryRepository;
     private final ActorRepository actorRepository;
     private final TagRepository tagRepository;
@@ -57,41 +61,103 @@ public class VideoCatalogService extends SessionService {
 
     @Transactional
     public VideoCategoryEntity saveCategory(VideoCategoryEntity entity) {
+        log.info("Iniciando guardado de categoria. categoryCod={}, name={}", entity == null ? "" : entity.CategoryCod, entity == null ? "" : entity.Name);
         if (entity.CategoryCod == null || entity.CategoryCod.isBlank()) {
             entity.CategoryCod = codGeneratorService.next("CAT");
             entity.addSessionCreate(getUserCod());
         } else {
             entity.addSessionModify(getUserCod());
         }
-        return categoryRepository.save(entity.validate());
+        VideoCategoryEntity saved = categoryRepository.save(entity.validate());
+        log.info("Categoria guardada correctamente. categoryCod={}", saved.CategoryCod);
+        return saved;
     }
 
     @Transactional
     public ActorEntity saveActor(ActorEntity entity) {
+        log.info("Iniciando guardado de actor. actorCod={}, name={}", entity == null ? "" : entity.ActorCod, entity == null ? "" : entity.Name);
         if (entity.ActorCod == null || entity.ActorCod.isBlank()) {
             entity.ActorCod = codGeneratorService.next("ACT");
             entity.addSessionCreate(getUserCod());
         } else {
             entity.addSessionModify(getUserCod());
         }
-        return actorRepository.save(entity.validate());
+        ActorEntity saved = actorRepository.save(entity.validate());
+        log.info("Actor guardado correctamente. actorCod={}", saved.ActorCod);
+        return saved;
     }
 
     @Transactional
     public TagEntity saveTag(TagEntity entity) {
+        log.info("Iniciando guardado de tag. tagCod={}, name={}", entity == null ? "" : entity.TagCod, entity == null ? "" : entity.Name);
         if (entity.TagCod == null || entity.TagCod.isBlank()) {
             entity.TagCod = codGeneratorService.next("TAG");
             entity.addSessionCreate(getUserCod());
         } else {
             entity.addSessionModify(getUserCod());
         }
-        return tagRepository.save(entity.validate());
+        TagEntity saved = tagRepository.save(entity.validate());
+        log.info("Tag guardado correctamente. tagCod={}", saved.TagCod);
+        return saved;
     }
 
-    @Transactional public VideoCategoryEntity enableCategory(String cod) { VideoCategoryEntity e = categoryRepository.findById(cod).orElseThrow(); e.active(getUserCod()); return categoryRepository.save(e); }
-    @Transactional public VideoCategoryEntity disableCategory(String cod) { VideoCategoryEntity e = categoryRepository.findById(cod).orElseThrow(); e.inactive(getUserCod()); return categoryRepository.save(e); }
-    @Transactional public ActorEntity enableActor(String cod) { ActorEntity e = actorRepository.findById(cod).orElseThrow(); e.active(getUserCod()); return actorRepository.save(e); }
-    @Transactional public ActorEntity disableActor(String cod) { ActorEntity e = actorRepository.findById(cod).orElseThrow(); e.inactive(getUserCod()); return actorRepository.save(e); }
-    @Transactional public TagEntity enableTag(String cod) { TagEntity e = tagRepository.findById(cod).orElseThrow(); e.active(getUserCod()); return tagRepository.save(e); }
-    @Transactional public TagEntity disableTag(String cod) { TagEntity e = tagRepository.findById(cod).orElseThrow(); e.inactive(getUserCod()); return tagRepository.save(e); }
+    @Transactional
+    public VideoCategoryEntity enableCategory(String cod) {
+        log.info("Iniciando activacion de categoria. categoryCod={}", cod);
+        VideoCategoryEntity e = categoryRepository.findById(cod).orElseThrow();
+        e.active(getUserCod());
+        VideoCategoryEntity saved = categoryRepository.save(e);
+        log.info("Categoria activada correctamente. categoryCod={}", saved.CategoryCod);
+        return saved;
+    }
+
+    @Transactional
+    public VideoCategoryEntity disableCategory(String cod) {
+        log.info("Iniciando desactivacion de categoria. categoryCod={}", cod);
+        VideoCategoryEntity e = categoryRepository.findById(cod).orElseThrow();
+        e.inactive(getUserCod());
+        VideoCategoryEntity saved = categoryRepository.save(e);
+        log.info("Categoria desactivada correctamente. categoryCod={}", saved.CategoryCod);
+        return saved;
+    }
+
+    @Transactional
+    public ActorEntity enableActor(String cod) {
+        log.info("Iniciando activacion de actor. actorCod={}", cod);
+        ActorEntity e = actorRepository.findById(cod).orElseThrow();
+        e.active(getUserCod());
+        ActorEntity saved = actorRepository.save(e);
+        log.info("Actor activado correctamente. actorCod={}", saved.ActorCod);
+        return saved;
+    }
+
+    @Transactional
+    public ActorEntity disableActor(String cod) {
+        log.info("Iniciando desactivacion de actor. actorCod={}", cod);
+        ActorEntity e = actorRepository.findById(cod).orElseThrow();
+        e.inactive(getUserCod());
+        ActorEntity saved = actorRepository.save(e);
+        log.info("Actor desactivado correctamente. actorCod={}", saved.ActorCod);
+        return saved;
+    }
+
+    @Transactional
+    public TagEntity enableTag(String cod) {
+        log.info("Iniciando activacion de tag. tagCod={}", cod);
+        TagEntity e = tagRepository.findById(cod).orElseThrow();
+        e.active(getUserCod());
+        TagEntity saved = tagRepository.save(e);
+        log.info("Tag activado correctamente. tagCod={}", saved.TagCod);
+        return saved;
+    }
+
+    @Transactional
+    public TagEntity disableTag(String cod) {
+        log.info("Iniciando desactivacion de tag. tagCod={}", cod);
+        TagEntity e = tagRepository.findById(cod).orElseThrow();
+        e.inactive(getUserCod());
+        TagEntity saved = tagRepository.save(e);
+        log.info("Tag desactivado correctamente. tagCod={}", saved.TagCod);
+        return saved;
+    }
 }

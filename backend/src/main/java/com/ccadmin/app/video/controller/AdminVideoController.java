@@ -12,6 +12,8 @@ import com.ccadmin.app.video.service.VideoMetadataProcessService;
 import com.ccadmin.app.video.service.VideoSearchService;
 import com.ccadmin.app.video.service.VideoStatisticsService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("api/v1/admin/videos")
 public class AdminVideoController {
+    private static final Logger log = LogManager.getLogger(AdminVideoController.class);
+
     private final VideoSearchService searchService;
     private final VideoCreateService createService;
     private final ThumbnailStorageService thumbnailStorageService;
@@ -34,6 +38,11 @@ public class AdminVideoController {
         this.metadataProcessService = metadataProcessService;
         this.videoCaptureService = videoCaptureService;
         this.statisticsService = statisticsService;
+    }
+
+    private ResponseEntity<ResponseWsDto> badRequest(String action, Exception ex) {
+        log.error("Error ejecutando accion admin de video: {}", action, ex);
+        return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
     }
 
     @GetMapping("findAll")
@@ -60,7 +69,7 @@ public class AdminVideoController {
         try {
             return new ResponseEntity<>(new ResponseWsDto(createService.save(dto)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("save", ex);
         }
     }
 
@@ -69,7 +78,7 @@ public class AdminVideoController {
         try {
             return new ResponseEntity<>(new ResponseWsDto(createService.enable(dto.Video.VideoCod)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("enable", ex);
         }
     }
 
@@ -78,7 +87,7 @@ public class AdminVideoController {
         try {
             return new ResponseEntity<>(new ResponseWsDto(createService.disable(dto.Video.VideoCod)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("disable", ex);
         }
     }
 
@@ -88,7 +97,7 @@ public class AdminVideoController {
             String newFileName = dto == null ? "" : dto.NewFileName;
             return new ResponseEntity<>(new ResponseWsDto(createService.renamePathFile(videoCod, newFileName)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("renameFile", ex);
         }
     }
 
@@ -97,7 +106,7 @@ public class AdminVideoController {
         try {
             return new ResponseEntity<>(new ResponseWsDto(thumbnailStorageService.saveThumbnail(VideoCod, file, request)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("uploadThumbnail", ex);
         }
     }
 
@@ -107,7 +116,7 @@ public class AdminVideoController {
             String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.saveManualCapture(VideoCod, file, baseUrl)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("uploadCapture", ex);
         }
     }
 
@@ -117,7 +126,7 @@ public class AdminVideoController {
             String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.saveCaptureAtSecond(VideoCod, CaptureSecond, baseUrl)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("captureAtSecond", ex);
         }
     }
 
@@ -127,7 +136,7 @@ public class AdminVideoController {
             String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
             return new ResponseEntity<>(new ResponseWsDto(metadataProcessService.process(Percentage, VideoCod, Mode, Overwrite, baseUrl)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("processMetadata", ex);
         }
     }
 
@@ -136,7 +145,7 @@ public class AdminVideoController {
         try {
             return new ResponseEntity<>(new ResponseWsDto(metadataProcessService.processFileMetadata(VideoCod, Overwrite)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("processFileMetadata", ex);
         }
     }
 
@@ -146,7 +155,7 @@ public class AdminVideoController {
             String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.generate(VideoCod, baseUrl)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("generateCaptures", ex);
         }
     }
 
@@ -155,7 +164,7 @@ public class AdminVideoController {
         try {
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.useCaptureAsThumbnail(videoCod, captureId)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("useCaptureAsThumbnail", ex);
         }
     }
 
@@ -164,7 +173,7 @@ public class AdminVideoController {
         try {
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.deleteCapture(videoCod, captureId)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("deleteCapture", ex);
         }
     }
 
@@ -173,7 +182,7 @@ public class AdminVideoController {
         try {
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.cleanUnlinkedCaptures(DryRun)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("cleanUnlinkedCaptures", ex);
         }
     }
 
@@ -246,7 +255,7 @@ public class AdminVideoController {
             String comment = dto == null ? "" : dto.ReviewComment;
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.approveSuggestion(suggestionId, comment)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("approveCaptureSuggestion", ex);
         }
     }
 
@@ -256,7 +265,7 @@ public class AdminVideoController {
             String comment = dto == null ? "" : dto.ReviewComment;
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.approvePendingSuggestions(comment)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("approveAllCaptureSuggestions", ex);
         }
     }
 
@@ -266,7 +275,7 @@ public class AdminVideoController {
             String comment = dto == null ? "" : dto.ReviewComment;
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.approvePendingSuggestionsByVideo(videoCod, comment)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("approveVideoCaptureSuggestions", ex);
         }
     }
 
@@ -276,7 +285,7 @@ public class AdminVideoController {
             String comment = dto == null ? "" : dto.ReviewComment;
             return new ResponseEntity<>(new ResponseWsDto(videoCaptureService.rejectSuggestion(suggestionId, comment)), HttpStatus.OK);
         } catch (Exception ex) {
-            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+            return badRequest("rejectCaptureSuggestion", ex);
         }
     }
 }

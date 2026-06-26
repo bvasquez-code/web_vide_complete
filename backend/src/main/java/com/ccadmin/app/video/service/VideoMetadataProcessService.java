@@ -5,6 +5,8 @@ import com.ccadmin.app.video.model.dto.VideoMetadataProcessItemDto;
 import com.ccadmin.app.video.model.dto.VideoMetadataProcessResultDto;
 import com.ccadmin.app.video.model.entity.VideoEntity;
 import com.ccadmin.app.video.repository.VideoRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -21,6 +23,8 @@ import java.util.Locale;
 
 @Service
 public class VideoMetadataProcessService extends SessionService {
+    private static final Logger log = LogManager.getLogger(VideoMetadataProcessService.class);
+
     private static final String PUBLIC_THUMBNAIL_PATH = "/api/v1/public/thumbnails/";
     private final VideoRepository videoRepository;
     private final VideoPathService videoPathService;
@@ -36,6 +40,7 @@ public class VideoMetadataProcessService extends SessionService {
     }
 
     public VideoMetadataProcessResultDto process(Double percentage, String videoCod, String mode, Boolean overwrite, String baseUrl) {
+        log.info("Iniciando procesamiento de miniaturas. videoCod={}, percentage={}, mode={}, overwrite={}", videoCod, percentage, mode, overwrite);
         double safePercentage = validatePercentage(percentage);
         String processMode = resolveProcessMode(mode, overwrite);
         List<VideoEntity> videos = resolveVideos(videoCod);
@@ -62,10 +67,12 @@ public class VideoMetadataProcessService extends SessionService {
             }
         }
 
+        log.info("Procesamiento de miniaturas finalizado. videoCod={}, totalVideos={}, processed={}, skipped={}, errors={}", videoCod, result.TotalVideos, result.Processed, result.Skipped, result.Errors);
         return result;
     }
 
     public VideoMetadataProcessResultDto processFileMetadata(String videoCod, Boolean overwrite) {
+        log.info("Iniciando procesamiento de metadata de archivo. videoCod={}, overwrite={}", videoCod, overwrite);
         boolean overwriteExisting = Boolean.TRUE.equals(overwrite);
         List<VideoEntity> videos = resolveVideos(videoCod).stream()
                 .filter(video -> "PATH".equals(video.SourceType))
@@ -92,6 +99,7 @@ public class VideoMetadataProcessService extends SessionService {
                 addResultItem(result, item);
             }
         }
+        log.info("Procesamiento de metadata de archivo finalizado. videoCod={}, totalVideos={}, processed={}, skipped={}, errors={}", videoCod, result.TotalVideos, result.Processed, result.Skipped, result.Errors);
         return result;
     }
 
@@ -105,7 +113,8 @@ public class VideoMetadataProcessService extends SessionService {
                 return;
             }
             applyFileMetadata(video, source);
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            log.error("No se pudo aplicar metadata de archivo durante el guardado. videoCod={}", video == null ? "" : video.VideoCod, ex);
         }
     }
 
@@ -152,8 +161,10 @@ public class VideoMetadataProcessService extends SessionService {
             item.Duration = video.Duration;
             item.ThumbnailUrl = video.ThumbnailUrl;
             fillFileMetadataItem(item, video);
+            log.info("Miniatura y metadata actualizadas. videoCod={}, thumbnailUrl={}", video.VideoCod, video.ThumbnailUrl);
             return item;
         } catch (Exception ex) {
+            log.error("Error procesando miniatura de video. videoCod={}", video == null ? "" : video.VideoCod, ex);
             return error(item, ex.getMessage());
         }
     }
@@ -178,8 +189,10 @@ public class VideoMetadataProcessService extends SessionService {
             item.Duration = video.Duration;
             item.ThumbnailUrl = video.ThumbnailUrl;
             fillFileMetadataItem(item, video);
+            log.info("Metadata de archivo actualizada. videoCod={}", video.VideoCod);
             return item;
         } catch (Exception ex) {
+            log.error("Error procesando metadata de archivo. videoCod={}", video == null ? "" : video.VideoCod, ex);
             return error(item, ex.getMessage());
         }
     }

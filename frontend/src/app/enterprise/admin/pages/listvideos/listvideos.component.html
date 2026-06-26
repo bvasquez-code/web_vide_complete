@@ -39,6 +39,7 @@
           <td>{{ video.ViewCount }}</td>
           <td>{{ video.Status }}</td>
           <td class="text-right">
+            <a [routerLink]="['/video', video.VideoCod]" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success mr-1" title="Ver publico"><i class="fas fa-external-link-alt"></i></a>
             <button type="button" class="btn btn-sm btn-outline-secondary mr-1" (click)="openPreview(video)" title="Previsualizar"><i class="fas fa-play"></i></button>
             <a [routerLink]="['/admin/statistics/videos', video.VideoCod]" class="btn btn-sm btn-outline-info mr-1" title="Estadisticas"><i class="fas fa-chart-line"></i></a>
             <a [routerLink]="['/admin/videos/edit', video.VideoCod]" class="btn btn-sm btn-outline-primary mr-1"><i class="fas fa-edit"></i></a>

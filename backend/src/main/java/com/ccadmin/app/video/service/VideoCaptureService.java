@@ -9,6 +9,8 @@ import com.ccadmin.app.video.model.entity.VideoCaptureEntity;
 import com.ccadmin.app.video.model.entity.VideoEntity;
 import com.ccadmin.app.video.repository.VideoCaptureRepository;
 import com.ccadmin.app.video.repository.VideoRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +42,8 @@ import java.util.stream.Stream;
 
 @Service
 public class VideoCaptureService extends SessionService {
+    private static final Logger log = LogManager.getLogger(VideoCaptureService.class);
+
     private static final String CAPTURE_SOURCE_AUTO = "AUTO";
     private static final String CAPTURE_SOURCE_MANUAL = "MANUAL";
     private static final String CAPTURE_SOURCE_SUGGESTION = "SUGGESTION";
@@ -63,6 +67,7 @@ public class VideoCaptureService extends SessionService {
     }
 
     public VideoCaptureProcessResultDto generate(String videoCod, String baseUrl) {
+        log.info("Iniciando generacion de capturas automaticas. videoCod={}", videoCod);
         if (videoCod == null || videoCod.isBlank()) {
             throw new IllegalArgumentException("Codigo de video obligatorio.");
         }
@@ -100,6 +105,7 @@ public class VideoCaptureService extends SessionService {
                 try {
                     captureImage(source, target, captureSecond);
                 } catch (Exception ex) {
+                    log.error("No se pudo generar captura automatica. videoCod={}, index={}, captureSecond={}", video.VideoCod, index, captureSecond, ex);
                     Files.deleteIfExists(target);
                     continue;
                 }
@@ -126,10 +132,12 @@ public class VideoCaptureService extends SessionService {
             result.Duration = video.Duration;
             result.CaptureCount = captures.size();
             result.Captures = captures;
+            log.info("Generacion de capturas automaticas finalizada. videoCod={}, captureCount={}, duration={}", video.VideoCod, result.CaptureCount, result.Duration);
             return result;
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
+            log.error("Error generando capturas automaticas. videoCod={}", videoCod, ex);
             throw new IllegalStateException(ex.getMessage(), ex);
         }
     }
@@ -159,7 +167,8 @@ public class VideoCaptureService extends SessionService {
         CompletableFuture.runAsync(() -> {
             try {
                 ensureAutomaticCaptures(videoCod, baseUrl);
-            } catch (Exception ignored) {
+            } catch (Exception ex) {
+                log.error("Error en generacion automatica de capturas en background. videoCod={}", videoCod, ex);
             } finally {
                 runningAutomaticGeneration.remove(videoCod);
             }
@@ -169,6 +178,7 @@ public class VideoCaptureService extends SessionService {
 
     @Transactional
     public VideoCaptureEntity useCaptureAsThumbnail(String videoCod, Long captureId) {
+        log.info("Iniciando actualizacion de miniatura desde captura. videoCod={}, captureId={}", videoCod, captureId);
         if (videoCod == null || videoCod.isBlank()) {
             throw new IllegalArgumentException("Codigo de video obligatorio.");
         }
@@ -185,11 +195,13 @@ public class VideoCaptureService extends SessionService {
         video.ThumbnailUrl = capture.ImageUrl;
         video.addSessionModify(getUserCod());
         videoRepository.save(video);
+        log.info("Miniatura actualizada desde captura correctamente. videoCod={}, captureId={}", videoCod, captureId);
         return capture;
     }
 
     @Transactional
     public VideoCaptureEntity deleteCapture(String videoCod, Long captureId) {
+        log.info("Iniciando eliminacion de captura. videoCod={}, captureId={}", videoCod, captureId);
         if (videoCod == null || videoCod.isBlank()) {
             throw new IllegalArgumentException("Codigo de video obligatorio.");
         }
@@ -211,7 +223,9 @@ public class VideoCaptureService extends SessionService {
         deleteCaptureFile(capture);
         capture.Status = "I";
         capture.addSessionModify(getUserCod());
-        return videoCaptureRepository.save(capture);
+        VideoCaptureEntity saved = videoCaptureRepository.save(capture);
+        log.info("Captura eliminada correctamente. videoCod={}, captureId={}", videoCod, captureId);
+        return saved;
     }
 
     public Path findCapture(String fileName) {
@@ -223,6 +237,7 @@ public class VideoCaptureService extends SessionService {
     }
 
     public VideoCaptureCleanupResultDto cleanUnlinkedCaptures(Boolean dryRun) throws Exception {
+        log.info("Iniciando limpieza de capturas no vinculadas. dryRun={}", dryRun);
         VideoCaptureCleanupResultDto result = new VideoCaptureCleanupResultDto();
         result.DryRun = Boolean.TRUE.equals(dryRun);
         Files.createDirectories(capturePath);
@@ -262,11 +277,13 @@ public class VideoCaptureService extends SessionService {
         if (!result.DryRun) {
             deleteEmptyCaptureDirectories();
         }
+        log.info("Limpieza de capturas no vinculadas finalizada. dryRun={}, scanned={}, deleted={}, errors={}", result.DryRun, result.ScannedFileCount, result.DeletedFileCount, result.ErrorCount);
         return result;
     }
 
     @Transactional
     public VideoCaptureEntity saveCaptureAtSecond(String videoCod, Double captureSecond, String baseUrl) throws Exception {
+        log.info("Iniciando guardado de captura por segundo. videoCod={}, captureSecond={}", videoCod, captureSecond);
         if (videoCod == null || videoCod.isBlank()) {
             throw new IllegalArgumentException("Codigo de video obligatorio.");
         }
@@ -294,6 +311,7 @@ public class VideoCaptureService extends SessionService {
         BigDecimal storedSecond = BigDecimal.valueOf(safeSecond).setScale(3, RoundingMode.HALF_UP);
         for (VideoCaptureEntity capture : videoCaptureRepository.findActiveByVideoCodAndCaptureSource(video.VideoCod, CAPTURE_SOURCE_MANUAL)) {
             if (capture.CaptureSecond != null && capture.CaptureSecond.setScale(3, RoundingMode.HALF_UP).compareTo(storedSecond) == 0) {
+                log.info("Captura por segundo ya existia. videoCod={}, captureId={}, captureSecond={}", videoCod, capture.CaptureId, capture.CaptureSecond);
                 return capture;
             }
         }
@@ -318,11 +336,14 @@ public class VideoCaptureService extends SessionService {
         capture.CaptureSecond = storedSecond;
         capture.DisplayOrder = nextOrder;
         capture.addSessionCreate(getUserCod());
-        return videoCaptureRepository.save(capture);
+        VideoCaptureEntity saved = videoCaptureRepository.save(capture);
+        log.info("Captura por segundo guardada correctamente. videoCod={}, captureId={}, captureSecond={}", videoCod, saved.CaptureId, saved.CaptureSecond);
+        return saved;
     }
 
     @Transactional
     public VideoCaptureEntity saveManualCapture(String videoCod, MultipartFile file, String baseUrl) throws Exception {
+        log.info("Iniciando guardado de captura manual. videoCod={}, fileName={}, fileSize={}", videoCod, file == null ? "" : file.getOriginalFilename(), file == null ? 0 : file.getSize());
         if (videoCod == null || videoCod.isBlank()) {
             throw new IllegalArgumentException("Codigo de video obligatorio.");
         }
@@ -343,6 +364,7 @@ public class VideoCaptureService extends SessionService {
         for (VideoCaptureEntity capture : videoCaptureRepository.findActiveByVideoCod(video.VideoCod)) {
             Path existingPath = resolvePathFromCaptureUrl(capture.ImageUrl);
             if (existingPath != null && Files.exists(existingPath) && newHash.equals(sha256(Files.readAllBytes(existingPath)))) {
+                log.info("Captura manual ya existia. videoCod={}, captureId={}", videoCod, capture.CaptureId);
                 return capture;
             }
         }
@@ -359,11 +381,14 @@ public class VideoCaptureService extends SessionService {
         capture.CaptureSecond = BigDecimal.ZERO;
         capture.DisplayOrder = nextOrder;
         capture.addSessionCreate(getUserCod());
-        return videoCaptureRepository.save(capture);
+        VideoCaptureEntity saved = videoCaptureRepository.save(capture);
+        log.info("Captura manual guardada correctamente. videoCod={}, captureId={}", videoCod, saved.CaptureId);
+        return saved;
     }
 
     @Transactional
     public VideoCaptureSuggestionEntity suggestCaptureAtSecond(String videoCod, Double captureSecond, String comment, String baseUrl) throws Exception {
+        log.info("Iniciando sugerencia de captura. videoCod={}, captureSecond={}, userCod={}", videoCod, captureSecond, getUserCod());
         if (getUserCod() == null || !getUserCod().startsWith("SUB")) {
             throw new IllegalArgumentException("Debe iniciar sesion para sugerir capturas.");
         }
@@ -376,7 +401,9 @@ public class VideoCaptureService extends SessionService {
         suggestion.Comment = comment == null ? "" : comment.trim();
         suggestion.addSessionCreate(getUserCod());
         suggestion.Status = "P";
-        return videoCaptureSuggestionRepository.save(suggestion);
+        VideoCaptureSuggestionEntity saved = videoCaptureSuggestionRepository.save(suggestion);
+        log.info("Sugerencia de captura guardada correctamente. videoCod={}, suggestionId={}", videoCod, saved.SuggestionId);
+        return saved;
     }
 
     public List<VideoCaptureSuggestionEntity> findPendingSuggestions() {
@@ -385,17 +412,20 @@ public class VideoCaptureService extends SessionService {
 
     @Transactional
     public Map<String, Object> approvePendingSuggestions(String reviewComment) {
+        log.info("Iniciando aprobacion masiva de sugerencias de captura.");
         List<VideoCaptureSuggestionEntity> suggestions = videoCaptureSuggestionRepository.findPending();
         int approvedCount = 0;
         for (VideoCaptureSuggestionEntity suggestion : suggestions) {
             approvePendingSuggestion(suggestion, reviewComment);
             approvedCount++;
         }
+        log.info("Aprobacion masiva de sugerencias finalizada. approvedCount={}", approvedCount);
         return Map.of("ApprovedCount", approvedCount);
     }
 
     @Transactional
     public Map<String, Object> approvePendingSuggestionsByVideo(String videoCod, String reviewComment) {
+        log.info("Iniciando aprobacion de sugerencias por video. videoCod={}", videoCod);
         if (videoCod == null || videoCod.isBlank()) {
             throw new IllegalArgumentException("Codigo de video obligatorio.");
         }
@@ -405,11 +435,13 @@ public class VideoCaptureService extends SessionService {
             approvePendingSuggestion(suggestion, reviewComment);
             approvedCount++;
         }
+        log.info("Aprobacion de sugerencias por video finalizada. videoCod={}, approvedCount={}", videoCod, approvedCount);
         return Map.of("VideoCod", videoCod, "ApprovedCount", approvedCount);
     }
 
     @Transactional
     public VideoCaptureSuggestionEntity approveSuggestion(Long suggestionId, String reviewComment) {
+        log.info("Iniciando aprobacion de sugerencia de captura. suggestionId={}", suggestionId);
         VideoCaptureSuggestionEntity suggestion = videoCaptureSuggestionRepository.findById(suggestionId)
                 .orElseThrow(() -> new IllegalArgumentException("Sugerencia no encontrada."));
         if (!"P".equals(suggestion.Status)) {
@@ -433,11 +465,14 @@ public class VideoCaptureService extends SessionService {
         suggestion.ReviewComment = reviewComment == null ? "" : reviewComment.trim();
         suggestion.ApprovedCaptureId = savedCapture.CaptureId;
         suggestion.addSessionModify(getUserCod());
-        return videoCaptureSuggestionRepository.save(suggestion);
+        VideoCaptureSuggestionEntity savedSuggestion = videoCaptureSuggestionRepository.save(suggestion);
+        log.info("Sugerencia de captura aprobada correctamente. suggestionId={}, videoCod={}, captureId={}", savedSuggestion.SuggestionId, savedSuggestion.VideoCod, savedCapture.CaptureId);
+        return savedSuggestion;
     }
 
     @Transactional
     public VideoCaptureSuggestionEntity rejectSuggestion(Long suggestionId, String reviewComment) {
+        log.info("Iniciando rechazo de sugerencia de captura. suggestionId={}", suggestionId);
         VideoCaptureSuggestionEntity suggestion = videoCaptureSuggestionRepository.findById(suggestionId)
                 .orElseThrow(() -> new IllegalArgumentException("Sugerencia no encontrada."));
         if (!"P".equals(suggestion.Status)) {
@@ -446,7 +481,9 @@ public class VideoCaptureService extends SessionService {
         suggestion.Status = "R";
         suggestion.ReviewComment = reviewComment == null ? "" : reviewComment.trim();
         suggestion.addSessionModify(getUserCod());
-        return videoCaptureSuggestionRepository.save(suggestion);
+        VideoCaptureSuggestionEntity saved = videoCaptureSuggestionRepository.save(suggestion);
+        log.info("Sugerencia de captura rechazada correctamente. suggestionId={}", suggestionId);
+        return saved;
     }
 
     private void deleteExistingCaptureFiles(String videoCod, String captureSource) {
@@ -464,7 +501,8 @@ public class VideoCaptureService extends SessionService {
             if (target != null && target.startsWith(capturePath.normalize())) {
                 Files.deleteIfExists(target);
             }
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            log.error("No se pudo eliminar archivo de captura. captureId={}, imageUrl={}", capture.CaptureId, capture.ImageUrl, ex);
         }
     }
 

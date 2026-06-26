@@ -4,6 +4,8 @@ import com.ccadmin.app.shared.service.SessionService;
 import com.ccadmin.app.video.model.entity.VideoEntity;
 import com.ccadmin.app.video.repository.VideoRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +16,8 @@ import java.nio.file.StandardCopyOption;
 
 @Service
 public class ThumbnailStorageService extends SessionService {
+    private static final Logger log = LogManager.getLogger(ThumbnailStorageService.class);
+
     private static final String PUBLIC_THUMBNAIL_PATH = "/api/v1/public/thumbnails/";
     private final VideoRepository videoRepository;
     private final Path thumbnailPath = Path.of("uploads", "thumbnails");
@@ -24,6 +28,7 @@ public class ThumbnailStorageService extends SessionService {
 
     @Transactional
     public String saveThumbnail(String videoCod, MultipartFile file, HttpServletRequest request) throws Exception {
+        log.info("Iniciando guardado de miniatura. videoCod={}, fileName={}, fileSize={}", videoCod, file == null ? "" : file.getOriginalFilename(), file == null ? 0 : file.getSize());
         if (videoCod == null || videoCod.isBlank()) {
             throw new IllegalArgumentException("Codigo de video obligatorio.");
         }
@@ -42,6 +47,7 @@ public class ThumbnailStorageService extends SessionService {
         video.ThumbnailUrl = url;
         video.addSessionModify(getUserCod());
         videoRepository.save(video);
+        log.info("Miniatura guardada correctamente. videoCod={}, thumbnailUrl={}", videoCod, url);
         return url;
     }
 

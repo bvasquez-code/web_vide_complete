@@ -6,6 +6,8 @@ import com.ccadmin.app.video.model.dto.VideoRegisterDto;
 import com.ccadmin.app.video.model.entity.*;
 import com.ccadmin.app.video.repository.*;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -16,6 +18,8 @@ import java.util.List;
 
 @Service
 public class VideoCreateService extends SessionService {
+    private static final Logger log = LogManager.getLogger(VideoCreateService.class);
+
     private final VideoRepository videoRepository;
     private final VideoCategoryRelRepository categoryRelRepository;
     private final VideoActorRelRepository actorRelRepository;
@@ -38,6 +42,9 @@ public class VideoCreateService extends SessionService {
 
     @Transactional
     public VideoEntity save(VideoRegisterDto dto) {
+        String videoCod = dto != null && dto.Video != null ? dto.Video.VideoCod : "";
+        boolean newVideo = videoCod == null || videoCod.isBlank();
+        log.info("Iniciando guardado de video. videoCod={}, nuevo={}", videoCod, newVideo);
         if (dto == null || dto.Video == null) {
             throw new IllegalArgumentException("Datos del video obligatorios.");
         }
@@ -59,25 +66,33 @@ public class VideoCreateService extends SessionService {
         saveCategoryRels(saved.VideoCod, dto.CategoryCodList);
         saveActorRels(saved.VideoCod, dto.ActorCodList);
         saveTagRels(saved.VideoCod, dto.TagCodList);
+        log.info("Video guardado correctamente. videoCod={}, nuevo={}", saved.VideoCod, newVideo);
         return saved;
     }
 
     @Transactional
     public VideoEntity enable(String cod) {
+        log.info("Iniciando activacion de video. videoCod={}", cod);
         VideoEntity video = videoRepository.findById(cod).orElseThrow(() -> new IllegalArgumentException("Video no encontrado."));
         video.active(getUserCod());
-        return videoRepository.save(video);
+        VideoEntity saved = videoRepository.save(video);
+        log.info("Video activado correctamente. videoCod={}", saved.VideoCod);
+        return saved;
     }
 
     @Transactional
     public VideoEntity disable(String cod) {
+        log.info("Iniciando desactivacion de video. videoCod={}", cod);
         VideoEntity video = videoRepository.findById(cod).orElseThrow(() -> new IllegalArgumentException("Video no encontrado."));
         video.inactive(getUserCod());
-        return videoRepository.save(video);
+        VideoEntity saved = videoRepository.save(video);
+        log.info("Video desactivado correctamente. videoCod={}", saved.VideoCod);
+        return saved;
     }
 
     @Transactional
     public VideoEntity renamePathFile(String videoCod, String newFileName) throws Exception {
+        log.info("Iniciando renombrado de archivo de video. videoCod={}, newFileName={}", videoCod, newFileName);
         if (videoCod == null || videoCod.isBlank()) {
             throw new IllegalArgumentException("Codigo de video obligatorio.");
         }
@@ -110,7 +125,9 @@ public class VideoCreateService extends SessionService {
         if (source.equals(target)) {
             video.SourceValue = videoPathService.renamedSourceValue(video.SourceValue, target);
             video.addSessionModify(getUserCod());
-            return videoRepository.save(video);
+            VideoEntity saved = videoRepository.save(video);
+            log.info("Archivo de video sin cambios de nombre, referencia actualizada. videoCod={}, sourceValue={}", saved.VideoCod, saved.SourceValue);
+            return saved;
         }
         if (Files.exists(target)) {
             throw new IllegalArgumentException("Ya existe un archivo con ese nombre.");
@@ -126,7 +143,9 @@ public class VideoCreateService extends SessionService {
 
         video.SourceValue = videoPathService.renamedSourceValue(video.SourceValue, target);
         video.addSessionModify(getUserCod());
-        return videoRepository.save(video);
+        VideoEntity saved = videoRepository.save(video);
+        log.info("Archivo de video renombrado correctamente. videoCod={}, sourceValue={}", saved.VideoCod, saved.SourceValue);
+        return saved;
     }
 
     @Transactional
