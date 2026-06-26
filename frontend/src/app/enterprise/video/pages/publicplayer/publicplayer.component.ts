@@ -1,6 +1,6 @@
 import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AppSetting } from '../../../../config/AppSetting';
 import { PublicAuthService } from '../../service/PublicAuthService';
 import { PublicSubscriberService } from '../../service/PublicSubscriberService';
@@ -31,14 +31,16 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
   interactionMessage = '';
   suggestionComment = '';
   suggestionMessage = '';
+  navigationMessage = '';
   private viewLogId: number | null = null;
   private pendingWatchSeconds = 0;
   private lastWatchPosition: number | null = null;
   private lastWatchFlushAt = 0;
   private capturesGenerationRunning = false;
   private captureRefreshTimer: ReturnType<typeof setInterval> | null = null;
+  private suggestionMessageTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private route: ActivatedRoute, private publicVideoService: PublicVideoService, private publicSubscriberService: PublicSubscriberService, public publicAuthService: PublicAuthService, public publicPreferenceService: PublicPreferenceService, private sanitizer: DomSanitizer) {}
+  constructor(private route: ActivatedRoute, private router: Router, private publicVideoService: PublicVideoService, private publicSubscriberService: PublicSubscriberService, public publicAuthService: PublicAuthService, public publicPreferenceService: PublicPreferenceService, private sanitizer: DomSanitizer) {}
 
   async ngOnInit(): Promise<void> {
     this.route.paramMap.subscribe(async params => {
@@ -56,6 +58,7 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.flushWatchProgress();
     this.stopCaptureRefresh();
+    this.clearSuggestionMessageTimer();
   }
 
   @HostListener('window:beforeunload')
@@ -98,8 +101,10 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
     this.interactionMessage = '';
     this.suggestionComment = '';
     this.suggestionMessage = '';
+    this.navigationMessage = '';
     this.capturesGenerationRunning = false;
     this.stopCaptureRefresh();
+    this.clearSuggestionMessageTimer();
   }
 
   async registerViewOnce(): Promise<void> {
@@ -224,14 +229,41 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
   }
 
   async suggestCurrentCapture(): Promise<void> {
+    if (!this.publicAuthService.isLogged()) {
+      this.showSuggestionMessage('Ingresa para sugerir capturas.');
+      return;
+    }
+    if (this.detail.Video.SourceType !== 'PATH') {
+      this.showSuggestionMessage('La sugerencia de captura solo esta disponible para videos del servidor.');
+      return;
+    }
     const second = this.videoPlayer?.nativeElement?.currentTime || 0;
     const rpt = await this.publicSubscriberService.suggestCapture(this.videoCod, second, this.suggestionComment);
     if (rpt.ErrorStatus) {
-      this.suggestionMessage = rpt.Message;
+      this.showSuggestionMessage(rpt.Message);
       return;
     }
     this.suggestionComment = '';
-    this.suggestionMessage = 'Captura enviada para revision del administrador.';
+    this.showSuggestionMessage('Captura enviada para revision del administrador.');
+  }
+
+  async goRandomVideo(): Promise<void> {
+    const rpt = await this.publicVideoService.findRandom(this.videoCod);
+    if (rpt.ErrorStatus || !rpt.Data?.VideoCod) {
+      this.navigationMessage = rpt.Message || 'No se encontro otro video disponible.';
+      return;
+    }
+    await this.navigateToVideo(rpt.Data.VideoCod);
+  }
+
+  async goRecommendedVideo(): Promise<void> {
+    const candidates = (this.related || []).filter(video => video.VideoCod && video.VideoCod !== this.videoCod);
+    if (candidates.length > 0) {
+      const selected = candidates[Math.floor(Math.random() * candidates.length)];
+      await this.navigateToVideo(selected.VideoCod);
+      return;
+    }
+    await this.goRandomVideo();
   }
 
   private async ensureAutomaticCapturesInBackground(videoCod: string): Promise<void> {
@@ -294,6 +326,28 @@ export class PublicplayerComponent implements OnInit, OnDestroy {
     }
     this.viewerState = rpt.Data || {};
     this.interactionMessage = 'Preferencia guardada.';
+  }
+
+  private async navigateToVideo(videoCod: string): Promise<void> {
+    await this.flushWatchProgress();
+    await this.router.navigate(['/video', videoCod]);
+  }
+
+  private showSuggestionMessage(message: string): void {
+    this.clearSuggestionMessageTimer();
+    this.suggestionMessage = message;
+    this.suggestionMessageTimer = setTimeout(() => {
+      this.suggestionMessage = '';
+      this.suggestionMessageTimer = null;
+    }, 3500);
+  }
+
+  private clearSuggestionMessageTimer(): void {
+    if (!this.suggestionMessageTimer) {
+      return;
+    }
+    clearTimeout(this.suggestionMessageTimer);
+    this.suggestionMessageTimer = null;
   }
 
   private addWatchDelta(video: HTMLVideoElement): void {

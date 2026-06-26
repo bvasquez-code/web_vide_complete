@@ -23,6 +23,10 @@ export class PublicVideoService {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/mostViewed`, { Limit: limit });
   }
 
+  async findRandom(currentVideoCod: string = ''): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/random`, { CurrentVideoCod: currentVideoCod });
+  }
+
   async search(Query: string, Page: number = 1, Limit: number = 30, Sort: string = 'recent'): Promise<ResponseWsDto> {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/videos/search`, { Query, Sort, Page, Limit });
   }
@@ -33,6 +37,10 @@ export class PublicVideoService {
 
   async findByActor(actorCod: string, sort: string = 'recent', Page: number = 1, Limit: number = 24): Promise<ResponseWsDto> {
     return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/actors/${actorCod}/videos`, { Sort: sort, Page, Limit });
+  }
+
+  async findActorCaptureGalleries(actorCod: string): Promise<ResponseWsDto> {
+    return await this.apiService.ExecuteGetService(`${AppSetting.API}/api/v1/public/actors/${actorCod}/captures`);
   }
 
   async findDetail(videoCod: string): Promise<ResponseWsDto> {

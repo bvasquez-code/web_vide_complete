@@ -1,6 +1,7 @@
 package com.ccadmin.app.video.service;
 
 import com.ccadmin.app.shared.model.dto.ResponsePageSearchT;
+import com.ccadmin.app.video.model.dto.ActorCaptureGalleryDto;
 import com.ccadmin.app.video.model.dto.VideoCardDto;
 import com.ccadmin.app.video.model.dto.VideoDetailDto;
 import com.ccadmin.app.video.model.dto.VideoLabelDto;
@@ -35,6 +36,15 @@ public class VideoSearchService {
 
     public List<VideoCardDto> findRecent(Integer limit) { return videoRepository.findRecent(safeLimit(limit)).stream().map(this::toCard).toList(); }
     public List<VideoCardDto> findMostViewed(Integer limit) { return videoRepository.findMostViewed(safeLimit(limit)).stream().map(this::toCard).toList(); }
+    public VideoCardDto findRandom(String currentVideoCod) {
+        String excludedVideoCod = currentVideoCod == null ? "" : currentVideoCod;
+        List<VideoEntity> videos = videoRepository.findRandomRelated(excludedVideoCod, 1);
+        if (videos.isEmpty()) {
+            throw new IllegalArgumentException("No se encontro otro video disponible.");
+        }
+        return toCard(videos.get(0));
+    }
+
     public List<VideoCardDto> findRelated(String videoCod, Integer limit) {
         int blockLimit = limit == null || limit < 1 ? 4 : Math.min(limit, 12);
         Map<String, VideoEntity> selected = new LinkedHashMap<>();
@@ -80,6 +90,16 @@ public class VideoSearchService {
                 safePage,
                 safeLimit
         );
+    }
+
+    public List<ActorCaptureGalleryDto> findActorCaptureGalleries(String actorCod) {
+        if (actorCod == null || actorCod.isBlank()) {
+            throw new IllegalArgumentException("Actor obligatorio.");
+        }
+        return videoRepository.findByActorForCaptureGallery(actorCod, 200).stream()
+                .map(video -> new ActorCaptureGalleryDto(toCard(video), captureRepository.findActiveByVideoCod(video.VideoCod)))
+                .filter(item -> item.Captures != null && !item.Captures.isEmpty())
+                .toList();
     }
 
     public ResponsePageSearchT<VideoEntity> findAll(String query, String status, String sourceType, String categoryCod, String actorCod, String tagCod, Integer page, Integer limit) {

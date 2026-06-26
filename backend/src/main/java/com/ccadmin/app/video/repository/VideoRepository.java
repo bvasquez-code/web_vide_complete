@@ -40,6 +40,15 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String> {
     List<VideoEntity> findByActor(@Param("actorCod") String actorCod, @Param("sort") String sort, @Param("init") Integer init, @Param("limit") Integer limit);
 
     @Query(value = """
+            select distinct v.* from video v
+            inner join video_actor_rel r on r.VideoCod = v.VideoCod and r.Status = 'A'
+            where v.Status = 'A' and r.ActorCod = :actorCod
+            order by coalesce(v.PublishDate, v.CreationDate) desc
+            limit :limit
+            """, nativeQuery = true)
+    List<VideoEntity> findByActorForCaptureGallery(@Param("actorCod") String actorCod, @Param("limit") Integer limit);
+
+    @Query(value = """
             select count(distinct v.VideoCod) from video v
             inner join video_actor_rel r on r.VideoCod = v.VideoCod and r.Status = 'A'
             where v.Status = 'A' and r.ActorCod = :actorCod

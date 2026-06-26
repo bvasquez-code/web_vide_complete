@@ -94,6 +94,22 @@ th {
 .viewer-actions .btn-group {
   flex-wrap: wrap;
 }
+.player-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+.player-action-buttons {
+  display: flex;
+  flex: 1 1 360px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.player-action-bar .form-control {
+  flex: 1 1 260px;
+  min-width: 220px;
+}
 .actor-profile {
   display: flex;
   align-items: center;
@@ -111,6 +127,12 @@ th {
 .actor-profile-content {
   flex: 1 1 auto;
   min-width: 180px;
+}
+.actor-profile-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .pagination-toolbar {
   display: flex;
@@ -430,9 +452,24 @@ th {
   .video-card .btn {
     width: 100%;
   }
+  .player-action-buttons,
+  .player-action-bar .form-control {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+  .player-action-buttons .btn {
+    flex: 1 1 100%;
+  }
   .actor-profile {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .actor-profile-actions {
+    width: 100%;
+  }
+  .actor-profile-actions > .btn,
+  .actor-profile-actions > .btn-group {
+    flex: 1 1 100%;
   }
   .actor-profile-image {
     width: 100%;

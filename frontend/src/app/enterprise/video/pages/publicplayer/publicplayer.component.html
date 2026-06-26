@@ -10,6 +10,22 @@
   <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
 
   <section class="form-section p-3 mb-4" *ngIf="detailLoaded && !errorMessage">
+    <div class="player-action-bar mb-3">
+      <div class="player-action-buttons">
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="suggestCurrentCapture()" [disabled]="detail.Video.SourceType !== 'PATH'">
+          <i class="fas fa-camera mr-1"></i> Sugerir captura
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="goRandomVideo()">
+          <i class="fas fa-random mr-1"></i> Ver video random
+        </button>
+        <button type="button" class="btn btn-outline-success btn-sm" (click)="goRecommendedVideo()">
+          <i class="fas fa-magic mr-1"></i> Recomendar video
+        </button>
+      </div>
+      <textarea class="form-control form-control-sm" rows="1" [(ngModel)]="suggestionComment" name="suggestionComment" placeholder="Comentario para sugerir captura"></textarea>
+      <div class="small text-success w-100" *ngIf="suggestionMessage">{{ suggestionMessage }}</div>
+      <div class="small text-warning w-100" *ngIf="navigationMessage">{{ navigationMessage }}</div>
+    </div>
     <ng-container *ngIf="publicPreferenceService.showThumbnails(); else hiddenPlayer">
       <div class="embed-responsive embed-responsive-16by9 bg-dark mb-3" *ngIf="detail.Video.SourceType === 'EMBED' && embedHtml" [innerHTML]="embedHtml"></div>
       <video #videoPlayer class="w-100 bg-dark mb-3" style="aspect-ratio: 16 / 9;" controls preload="metadata" [src]="videoSource()" (play)="onPlayerPlay($event)" (timeupdate)="onPlayerTimeUpdate($event)" (pause)="onPlayerPause($event)" (seeked)="onPlayerSeeked($event)" (ended)="onPlayerEnded($event)" (error)="onPlayerError($event)" *ngIf="canUseHtmlVideo() && detail.Video.SourceValue"></video>
@@ -59,13 +75,6 @@
       </div>
       <div class="small text-success mb-3" *ngIf="interactionMessage">{{ interactionMessage }}</div>
 
-      <div *ngIf="detail.Video.SourceType === 'PATH'">
-        <textarea class="form-control form-control-sm mb-2" rows="2" [(ngModel)]="suggestionComment" name="suggestionComment" placeholder="Comentario para el administrador"></textarea>
-        <button type="button" class="btn btn-outline-primary btn-sm" (click)="suggestCurrentCapture()">
-          <i class="fas fa-camera mr-1"></i> Sugerir captura del instante actual
-        </button>
-        <div class="small text-success mt-2" *ngIf="suggestionMessage">{{ suggestionMessage }}</div>
-      </div>
     </div>
   </section>
 

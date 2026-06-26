@@ -13,11 +13,37 @@
       <h1 class="h3 mb-1">{{ publicPreferenceService.showThumbnails() ? (actor.Name || 'Actor') : actor.ActorCod }}</h1>
       <p class="text-muted mb-0" *ngIf="publicPreferenceService.showThumbnails()">{{ actorDescription() }}</p>
     </div>
-    <div class="btn-group btn-group-sm mt-2">
-      <button class="btn" [class.btn-primary]="sortMode === 'recent'" [class.btn-outline-primary]="sortMode !== 'recent'" (click)="loadVideos('recent', 1)">Recientes</button>
-      <button class="btn" [class.btn-primary]="sortMode === 'views'" [class.btn-outline-primary]="sortMode !== 'views'" (click)="loadVideos('views', 1)">Mas vistos</button>
+    <div class="actor-profile-actions mt-2">
+      <button type="button" class="btn btn-outline-success btn-sm" (click)="showCaptureGalleries()">
+        <i class="fas fa-images mr-1"></i> Ver foto
+      </button>
+      <div class="btn-group btn-group-sm">
+        <button class="btn" [class.btn-primary]="sortMode === 'recent'" [class.btn-outline-primary]="sortMode !== 'recent'" (click)="loadVideos('recent', 1)">Recientes</button>
+        <button class="btn" [class.btn-primary]="sortMode === 'views'" [class.btn-outline-primary]="sortMode !== 'views'" (click)="loadVideos('views', 1)">Mas vistos</button>
+      </div>
     </div>
   </section>
+
+  <section id="actorCaptureGallery" class="form-section p-3 mb-3" *ngIf="captureGalleryVisible && publicPreferenceService.showThumbnails()">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h4 mb-0">Fotos por video</h2>
+      <small class="text-muted" *ngIf="captureGalleries.length">{{ captureGalleries.length }} videos con capturas</small>
+    </div>
+    <div class="alert alert-info" *ngIf="captureGalleryLoading">Cargando capturas...</div>
+    <div class="alert alert-warning" *ngIf="captureGalleryMessage">{{ captureGalleryMessage }}</div>
+    <article class="actor-capture-group mb-3" *ngFor="let group of captureGalleries">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <a class="h6 mb-0 text-dark" [routerLink]="['/video', group.Video.VideoCod]">{{ group.Video.Title }}</a>
+        <a class="btn btn-outline-primary btn-sm" [routerLink]="['/video', group.Video.VideoCod]">Ver video</a>
+      </div>
+      <div class="capture-slider">
+        <a class="capture-slider-item" *ngFor="let capture of group.Captures" [routerLink]="['/video', group.Video.VideoCod]" [title]="'Segundo ' + capture.CaptureSecond">
+          <img [src]="capture.ImageUrl | mediaUrl" [alt]="group.Video.Title">
+        </a>
+      </div>
+    </article>
+  </section>
+
   <small class="text-muted d-block mb-3">{{ totalRows }} videos disponibles</small>
   <div class="row">
     <div class="col-sm-6 col-lg-4 mb-4" *ngFor="let video of videos">

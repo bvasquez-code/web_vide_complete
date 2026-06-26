@@ -59,6 +59,15 @@ public class PublicVideoController {
         return new ResponseEntity<>(new ResponseWsDto(searchService.findMostViewed(Limit)), HttpStatus.OK);
     }
 
+    @GetMapping("videos/random")
+    public ResponseEntity<ResponseWsDto> random(@RequestParam(defaultValue = "") String CurrentVideoCod) {
+        try {
+            return new ResponseEntity<>(new ResponseWsDto(searchService.findRandom(CurrentVideoCod)), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @GetMapping("videos/search")
     public ResponseEntity<ResponseWsDto> search(@RequestParam(defaultValue = "") String Query, @RequestParam(defaultValue = "recent") String Sort, @RequestParam(defaultValue = "1") Integer Page, @RequestParam(defaultValue = "30") Integer Limit) {
         return new ResponseEntity<>(new ResponseWsDto(searchService.searchPublic(Query, Sort, Page, Limit)), HttpStatus.OK);
@@ -76,6 +85,17 @@ public class PublicVideoController {
         ResponseWsDto response = new ResponseWsDto(searchService.findByActor(actorCod, Sort, Page, Limit));
         response.AddResponseAdditional("Actor", searchService.findActorById(actorCod));
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("actors/{actorCod}/captures")
+    public ResponseEntity<ResponseWsDto> actorCaptures(@PathVariable String actorCod) {
+        try {
+            ResponseWsDto response = new ResponseWsDto(searchService.findActorCaptureGalleries(actorCod));
+            response.AddResponseAdditional("Actor", searchService.findActorById(actorCod));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ResponseWsDto(ex), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("videos/{videoCod}")
